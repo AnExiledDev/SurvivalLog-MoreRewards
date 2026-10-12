@@ -15,22 +15,24 @@
   var COLUMNS = '--slmr-columns';
   // The game's page is a flex column (.panel > .content) with the card grid between the title and the footer. Many
   // cards: the grid takes only the height left over and scrolls inside it, and its columns come from --slmr-columns.
-  // The top padding leaves room for the lift a card gets on hover. Compact: smaller cards, so two rows fit a 1080p
-  // screen.
+  // A scrolling box clips what spills over its edges, so the padding holds what the game's cards draw outside
+  // themselves: the hover lift and glow (6px up, 32px glow, 34px on an exclusive card), the buy flash (scaled to 1.04
+  // with a 24px glow) and the bought stamp (10px past the right edge). Compact: smaller cards, so two rows fit a 1080p
+  // screen, and at five across (about 240px a card) long names, costs and button labels wrap inside the card.
   var CSS = [
     'html.slmr-many .content{min-height:0}',
     'html.slmr-many .card-grid{flex:0 1 auto;min-height:0;overflow-x:hidden;overflow-y:auto;' +
-      'grid-template-columns:repeat(var(--slmr-columns),minmax(0,320px));justify-content:center;gap:16px;padding:10px 24px 16px}',
+      'grid-template-columns:repeat(var(--slmr-columns),minmax(0,320px));justify-content:center;gap:16px;padding:42px 36px 36px}',
     'html.slmr-many .card-grid::-webkit-scrollbar{width:8px}',
     'html.slmr-many .card-grid::-webkit-scrollbar-track{background:rgba(0,0,0,.25);border-radius:4px}',
     'html.slmr-many .card-grid::-webkit-scrollbar-thumb{background:rgba(255,200,80,.35);border-radius:4px}',
     'html.slmr-compact .card-slot{display:flex}',
     'html.slmr-compact .card{flex:1;min-height:0;padding:16px 16px 16px}',
     'html.slmr-compact .icon-frame{width:64px;height:64px;margin-bottom:10px}',
-    'html.slmr-compact .card-name{font-size:17px;margin-bottom:8px;padding-bottom:8px}',
-    'html.slmr-compact .card-desc{font-size:13px;line-height:1.5;margin-bottom:10px}',
-    'html.slmr-compact .card-cost{margin-bottom:8px}',
-    'html.slmr-compact .card-btn{padding:9px 0 10px}'
+    'html.slmr-compact .card-name{font-size:16px;letter-spacing:0;overflow-wrap:anywhere;margin-bottom:8px;padding-bottom:8px}',
+    'html.slmr-compact .card-desc{font-size:13px;line-height:1.5;overflow-wrap:anywhere;margin-bottom:10px}',
+    'html.slmr-compact .card-cost{overflow-wrap:anywhere;margin-bottom:8px}',
+    'html.slmr-compact .card-btn{font-size:14px;letter-spacing:2px;white-space:normal;overflow-wrap:anywhere;padding:9px 6px 10px}'
   ].join('\n');
 
   var notes = [];

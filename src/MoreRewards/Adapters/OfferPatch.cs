@@ -21,7 +21,8 @@ namespace MoreRewards.Adapters;
 /// </summary>
 internal static class OfferPatch
 {
-    private const string Doing = "adding rewards, the game's own rewards stay";
+    private const string DoingDay = "adding end-of-day rewards, the game's own rewards stay";
+    private const string DoingRefresh = "adding refresh rewards, the game's own rewards stay";
 
     private static readonly Type[] DayParameters = { typeof(int) };
     private static readonly Type[] RefreshParameters = { typeof(int), typeof(Il2CppInts), typeof(Il2CppInts) };
@@ -47,43 +48,42 @@ internal static class OfferPatch
     {
         try
         {
-            TopUp(__instance, day, __result, "end of day", new RewardDraw[]
-            {
-                (group, offered) => First(__instance.GetRandomIdsFromGroup(group, 1, day, ToGame(offered))),
-            });
+            RewardDraw draw = (group, offered) => First(__instance.GetRandomIdsFromGroup(group, 1, day, ToGame(offered)));
+
+            TopUp(__instance, day, __result, "end of day", (offered, groups) => OfferFill.TopUp(offered, _optionCount, groups, draw));
         }
         catch (Exception ex)
         {
-            PatchKit.Fail(Doing, ex);
+            PatchKit.Fail(DoingDay, ex);
         }
     }
 
     /// <summary>
-    /// The game's refresh keeps out rewards already bought and prefers ones not shown before (displayedIds), so the
-    /// extras do too, and fall back to ones shown before only when the unseen ones run out.
+    /// The game's refresh keeps out rewards already bought and draws only ones not shown before (displayedIds), so the
+    /// extras do too, and fall back to ones shown before only when the unseen ones run out and at least one new reward
+    /// turned up (<see cref="OfferFill.TopUpRefresh"/>).
     /// </summary>
     private static void AddToRefresh(SurvivalPlanningComponent __instance, int day, Il2CppInts displayedIds, Il2CppInts buyedIds, Il2CppInts __result)
     {
         try
         {
-            TopUp(__instance, day, __result, "refresh", new RewardDraw[]
-            {
-                (group, offered) => First(__instance.GetRandomIdsFromGroup(group, 1, day, displayedIds, buyedIds, ToGame(offered))),
-                (group, offered) => First(__instance.GetRandomIdsFromGroup(group, 1, day, null, buyedIds, ToGame(offered))),
-            });
+            RewardDraw unseen = (group, offered) => First(__instance.GetRandomIdsFromGroup(group, 1, day, displayedIds, buyedIds, ToGame(offered)));
+            RewardDraw seenBefore = (group, offered) => First(__instance.GetRandomIdsFromGroup(group, 1, day, null, buyedIds, ToGame(offered)));
+
+            TopUp(__instance, day, __result, "refresh", (offered, groups) => OfferFill.TopUpRefresh(offered, _optionCount, groups, unseen, seenBefore));
         }
         catch (Exception ex)
         {
-            PatchKit.Fail(Doing, ex);
+            PatchKit.Fail(DoingRefresh, ex);
         }
     }
 
-    private static void TopUp(SurvivalPlanningComponent planning, int day, Il2CppInts offered, string when, IReadOnlyList<RewardDraw> passes)
+    private static void TopUp(SurvivalPlanningComponent planning, int day, Il2CppInts offered, string when, Func<IReadOnlyList<int>, IReadOnlyList<RewardGroup>, IReadOnlyList<int>> fill)
     {
         if (planning == null || offered == null || offered.Count >= _optionCount || DayGroups(day) is not { } groups) return;
 
         var gameCount = offered.Count;
-        var added = OfferFill.TopUp(FromGame(offered), _optionCount, groups, passes);
+        var added = fill(FromGame(offered), groups);
 
         foreach (var reward in added) offered.Add(reward);
 

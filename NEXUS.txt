@@ -18,6 +18,7 @@ No new keys or buttons. More Rewards adds no data to your save and does not edit
 [list]
 [*]Some days give a fixed set of rewards instead of drawing them. Those days are left as the game has them.[/*]
 [*]If a day's reward groups run out, you get fewer rewards than you asked for.[/*]
+[*]A refresh that finds no new rewards at all stays empty and costs nothing, as in the game. It is not filled up with the rewards you already saw.[/*]
 [*]The new refresh cost applies a moment after the game starts, once the game has loaded its own cost.[/*]
 [*]The bigger layouts have not been checked on every screen size. If cards are cut off or overlap, please tell me your screen resolution and include [font=Courier New]BepInEx&#92;more-rewards.log[/font].[/*]
 [/list]
