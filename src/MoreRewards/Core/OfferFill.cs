@@ -15,24 +15,39 @@ public delegate int? RewardDraw(int groupId, IReadOnlyList<int> offeredSoFar);
 /// <summary>
 /// Tops the game's end-of-day rewards up to the number the player asked for. The extra rewards come from the day's
 /// own groups in the day's own mix: a group that gives two of the game's three gives two of every three extras. A
-/// group with nothing left drops out and the others carry on. Each draw pass is tried in turn while rewards are
-/// missing; a refresh first draws rewards the player has not been shown yet, then any.
+/// group with nothing left drops out and the others carry on.
 /// </summary>
 public static class OfferFill
 {
     /// <returns>The rewards to add after <paramref name="offered"/>, in order; fewer when the groups run dry.</returns>
-    public static IReadOnlyList<int> TopUp(IReadOnlyList<int> offered, int target, IReadOnlyList<RewardGroup> groups, IReadOnlyList<RewardDraw> passes)
+    public static IReadOnlyList<int> TopUp(IReadOnlyList<int> offered, int target, IReadOnlyList<RewardGroup> groups, RewardDraw draw)
     {
-        var rotation = Rotation(groups);
         var shown = offered.ToList();
         var added = new List<int>();
 
-        foreach (var draw in passes)
-        {
-            if (shown.Count >= target) break;
+        Fill(shown, added, target, Rotation(groups), draw);
 
-            Fill(shown, added, target, rotation, draw);
-        }
+        return added;
+    }
+
+    /// <summary>
+    /// A refresh first draws rewards the player has not been shown yet, then fills the rest with ones shown before. The
+    /// game charges for a refresh only when it draws something (SurvivalResultsManager.OnRefreshSurvivalPlans, rva
+    /// 0x2699b60), and its own draw is all new rewards. So when neither the game nor the first pass found a new one,
+    /// the refresh is left empty and free, as in the game, instead of charging again for the rewards on screen.
+    /// </summary>
+    /// <param name="offered">The game's refresh, every one of them new.</param>
+    public static IReadOnlyList<int> TopUpRefresh(IReadOnlyList<int> offered, int target, IReadOnlyList<RewardGroup> groups, RewardDraw unseen, RewardDraw seenBefore)
+    {
+        var shown = offered.ToList();
+        var added = new List<int>();
+        var rotation = Rotation(groups);
+
+        Fill(shown, added, target, rotation, unseen);
+
+        if (shown.Count == 0) return added;
+
+        Fill(shown, added, target, rotation, seenBefore);
 
         return added;
     }

@@ -21,6 +21,7 @@ More Rewards adds no data to your save and does not edit game files. You can rem
 
 - Some days give a fixed set of rewards instead of drawing them. Those days are left as the game has them.
 - If a day's reward groups run out, you get fewer rewards than you asked for. The log says how many short it was.
+- A refresh that finds no new rewards at all stays empty and costs nothing, as in the game. It is not filled up with the rewards you already saw.
 - The new refresh cost applies a moment after the game starts, once the game has loaded its own cost.
 - The bigger layouts are the least tested part, and not tested on every screen size. If cards are cut off or overlap, please tell me (see [Feedback](#feedback-and-bug-reports)) and include your screen resolution and `BepInEx\more-rewards.log`.
 - If something odd happens with the end-of-day rewards, try it with `Enabled` set to `false` to see whether the mod caused it, and please tell me either way.
@@ -51,7 +52,7 @@ Built against BepInEx `6.0.0-be.788`.
 
 Check `BepInEx\LogOutput.log` for a line starting `===== More Rewards 0.1.0 started`. It says whether the mod is on, how many rewards it offers, and the refresh cost. The next lines should say the hooks went in, for example `hooked the end-of-day rewards: up to 10 to choose from`.
 
-Each time a day ends or you refresh, the log gets a line saying how many rewards the game offered and how many the mod added. Shortly after the game starts, a line says what a refresh costs now.
+Each time a day ends or you refresh, the log gets a line saying how many rewards the game offered and how many the mod added. Shortly after the game starts, a line says what a refresh costs now. The reward lines are only written when `OptionCount` is above 3, and the cost line only when the mod changes the cost. With settings that match the game's own, the log says so once at the start and stays quiet after that.
 
 The same lines are in `BepInEx\more-rewards.log`, which survives restarts.
 

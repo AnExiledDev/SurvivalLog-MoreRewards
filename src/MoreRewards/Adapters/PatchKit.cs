@@ -31,8 +31,9 @@ internal static class PatchKit
     }
 
     /// <summary>
-    /// Runs from hooks the game calls again and again, so each kind of failure is written once; one that repeats
-    /// cannot flood the log or hide a different one later.
+    /// Runs from hooks the game calls again and again, so each <paramref name="doing"/> is written once: a failure that
+    /// repeats cannot flood the log. Give every hook its own <paramref name="doing"/>, or the first hook to fail hides
+    /// the others' failures.
     /// </summary>
     public static void Fail(string doing, Exception ex)
     {
