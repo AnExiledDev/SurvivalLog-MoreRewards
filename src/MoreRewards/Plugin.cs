@@ -12,7 +12,7 @@ namespace MoreRewards;
 public sealed class Plugin : BasePlugin
 {
     private const string Guid = "com.dev.survivallog.morerewards";
-    private const string Version = "0.2.0";
+    private const string Version = "0.3.0";
 
     public override void Load()
     {
@@ -27,28 +27,30 @@ public sealed class Plugin : BasePlugin
             "How many survival points a refresh costs. -1 is automatic: the game's cost with 3 rewards, going up by 1 at 4, 6, 8 rewards and so on (4 or 5 rewards cost 3, 6 or 7 cost 4, 10 cost 6); 0 makes every refresh free, and any number from 1 to 99 is the cost of every refresh.\n" +
             "每次刷新花费的生存点。-1 为自动：3 个生存规划时与游戏原价相同，数量到 4、6、8 个等时各加 1 点（4 或 5 个花 3 点，6 或 7 个花 4 点，10 个花 6 点）；0 表示刷新免费；1 到 99 则是每次刷新的固定花费。",
             new AcceptableValueRange<int>(RewardSettings.AutomaticRefreshCost, RewardSettings.MostRefreshCost))).Value;
+        var interestRate = Config.Bind("Interest", "InterestRate", InterestRate.DefaultRate, new ConfigDescription(
+            "The interest rate, in percent, on the survival points you hold when a day ends. 0 keeps the game's rate of 5%, and any number from 1 to 100 sets a new rate; the interest still stops at MaxInterest, so at 10% with a MaxInterest of 20, holding more than 200 points earns no more. The Savings Plan talent does not change this rate: it adds 5% of the points you earned that day, up to 10, on top.\n" +
+            "每天结算时持有生存点的回息比例（百分比）。设为 0 保持游戏原本的 5%，设为 1 到 100 则以该数作为新的比例；回息仍受 MaxInterest 上限限制，比例 10%、上限 20 时，持有超过 200 点也不会再多。天赋「储蓄计划」不改变这个比例，而是另外加上当天所得生存点的 5%，最多 10 点。",
+            new AcceptableValueRange<int>(0, InterestRate.MostRate))).Value;
         var maxInterest = Config.Bind("Interest", "MaxInterest", InterestCap.DefaultCap, new ConfigDescription(
-            "The most interest your survival points can earn when a day ends. The game's base rate is 5% of the points you hold, and some talents and plans raise it; while you hold any points it pays at least 1, and at most 10. 0 keeps the game's limit of 10, and any number from 1 to 100 sets a new limit.\n" +
-            "每天结算时生存点回息的上限。游戏的基础回息为持有生存点的 5%，部分天赋和生存规划可以提高；只要持有生存点，回息最少 1 点，最多 10 点。设为 0 保持游戏原本的上限 10，设为 1 到 100 则以该数作为新的上限。",
+            "The most interest your survival points can earn when a day ends. The interest is the points you hold times InterestRate, rounded down, and at least 1 while you hold any points; 0 keeps the game's limit of 10, and any number from 1 to 100 sets a new limit.\n" +
+            "每天结算时生存点回息的上限。回息为持有生存点乘以 InterestRate 的比例，向下取整，只要持有生存点最少 1 点；设为 0 保持游戏原本的上限 10，设为 1 到 100 则以该数作为新的上限。",
             new AcceptableValueRange<int>(0, InterestCap.MostCap))).Value;
         var settings = RewardSettings.From(optionCount, refreshCost);
+        var rate = InterestRate.From(interestRate);
         var interestCap = InterestCap.From(maxInterest);
         var log = new RewardsLog(Log, Path.Combine(Paths.BepInExRootPath, "more-rewards.log"));
 
         PatchKit.Log = log.Write;
         log.TrimIfLarge();
-        log.Write($"===== More Rewards {Version} started: {(isEnabled ? "on" : "off")}, {settings.OptionCount} rewards, refresh cost {RefreshCostText(settings)}, interest {InterestText(interestCap)}");
+        log.Write($"===== More Rewards {Version} started: {(isEnabled ? "on" : "off")}, {settings.OptionCount} rewards, refresh cost {RefreshCostText(settings)}, interest rate {RateText(rate)}, interest {InterestText(interestCap)}");
 
         if (!isEnabled) return;
 
         if (interestCap is { } cap) InterestCode.Apply(cap, log.Write);
 
-        if (!settings.AddsOptions && !settings.ChangesCost)
-        {
-            log.Write("the rewards and the refresh cost are the game's own, so they are left as they are");
+        if (rate is { } keptRate) RewardsTicker.Checks.Add(new RateField(new RateKeeper(keptRate), log.Write).Tick);
 
-            return;
-        }
+        if (!settings.AddsOptions && !settings.ChangesCost) log.Write("the rewards and the refresh cost are the game's own, so they are left as they are");
 
         if (settings.AddsOptions)
         {
@@ -57,6 +59,8 @@ public sealed class Plugin : BasePlugin
         }
 
         if (settings.ChangesCost) RewardsTicker.Checks.Add(new CostField(new CostKeeper(settings), log.Write).Tick);
+
+        if (RewardsTicker.Checks.Count == 0) return;
 
         RewardsTicker.Log = log.Write;
         AddComponent<RewardsTicker>();
@@ -68,6 +72,8 @@ public sealed class Plugin : BasePlugin
         0 => "free",
         var cost => cost.ToString(),
     };
+
+    private static string RateText(int? rate) => rate is { } kept ? $"{kept}%" : $"off (the game's {InterestRate.GameRate}%)";
 
     private static string InterestText(int? interestCap) =>
         interestCap is { } cap ? $"up to {cap}" : $"off (the game's cap of {InterestCap.GameCap})";

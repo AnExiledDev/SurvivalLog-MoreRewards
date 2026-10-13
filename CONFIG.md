@@ -2,7 +2,7 @@
 
 Settings live in `BepInEx\config\com.dev.survivallog.morerewards.cfg`, created the first time the game starts with the mod. Edit the file while the game is closed; changes apply at the next game start. Delete the file to get the defaults back.
 
-With the defaults you get the game's 3 rewards and its own refresh cost, and the most interest your survival points earn in a day goes from 10 to 20. Raise `OptionCount` to get more rewards to choose from. Set `MaxInterest` to `0` to keep the game's interest as it is.
+With the defaults you get the game's 3 rewards and its own refresh cost, the interest rate on your survival points goes from 5% to 10%, and the most interest they earn in a day goes from 10 to 20. Raise `OptionCount` to get more rewards to choose from. Set `InterestRate` and `MaxInterest` to `0` to keep the game's interest as it is.
 
 ## General
 
@@ -45,22 +45,27 @@ A refresh that finds no new rewards at all costs nothing, whatever `RefreshCost`
 
 | Setting | Default | What it does |
 | --- | --- | --- |
+| `InterestRate` | `10` | The interest rate, in percent, on the survival points you hold when a day ends. `0` keeps the game's rate of 5%, and any number from 1 to 100 sets a new rate. The interest still stops at `MaxInterest`. |
 | `MaxInterest` | `20` | The most interest your survival points can earn when a day ends. `0` keeps the game's limit of 10, and any number from 1 to 100 sets a new limit. |
 
 ### How interest works
 
-When a day ends, the game pays interest on the survival points you hold: 5% of them at its base rate, rounded down, at most 10, and at least 1 while you hold any points. The interest shows on the end-of-day page as its own card. Some talents and plans raise the 5%; the mod leaves that as it is and changes only the most you can get.
+When a day ends, the game pays interest on the survival points you hold: the points times the interest rate, rounded down, at least 1 while you hold any points, and at most the limit. The game's rate is 5% and its limit is 10; `InterestRate` and `MaxInterest` change them. The interest shows on the end-of-day page as its own card.
 
-With the base 5%:
+| Points held | Game (5%, limit 10) | `InterestRate` 10, `MaxInterest` 0 | Defaults (10%, limit 20) |
+| --- | --- | --- | --- |
+| 50 | 2 | 5 | 5 |
+| 100 | 5 | 10 | 10 |
+| 150 | 7 | 10 | 15 |
+| 200 or more | 10 | 10 | 20 |
 
-| Points held | Game (limit 10) | `MaxInterest` 20 |
-| --- | --- | --- |
-| 100 | 5 | 5 |
-| 200 | 10 | 10 |
-| 300 | 10 | 15 |
-| 400 or more | 10 | 20 |
+So with the defaults, holding more than 200 points earns no more interest. Raise `MaxInterest` to let it grow further.
 
-The tip on the end-of-day page still says the limit is 10. The interest you are paid follows `MaxInterest`.
+The Savings Plan talent does not change the interest rate. It pays its own bonus on the same card: on a day you earned survival points, 5% of them, rounded down, at least 1 and at most 10. Its limit of 10 is the talent's own, and `MaxInterest` does not change it.
+
+The tip on the end-of-day page still says the rate is 5% and the limit is 10. The interest you are paid follows `InterestRate` and `MaxInterest`.
+
+The mod sets the rate a moment after a game is loaded, long before the day ends. Your save keeps the game's own rate, so without the mod the interest is back to 5%.
 
 ## How many rewards fit
 

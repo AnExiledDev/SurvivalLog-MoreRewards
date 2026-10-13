@@ -11,13 +11,13 @@ namespace MoreRewards.Core;
 /// points are held. The 10 is in
 /// no table: it is two numbers in the game's code, <c>cmp eax,0Ah / jl +5 / mov eax,0Ah</c> at rva 0x269a4d4, which keep
 /// the smaller of the interest and 10. The mod writes its own cap over both numbers and leaves the rest of the rule,
-/// the rate and the minimum of 1, to the game.
+/// the rate (<see cref="InterestRate"/>) and the minimum of 1, as it is.
 /// </summary>
 public static class InterestCap
 {
     public const int GameCap = 10;
 
-    /// <summary>Double the game's: at the base rate of 5% the cap is reached at 400 points held instead of 200.</summary>
+    /// <summary>Double the game's: at the default rate of 10% the cap is reached at 200 points held instead of 100.</summary>
     public const int DefaultCap = 20;
 
     /// <summary>The compare holds a signed byte, so the cap must stay below 128.</summary>
