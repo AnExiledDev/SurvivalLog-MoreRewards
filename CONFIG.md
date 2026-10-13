@@ -50,7 +50,7 @@ A refresh that finds no new rewards at all costs nothing, whatever `RefreshCost`
 
 ### How interest works
 
-When a day ends, the game pays interest on the survival points you hold: the points times the interest rate, rounded down, at least 1 while you hold any points, and at most the limit. The game's rate is 5% and its limit is 10; `InterestRate` and `MaxInterest` change them. The interest shows on the end-of-day page as its own card.
+When a day ends, the game pays interest on the survival points you hold: the points times the interest rate, rounded down, at least 1 while you hold any points, and at most the limit. The game's rate is 5% and its limit is 10; `InterestRate` and `MaxInterest` change them. `InterestRate` is the whole rate for every character: it replaces the game's 5% and is not added to it. The interest shows on the end-of-day page as its own card.
 
 | Points held | Game (5%, limit 10) | `InterestRate` 10, `MaxInterest` 0 | Defaults (10%, limit 20) |
 | --- | --- | --- | --- |
@@ -61,7 +61,7 @@ When a day ends, the game pays interest on the survival points you hold: the poi
 
 So with the defaults, holding more than 200 points earns no more interest. Raise `MaxInterest` to let it grow further.
 
-The Savings Plan talent does not change the interest rate. It pays its own bonus on the same card: on a day you earned survival points, 5% of them, rounded down, at least 1 and at most 10. Its limit of 10 is the talent's own, and `MaxInterest` does not change it.
+The Savings Plan reward does not change the interest rate. It pays its own bonus on the same card: on a day you earned survival points, 5% of them, rounded down, at least 1 and at most 10. Its limit of 10 is the reward's own, and `MaxInterest` does not change it.
 
 The tip on the end-of-day page still says the rate is 5% and the limit is 10. The interest you are paid follows `InterestRate` and `MaxInterest`.
 

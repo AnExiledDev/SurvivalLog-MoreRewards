@@ -28,8 +28,8 @@ public sealed class Plugin : BasePlugin
             "每次刷新花费的生存点。-1 为自动：3 个生存规划时与游戏原价相同，数量到 4、6、8 个等时各加 1 点（4 或 5 个花 3 点，6 或 7 个花 4 点，10 个花 6 点）；0 表示刷新免费；1 到 99 则是每次刷新的固定花费。",
             new AcceptableValueRange<int>(RewardSettings.AutomaticRefreshCost, RewardSettings.MostRefreshCost))).Value;
         var interestRate = Config.Bind("Interest", "InterestRate", InterestRate.DefaultRate, new ConfigDescription(
-            "The interest rate, in percent, on the survival points you hold when a day ends. 0 keeps the game's rate of 5%, and any number from 1 to 100 sets a new rate; the interest still stops at MaxInterest, so at 10% with a MaxInterest of 20, holding more than 200 points earns no more. The Savings Plan talent does not change this rate: it adds 5% of the points you earned that day, up to 10, on top.\n" +
-            "每天结算时持有生存点的回息比例（百分比）。设为 0 保持游戏原本的 5%，设为 1 到 100 则以该数作为新的比例；回息仍受 MaxInterest 上限限制，比例 10%、上限 20 时，持有超过 200 点也不会再多。天赋「储蓄计划」不改变这个比例，而是另外加上当天所得生存点的 5%，最多 10 点。",
+            "The interest rate, in percent, on the survival points you hold when a day ends. 0 keeps the game's rate of 5%, and any number from 1 to 100 sets a new rate; the interest still stops at MaxInterest.\n" +
+            "每天结算时持有生存点的回息比例（百分比）。设为 0 保持游戏原本的 5%，设为 1 到 100 则以该数作为新的比例；回息仍受 MaxInterest 上限限制。",
             new AcceptableValueRange<int>(0, InterestRate.MostRate))).Value;
         var maxInterest = Config.Bind("Interest", "MaxInterest", InterestCap.DefaultCap, new ConfigDescription(
             "The most interest your survival points can earn when a day ends. The interest is the points you hold times InterestRate, rounded down, and at least 1 while you hold any points; 0 keeps the game's limit of 10, and any number from 1 to 100 sets a new limit.\n" +

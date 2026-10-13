@@ -40,6 +40,8 @@ internal sealed class RateField
 
         var scaling = GameKey.Attr_ScalingRatio;
 
+        if (scaling <= 0) return;
+
         if (_keeper.Next(attr.BaseValue, attr.StrengtheningValue, scaling) is not { } write) return;
 
         attributes.SetStrengtheningValue_Float(AttrName.PointsInterest, InterestRate.GameValue(write.Strengthening, scaling));
