@@ -9,13 +9,13 @@ namespace MoreRewards.Adapters;
 /// Writes the mod's interest cap into the game's code (<see cref="InterestCap"/>), once, while the plugin loads: no day
 /// has ended yet, so the code is not running. There is no hook, so the 14-byte rule for hook targets does not apply;
 /// only two numbers inside the method change, and the bytes around them are checked first, so a game build with
-/// different code keeps its own cap. The code is in GameAssembly.dll's executable il2cpp section, so it is made
+/// different code keeps its own cap. Before those bytes are read, the module's size from its PE header must reach past
+/// them, so a smaller module is never read beyond its end. The code is in GameAssembly.dll's executable il2cpp section, so it is made
 /// writable for the write and given its old protection back.
 /// </summary>
 internal static class InterestCode
 {
     private const string GameModule = "GameAssembly.dll";
-    private const int GameCodeRva = 0x269a4c1;
     private const uint ExecuteReadWrite = 0x40;
 
     public static void Apply(int cap, Action<string> log)
@@ -33,7 +33,14 @@ internal static class InterestCode
                 return;
             }
 
-            var address = module + GameCodeRva;
+            if (!HoldsGameCode(module))
+            {
+                log($"the interest code would lie outside {GameModule} (a game update?), so it is not read; {keepsGameCap}");
+
+                return;
+            }
+
+            var address = module + InterestCap.GameCodeRva;
             var code = new byte[InterestCap.GameCode.Count];
 
             Marshal.Copy(address, code, 0, code.Length);
@@ -45,7 +52,7 @@ internal static class InterestCode
                 return;
             }
 
-            Write(address, rewritten);
+            Write(address, rewritten, log);
             log($"interest is now up to {cap} survival points a day (the game's own cap is {InterestCap.GameCap})");
         }
         catch (Exception ex)
@@ -54,7 +61,17 @@ internal static class InterestCode
         }
     }
 
-    private static void Write(IntPtr address, byte[] code)
+    /// <summary>Whether the module's size, from its PE header, reaches past the interest code.</summary>
+    private static bool HoldsGameCode(IntPtr module)
+    {
+        var firstPage = new byte[PeHeader.PageSize];
+
+        Marshal.Copy(module, firstPage, 0, firstPage.Length);
+
+        return PeHeader.SizeOfImage(firstPage) is { } size && InterestCap.FitsIn(size);
+    }
+
+    private static void Write(IntPtr address, byte[] code, Action<string> log)
     {
         var size = new UIntPtr((uint)code.Length);
 
@@ -67,8 +84,16 @@ internal static class InterestCode
         }
         finally
         {
-            VirtualProtect(address, size, oldProtection, out _);
+            RestoreProtection(address, size, oldProtection, log);
         }
+    }
+
+    /// <summary>A failure here only leaves the code writable, so it is reported and nothing else is undone.</summary>
+    private static void RestoreProtection(IntPtr address, UIntPtr size, uint oldProtection, Action<string> log)
+    {
+        if (VirtualProtect(address, size, oldProtection, out _)) return;
+
+        log($"could not give the interest code its old memory protection back (error {Marshal.GetLastWin32Error()})");
     }
 
     [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]

@@ -70,6 +70,16 @@ public class InterestCapTests
         Assert.Null(InterestCap.Rewrite(new byte[3], 20));
     }
 
+    [Fact]
+    public void A_module_that_ends_before_the_interest_code_is_not_read()
+    {
+        var end = InterestCap.GameCodeRva + InterestCap.GameCode.Count;
+
+        Assert.True(InterestCap.FitsIn(end));
+        Assert.False(InterestCap.FitsIn(end - 1));
+        Assert.False(InterestCap.FitsIn(PeHeader.PageSize));
+    }
+
     [Theory]
     [InlineData(0, null)]
     [InlineData(-3, null)]

@@ -19,7 +19,7 @@ With the defaults you get the game's 3 rewards and its own refresh cost, and the
 
 ### The automatic refresh cost
 
-With `RefreshCost` at `-1`, a refresh costs the game's own cost with 3 rewards, plus 1 for every 2 rewards more. In numbers: the game's cost, minus 1, plus half of `OptionCount` rounded down.
+With `RefreshCost` at `-1`, a refresh costs the game's own cost with 3 rewards, going up by 1 at 4, 6, 8 rewards and so on. In numbers: the game's cost, minus 1, plus half of `OptionCount` rounded down.
 
 With the game's usual cost of 2 survival points:
 
@@ -49,7 +49,7 @@ A refresh that finds no new rewards at all costs nothing, whatever `RefreshCost`
 
 ### How interest works
 
-When a day ends, the game pays interest on the survival points you hold: 5% of them, rounded down, at least 1 and at most 10. The interest shows on the end-of-day page as its own card. Some talents and plans raise the 5%; the mod leaves that as it is and changes only the most you can get.
+When a day ends, the game pays interest on the survival points you hold: 5% of them at its base rate, rounded down, at most 10, and at least 1 while you hold any points. The interest shows on the end-of-day page as its own card. Some talents and plans raise the 5%; the mod leaves that as it is and changes only the most you can get.
 
 With the base 5%:
 

@@ -7,7 +7,8 @@ namespace MoreRewards.Core;
 
 /// <summary>
 /// The most interest the game pays on survival points when a day ends. SurvivalResultsManager.SettleDailySurvivalPoints
-/// (rva 0x2699ec0) pays the points held times the interest rate, rounded down, at least 1 and at most 10. The 10 is in
+/// (rva 0x2699ec0) pays the points held times the interest rate, rounded down, at most 10, and at least 1 while any
+/// points are held. The 10 is in
 /// no table: it is two numbers in the game's code, <c>cmp eax,0Ah / jl +5 / mov eax,0Ah</c> at rva 0x269a4d4, which keep
 /// the smaller of the interest and 10. The mod writes its own cap over both numbers and leaves the rest of the rule,
 /// the rate and the minimum of 1, to the game.
@@ -22,8 +23,11 @@ public static class InterestCap
     /// <summary>The compare holds a signed byte, so the cap must stay below 128.</summary>
     public const int MostCap = 100;
 
+    /// <summary>Where <see cref="GameCode"/> starts in GameAssembly.dll.</summary>
+    public const int GameCodeRva = 0x269a4c1;
+
     /// <summary>
-    /// The game's code from rva 0x269a4c1: the rounded-down interest into eax, the minimum of 1 for interest that rounds
+    /// The game's code from <see cref="GameCodeRva"/>: the rounded-down interest into eax, the minimum of 1 for interest that rounds
     /// to 0, then the cap. Checking all of it, not just the cap, tells this cap apart from the game's other caps of 10.
     /// </summary>
     public static readonly IReadOnlyList<byte> GameCode = new byte[]
@@ -45,6 +49,9 @@ public static class InterestCap
 
     private const int CompareCapAt = CapAt + 2;
     private const int MoveCapAt = CapAt + 6;
+
+    /// <returns>Whether a module of <paramref name="sizeOfImage"/> bytes holds all of <see cref="GameCode"/>, so reading it is safe.</returns>
+    public static bool FitsIn(int sizeOfImage) => GameCodeRva <= sizeOfImage - GameCode.Count;
 
     /// <returns>The cap to write, or null to keep the game's: 0 (or less) and the game's own 10 change nothing.</returns>
     public static int? From(int maxInterest) => maxInterest <= 0 || maxInterest == GameCap ? null : Math.Min(maxInterest, MostCap);

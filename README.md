@@ -8,8 +8,8 @@ At the end of each day, Survival Log offers 3 rewards you can buy with survival 
 
 - **More rewards to choose from**: set how many rewards the end of the day offers, from the game's 3 up to 20. A refresh draws that many too.
 - **The game's own rewards**: the extra rewards come from the same groups the game picks that day's rewards from, never repeat a reward already on offer, and are bought like any other.
-- **A fair refresh cost**: by default the cost goes up by 1 survival point for every 2 rewards more (3 rewards cost 2, 4 cost 3, 6 cost 4, 10 cost 6). Or make every refresh free, or set a fixed cost of your own.
-- **More interest**: when a day ends, the game pays 5% interest on the survival points you hold, at most 10. The mod raises that limit to 20, so saving up to 400 points pays off. Set your own limit up to 100, or keep the game's.
+- **A fair refresh cost**: by default the cost goes up by 1 survival point at 4, 6, 8 rewards and so on (3 rewards cost 2, 4 or 5 cost 3, 6 or 7 cost 4, 10 cost 6). Or make every refresh free, or set a fixed cost of your own.
+- **More interest**: when a day ends, the game pays interest on the survival points you hold, 5% at its base rate, at most 10. The mod raises that limit to 20, so saving up to 400 points pays off. Set your own limit up to 100, or keep the game's.
 - **Room for every card**: up to 5 rewards sit in one row. More are spread over even rows with smaller cards, and the area scrolls if they still do not fit.
 - **Rewards stay as they are until you ask**: with the default settings you get the game's 3 rewards and its own refresh cost.
 - **A log file**: what the mod did is written to `BepInEx\more-rewards.log`.
