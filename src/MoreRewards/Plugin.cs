@@ -70,7 +70,7 @@ public sealed class Plugin : BasePlugin
     {
         null => "automatic",
         0 => "free",
-        var cost => cost.ToString(),
+        int cost => cost.ToString(),
     };
 
     private static string RateText(int? rate) => rate is { } kept ? $"{kept}%" : $"off (the game's {InterestRate.GameRate}%)";
