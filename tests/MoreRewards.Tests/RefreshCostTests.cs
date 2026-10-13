@@ -56,6 +56,24 @@ public class RefreshCostTests
     [Fact]
     public void Without_a_fixed_cost_the_cost_follows_the_rewards()
     {
-        Assert.Equal(4, RefreshCost.Target(GameCost, RewardSettings.From(6, 0)));
+        Assert.Equal(4, RefreshCost.Target(GameCost, RewardSettings.From(6, -1)));
+    }
+
+    [Theory]
+    [InlineData(3, 2)]
+    [InlineData(4, 3)]
+    [InlineData(10, 6)]
+    public void Minus_one_is_the_automatic_cost(int options, int cost)
+    {
+        Assert.Equal(cost, RefreshCost.Target(GameCost, RewardSettings.From(options, RewardSettings.AutomaticRefreshCost)));
+    }
+
+    [Theory]
+    [InlineData(3)]
+    [InlineData(10)]
+    [InlineData(20)]
+    public void Zero_makes_every_refresh_free_however_many_rewards(int options)
+    {
+        Assert.Equal(0, RefreshCost.Target(GameCost, RewardSettings.From(options, 0)));
     }
 }

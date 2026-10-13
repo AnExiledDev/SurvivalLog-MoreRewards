@@ -20,7 +20,10 @@ public sealed class CostKeeper
         _settings = settings;
     }
 
-    /// <param name="current">The field's value; 0 or less is a cost the game has not loaded yet.</param>
+    /// <param name="current">
+    /// The field's value; 0 or less is a cost the game has not loaded yet, or a free refresh already written, and both
+    /// leave nothing to write.
+    /// </param>
     /// <returns>The cost to write, or null when the field should stay as it is.</returns>
     public CostWrite? Next(int current)
     {

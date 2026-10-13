@@ -1,16 +1,17 @@
 Name: More Rewards
-Summary: Choose from more rewards at the end of the day, up to 20 instead of 3, with a refresh cost that scales to match or one you set yourself.
+Summary: Choose from more rewards at the end of the day, up to 20 instead of 3, with a refresh cost that scales to match, and earn more daily interest on your survival points.
 
 Description (BBCode):
-At the end of each day, Survival Log offers 3 rewards you can buy with survival points, and a refresh for 2 points draws 3 new ones. More Rewards lets you raise that to any number up to 20, from the same reward pool the game draws from. The refresh cost goes up with the number of rewards on its own, or you can set it to any cost you like.
+At the end of each day, Survival Log offers 3 rewards you can buy with survival points, and a refresh for 2 points draws 3 new ones. More Rewards lets you raise that to any number up to 20, from the same reward pool the game draws from. The refresh cost goes up with the number of rewards on its own, or you can make it free or set any cost you like. The interest your survival points earn each day can go up to 20 instead of 10.
 
 [size=5]Main features[/size]
 [list]
 [*][b]More rewards to choose from[/b]: set how many rewards the end of the day offers, from the game's 3 up to 20. A refresh draws that many too.[/*]
 [*][b]The game's own rewards[/b]: the extra rewards come from the same groups the game picks that day's rewards from, never repeat a reward already on offer, and are bought like any other.[/*]
-[*][b]A fair refresh cost[/b]: by default the cost goes up by 1 survival point for every 2 rewards more (3 rewards cost 2, 4 cost 3, 6 cost 4, 10 cost 6). Or set a fixed cost of your own.[/*]
+[*][b]A fair refresh cost[/b]: by default the cost goes up by 1 survival point for every 2 rewards more (3 rewards cost 2, 4 cost 3, 6 cost 4, 10 cost 6). Or make every refresh free, or set a fixed cost of your own.[/*]
+[*][b]More interest[/b]: when a day ends, the game pays 5% interest on the survival points you hold, at most 10. The mod raises that limit to 20, so saving up to 400 points pays off. Set your own limit up to 100, or keep the game's.[/*]
 [*][b]Room for every card[/b]: up to 5 rewards sit in one row. More are spread over even rows with smaller cards, and the area scrolls if they still do not fit.[/*]
-[*][b]Changes nothing until you ask[/b]: with the default settings the game plays exactly as it does without the mod.[/*]
+[*][b]Rewards stay as they are until you ask[/b]: with the default settings you get the game's 3 rewards and its own refresh cost.[/*]
 [/list]
 No new keys or buttons. More Rewards adds no data to your save and does not edit game files. You can remove it at any time.
 
@@ -20,9 +21,10 @@ No new keys or buttons. More Rewards adds no data to your save and does not edit
 [*]If a day's reward groups run out, you get fewer rewards than you asked for.[/*]
 [*]A refresh that finds no new rewards at all stays empty and costs nothing, as in the game. It is not filled up with the rewards you already saw.[/*]
 [*]The new refresh cost applies a moment after the game starts, once the game has loaded its own cost.[/*]
+[*]The tip on the end-of-day page still says interest is at most 10. The interest you are paid follows MaxInterest.[/*]
 [*]The bigger layouts have not been checked on every screen size. If cards are cut off or overlap, please tell me your screen resolution and include [font=Courier New]BepInEx&#92;more-rewards.log[/font].[/*]
 [/list]
-If something odd happens with the end-of-day rewards, try it with Enabled set to false to see whether the mod caused it, and please tell me either way (see Feedback below).
+If something odd happens with the end-of-day rewards or the interest, try it with Enabled set to false to see whether the mod caused it, and please tell me either way (see Feedback below).
 
 [size=5]Requirements[/size]
 [list]
@@ -35,7 +37,7 @@ If something odd happens with the end-of-day rewards, try it with Enabled set to
 [*]Install [url=https://www.nexusmods.com/survivallog/mods/12]BepInEx[/url] [i](if no other mods were installed before, start the game once so BepInEx finishes setup, then quit)[/i].[/*]
 [*]Put [font=Courier New]MoreRewards.dll[/font] in the BepInEx&#92;plugins folder inside the game folder. Full path example:
 [code]C:&#92;Program Files (x86)&#92;Steam&#92;steamapps&#92;common&#92;Survival Log&#92;BepInEx&#92;plugins&#92;MoreRewards.dll[/code][/*]
-[*]Start the game once, quit, and set OptionCount in the settings file (see Configuration below). Until you do, nothing changes.[/*]
+[*]Start the game once, quit, and set OptionCount in the settings file (see Configuration below). Until you do, you get the game's 3 rewards; the higher interest limit applies right away.[/*]
 [/list]
 
 [size=5]Uninstall[/size]
@@ -45,7 +47,8 @@ Delete [font=Courier New]MoreRewards.dll[/font] from the [font=Courier New]BepIn
 Edit [font=Courier New]BepInEx&#92;config&#92;com.dev.survivallog.morerewards.cfg[/font] while the game is closed (see [url=https://github.com/AnExiledDev/SurvivalLog-MoreRewards/blob/main/CONFIG.md]CONFIG.md[/url] for every setting and the full cost table). Changes apply at the next game start.
 [list]
 [*][b]OptionCount[/b] (default 3): how many rewards to choose from, 3 to 20.[/*]
-[*][b]RefreshCost[/b] (default 0): 0 scales the cost with OptionCount; any other number is the cost of every refresh.[/*]
+[*][b]RefreshCost[/b] (default -1): -1 scales the cost with OptionCount, 0 makes every refresh free, and 1 to 99 is the cost of every refresh.[/*]
+[*][b]MaxInterest[/b] (default 20): the most interest your survival points earn in a day. 0 keeps the game's limit of 10; 1 to 100 sets a new limit.[/*]
 [*][b]Enabled[/b] (default true): false turns the whole mod off.[/*]
 [/list]
 

@@ -14,7 +14,9 @@ namespace MoreRewards.Adapters;
 /// else in the game writes it. So
 /// the cost is written into that field, and every reader sees it: the charge in OnRefreshSurvivalPlans (rva
 /// 0x2699b60) and the cost the page shows, which CountUpTimer.TriggerDaySettlement (rva 0x254b250) sends when a day
-/// ends. The field is checked every second and put back if something changed it.
+/// ends. The field is checked every second and put back if something changed it. A field of 0 sends the getter back
+/// to the table, so the cost is written into the table's entry (Config_GlobalSetting.Params1, which the getter copies)
+/// as well: that is what keeps a free refresh at 0.
 /// </summary>
 internal sealed class CostField
 {
@@ -43,8 +45,15 @@ internal sealed class CostField
 
         if (_keeper.Next(current) is not { } write) return;
 
-        GameKey._GlobalSetting_RefreshSurvivalCost = write.Cost;
+        Write(write.Cost);
         Report(write);
+    }
+
+    private static void Write(int cost)
+    {
+        GameKey._GlobalSetting_RefreshSurvivalCost = cost;
+
+        if (TableEntry() is { } entry) entry._Params1_k__BackingField = cost;
     }
 
     /// <summary>
@@ -52,14 +61,15 @@ internal sealed class CostField
     /// ConfigManager's GlobalSetting table (Get_Config_GlobalSetting, rva 0x2caba00), which throws while the table is
     /// not loaded and logs an error for a missing key, so it is only asked once the table holds the key.
     /// </summary>
-    private static int LoadGameCost()
+    private static int LoadGameCost() => TableEntry() == null ? 0 : GameKey.GlobalSetting_RefreshSurvivalCost;
+
+    /// <summary>The refresh cost's entry in the GlobalSetting table, or null while the table does not hold it.</summary>
+    private static Config_GlobalSetting? TableEntry()
     {
         var table = GameSingleton.Existing<ConfigManager>()?._Config_GlobalSetting_Dict;
         var key = GameKey.Key_GlobalSetting_RefreshSurvivalCost;
 
-        if (table == null || key == null || !table.ContainsKey(key)) return 0;
-
-        return GameKey.GlobalSetting_RefreshSurvivalCost;
+        return table != null && key != null && table.TryGetValue(key, out var entry) ? entry : null;
     }
 
     /// <summary>The first write happens once; putting the cost back can repeat, so it is reported once.</summary>

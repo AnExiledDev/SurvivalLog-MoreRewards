@@ -9,7 +9,7 @@ public static class RefreshCost
 {
     public static int Auto(int gameCost, int optionCount) => gameCost <= 0 ? gameCost : gameCost - 1 + optionCount / 2;
 
-    /// <summary>A fixed cost the player set wins; otherwise the cost follows the number of rewards.</summary>
+    /// <summary>A fixed cost the player set wins, 0 included; otherwise the cost follows the number of rewards.</summary>
     public static int Target(int gameCost, RewardSettings settings) =>
-        settings.FixedRefreshCost > 0 ? settings.FixedRefreshCost : Auto(gameCost, settings.OptionCount);
+        settings.FixedRefreshCost ?? Auto(gameCost, settings.OptionCount);
 }
