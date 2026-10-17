@@ -25,7 +25,7 @@ Works in English and Chinese.
 [*]The new refresh cost applies a moment after the game starts, once the game has loaded its own cost.[/*]
 [*]The new interest rate applies a moment after a game is loaded, long before the day ends.[/*]
 [*]The tip on the end-of-day page still says interest is 5% and at most 10. The interest you are paid follows InterestRate and MaxInterest.[/*]
-[*]The bigger layouts have not been checked on every screen size. If cards are cut off or overlap, please tell me your screen resolution and include [font=Courier New]BepInEx&#92;more-rewards.log[/font].[/*]
+[*]The bigger layouts have not been checked on every screen size. If cards are cut off or overlap, please tell me your screen resolution and include [font=Courier New]BepInEx\more-rewards.log[/font].[/*]
 [/list]
 If something odd happens with the end-of-day rewards or the interest, try it with Enabled set to false to see whether the mod caused it, and please tell me either way (see Feedback below).
 
@@ -38,16 +38,16 @@ If something odd happens with the end-of-day rewards or the interest, try it wit
 [size=5]Installation[/size]
 [list=1]
 [*]Install [url=https://www.nexusmods.com/survivallog/mods/12]BepInEx[/url] [i](if no other mods were installed before, start the game once so BepInEx finishes setup, then quit)[/i].[/*]
-[*]Put [font=Courier New]MoreRewards.dll[/font] in the BepInEx&#92;plugins folder inside the game folder. Full path example:
-[code]C:&#92;Program Files (x86)&#92;Steam&#92;steamapps&#92;common&#92;Survival Log&#92;BepInEx&#92;plugins&#92;MoreRewards.dll[/code][/*]
+[*]Put [font=Courier New]MoreRewards.dll[/font] in the BepInEx\plugins folder inside the game folder. Full path example:
+[code]C:\Program Files (x86)\Steam\steamapps\common\Survival Log\BepInEx\plugins\MoreRewards.dll[/code][/*]
 [*]Start the game once, quit, and set OptionCount in the settings file (see Configuration below). Until you do, you get the game's 3 rewards; the higher interest rate and limit apply right away.[/*]
 [/list]
 
 [size=5]Uninstall[/size]
-Delete [font=Courier New]MoreRewards.dll[/font] from the [font=Courier New]BepInEx&#92;plugins[/font] folder.
+Delete [font=Courier New]MoreRewards.dll[/font] from the [font=Courier New]BepInEx\plugins[/font] folder.
 
 [size=5]Configuration[/size]
-Edit [font=Courier New]BepInEx&#92;config&#92;com.dev.survivallog.morerewards.cfg[/font] while the game is closed (see [url=https://github.com/AnExiledDev/SurvivalLog-MoreRewards/blob/main/CONFIG.md]CONFIG.md[/url] for every setting and the full cost table). Changes apply at the next game start.
+Edit [font=Courier New]BepInEx\config\com.dev.survivallog.morerewards.cfg[/font] while the game is closed (see [url=https://github.com/AnExiledDev/SurvivalLog-MoreRewards/blob/main/CONFIG.md]CONFIG.md[/url] for every setting and the full cost table). Changes apply at the next game start.
 [list]
 [*][b]OptionCount[/b] (default 3): how many rewards to choose from, 3 to 20.[/*]
 [*][b]RefreshCost[/b] (default -1): -1 scales the cost with OptionCount, 0 makes every refresh free, and 1 to 99 is the cost of every refresh.[/*]
@@ -57,7 +57,7 @@ Edit [font=Courier New]BepInEx&#92;config&#92;com.dev.survivallog.morerewards.cf
 [/list]
 
 [size=5]Feedback[/size]
-Found a bug or have an idea? Come say hi on the [url=https://discord.gg/trTsyxUFqg]Core Directive Discord[/url], or leave a comment here. For bugs, please include [font=Courier New]BepInEx&#92;LogOutput.log[/font] and [font=Courier New]BepInEx&#92;more-rewards.log[/font].
+Found a bug or have an idea? Come say hi on the [url=https://discord.gg/trTsyxUFqg]Core Directive Discord[/url], or leave a comment here. For bugs, please include [font=Courier New]BepInEx\LogOutput.log[/font] and [font=Courier New]BepInEx\more-rewards.log[/font].
 
 [size=5]Source and license[/size]
 Open source under MIT: [url=https://github.com/AnExiledDev/SurvivalLog-MoreRewards]github.com/AnExiledDev/SurvivalLog-MoreRewards[/url]
@@ -88,7 +88,7 @@ Open source under MIT: [url=https://github.com/AnExiledDev/SurvivalLog-MoreRewar
 [*]新的刷新花费会在游戏启动片刻后、游戏读取完它自己的花费时生效。[/*]
 [*]新的回息比例会在载入游戏片刻后生效，远早于当天结束。[/*]
 [*]每日结算页面上的提示仍然写着回息 5%、上限 10。实际发放的回息以 InterestRate 和 MaxInterest 为准。[/*]
-[*]卡片较多时的布局还没有在所有屏幕尺寸上测试过。如果卡片被截断或互相重叠，请告诉我你的屏幕分辨率，并附上 [font=Courier New]BepInEx&#92;more-rewards.log[/font]。[/*]
+[*]卡片较多时的布局还没有在所有屏幕尺寸上测试过。如果卡片被截断或互相重叠，请告诉我你的屏幕分辨率，并附上 [font=Courier New]BepInEx\more-rewards.log[/font]。[/*]
 [/list]
 如果每天结束时的规划卡或回息出现异常，可以把 Enabled 设为 false 再试一次，看看是不是本模组造成的，无论结果如何都欢迎告诉我（见下方「反馈」）。
 
@@ -101,16 +101,16 @@ Open source under MIT: [url=https://github.com/AnExiledDev/SurvivalLog-MoreRewar
 [size=5]安装[/size]
 [list=1]
 [*]安装 [url=https://www.nexusmods.com/survivallog/mods/12]BepInEx[/url] [i]（如果之前没有装过其他模组，先启动一次游戏，让 BepInEx 完成初始化，然后退出）[/i]。[/*]
-[*]把 [font=Courier New]MoreRewards.dll[/font] 放进游戏目录下的 BepInEx&#92;plugins 文件夹。完整路径示例：
-[code]C:&#92;Program Files (x86)&#92;Steam&#92;steamapps&#92;common&#92;Survival Log&#92;BepInEx&#92;plugins&#92;MoreRewards.dll[/code][/*]
+[*]把 [font=Courier New]MoreRewards.dll[/font] 放进游戏目录下的 BepInEx\plugins 文件夹。完整路径示例：
+[code]C:\Program Files (x86)\Steam\steamapps\common\Survival Log\BepInEx\plugins\MoreRewards.dll[/code][/*]
 [*]启动一次游戏后退出，然后在设置文件里设置 OptionCount（见下方「配置」）。在此之前仍是游戏原本的 3 张规划卡；更高的回息比例和上限会立即生效。[/*]
 [/list]
 
 [size=5]卸载[/size]
-从 [font=Courier New]BepInEx&#92;plugins[/font] 文件夹中删除 [font=Courier New]MoreRewards.dll[/font]。
+从 [font=Courier New]BepInEx\plugins[/font] 文件夹中删除 [font=Courier New]MoreRewards.dll[/font]。
 
 [size=5]配置[/size]
-请在游戏关闭时编辑 [font=Courier New]BepInEx&#92;config&#92;com.dev.survivallog.morerewards.cfg[/font]。配置文件中每项设置都有中文说明，所有设置和完整的刷新花费表见 [url=https://github.com/AnExiledDev/SurvivalLog-MoreRewards/blob/main/CONFIG.md]CONFIG.md[/url]（英文）。修改会在下次启动游戏时生效。
+请在游戏关闭时编辑 [font=Courier New]BepInEx\config\com.dev.survivallog.morerewards.cfg[/font]。配置文件中每项设置都有中文说明，所有设置和完整的刷新花费表见 [url=https://github.com/AnExiledDev/SurvivalLog-MoreRewards/blob/main/CONFIG.md]CONFIG.md[/url]（英文）。修改会在下次启动游戏时生效。
 [list]
 [*][b]OptionCount[/b]（默认 3）：可供选择的规划卡数量，3 到 20。[/*]
 [*][b]RefreshCost[/b]（默认 -1）：-1 表示刷新花费随 OptionCount 自动调整，0 表示每次刷新免费，1 到 99 则是每次刷新的固定花费。[/*]
@@ -120,7 +120,7 @@ Open source under MIT: [url=https://github.com/AnExiledDev/SurvivalLog-MoreRewar
 [/list]
 
 [size=5]反馈[/size]
-发现 bug 或有好点子？欢迎来 [url=https://discord.gg/trTsyxUFqg]Core Directive Discord[/url] 打个招呼，或在这里留言。报告 bug 时，请附上 [font=Courier New]BepInEx&#92;LogOutput.log[/font] 和 [font=Courier New]BepInEx&#92;more-rewards.log[/font]。
+发现 bug 或有好点子？欢迎来 [url=https://discord.gg/trTsyxUFqg]Core Directive Discord[/url] 打个招呼，或在这里留言。报告 bug 时，请附上 [font=Courier New]BepInEx\LogOutput.log[/font] 和 [font=Courier New]BepInEx\more-rewards.log[/font]。
 
 [size=5]源代码与许可[/size]
 基于 MIT 许可开源：[url=https://github.com/AnExiledDev/SurvivalLog-MoreRewards]github.com/AnExiledDev/SurvivalLog-MoreRewards[/url]
