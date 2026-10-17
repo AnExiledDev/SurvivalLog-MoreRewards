@@ -7,7 +7,7 @@ At the end of each day, Survival Log offers 3 rewards you can buy with survival 
 ## Features
 
 - **More rewards to choose from**: set how many rewards the end of the day offers, from the game's 3 up to 20. A refresh draws that many too.
-- **The game's own rewards**: the extra rewards come from the same groups the game picks that day's rewards from, never repeat a reward already on offer, and are bought like any other.
+- **The game's own rewards**: the extra rewards come from the same groups the game picks that day's rewards from, never repeat a reward already on offer, skip the rewards the game has on cooldown just as its own picks do, and are bought like any other.
 - **A fair refresh cost**: by default the cost goes up by 1 survival point at 4, 6, 8 rewards and so on (3 rewards cost 2, 4 or 5 cost 3, 6 or 7 cost 4, 10 cost 6). Or make every refresh free, or set a fixed cost of your own.
 - **More interest**: when a day ends, the game pays interest on the survival points you hold, 5% of them, at most 10. The mod raises the rate to 10% and the limit to 20, so saving up to 200 points pays off. Set your own rate and limit up to 100, or keep the game's. The Savings Plan reward keeps paying its own bonus on top.
 - **Room for every card**: up to 5 rewards sit in one row. More are spread over even rows with smaller cards, and the area scrolls if they still do not fit.
@@ -15,6 +15,8 @@ At the end of each day, Survival Log offers 3 rewards you can buy with survival 
 - **A log file**: what the mod did is written to `BepInEx\more-rewards.log`.
 
 There are no new keys or buttons.
+
+Works in English and Chinese. The mod puts no text of its own on screen, and the settings file describes every setting in English and Simplified Chinese. The log is in English.
 
 More Rewards adds no data to your save and does not edit game files. Your save keeps the game's own interest rate. You can remove it at any time.
 
@@ -28,11 +30,10 @@ More Rewards adds no data to your save and does not edit game files. Your save k
 - The tip on the end-of-day page still says interest is 5% and at most 10. The interest you are paid follows `InterestRate` and `MaxInterest`.
 - The bigger layouts are the least tested part, and not tested on every screen size. If cards are cut off or overlap, please tell me (see [Feedback](#feedback-and-bug-reports)) and include your screen resolution and `BepInEx\more-rewards.log`.
 - If something odd happens with the end-of-day rewards or the interest, try it with `Enabled` set to `false` to see whether the mod caused it, and please tell me either way.
-- The mod's own text, in the log, is in English.
 
 ## Requirements
 
-- Survival Log 1.1.18317. Built for this version; a game update can break it until the mod is updated.
+- Survival Log 1.1.18902. Built for this version; a game update can break it until the mod is updated.
 - The [BepInEx Pack for Survival Log](https://www.nexusmods.com/survivallog/mods/12), the BepInEx 6 (IL2CPP) build for the game, version `6.0.0-be.788`.
 
 ## Install
