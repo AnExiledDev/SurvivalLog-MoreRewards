@@ -28,8 +28,6 @@ More Rewards adds no data to your save and does not edit game files. Your save k
 - The new refresh cost applies a moment after the game starts, once the game has loaded its own cost.
 - The new interest rate applies a moment after a game is loaded, long before the day ends.
 - The tip on the end-of-day page still says interest is 5% and at most 10. The interest you are paid follows `InterestRate` and `MaxInterest`.
-- The bigger layouts are the least tested part, and not tested on every screen size. If cards are cut off or overlap, please tell me (see [Feedback](#feedback-and-bug-reports)) and include your screen resolution and `BepInEx\more-rewards.log`.
-- If something odd happens with the end-of-day rewards or the interest, try it with `Enabled` set to `false` to see whether the mod caused it, and please tell me either way.
 
 ## Requirements
 

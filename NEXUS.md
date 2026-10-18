@@ -25,9 +25,7 @@ Works in English and Chinese.
 [*]The new refresh cost applies a moment after the game starts, once the game has loaded its own cost.[/*]
 [*]The new interest rate applies a moment after a game is loaded, long before the day ends.[/*]
 [*]The tip on the end-of-day page still says interest is 5% and at most 10. The interest you are paid follows InterestRate and MaxInterest.[/*]
-[*]The bigger layouts have not been checked on every screen size. If cards are cut off or overlap, please tell me your screen resolution and include [font=Courier New]BepInEx\more-rewards.log[/font].[/*]
 [/list]
-If something odd happens with the end-of-day rewards or the interest, try it with Enabled set to false to see whether the mod caused it, and please tell me either way (see Feedback below).
 
 [size=5]Requirements[/size]
 [list]
@@ -89,9 +87,7 @@ Open source under MIT: [url=https://github.com/AnExiledDev/SurvivalLog-MoreRewar
 [*]新的刷新花费会在游戏启动片刻后、游戏读取完它自己的花费时生效。[/*]
 [*]新的回息比例会在载入游戏片刻后生效，远早于当天结束。[/*]
 [*]每日结算页面上的提示仍然写着回息 5%、上限 10。实际发放的回息以 InterestRate 和 MaxInterest 为准。[/*]
-[*]卡片较多时的布局还没有在所有屏幕尺寸上测试过。如果卡片被截断或互相重叠，请告诉我你的屏幕分辨率，并附上 [font=Courier New]BepInEx\more-rewards.log[/font]。[/*]
 [/list]
-如果每天结束时的规划卡或回息出现异常，可以把 Enabled 设为 false 再试一次，看看是不是本模组造成的，无论结果如何都欢迎告诉我（见下方「反馈」）。
 
 [size=5]前置要求[/size]
 [list]
