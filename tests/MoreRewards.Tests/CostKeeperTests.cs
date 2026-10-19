@@ -80,4 +80,49 @@ public class CostKeeperTests
 
         Assert.Equal(new CostWrite(0, 2, IsPutBack: true), keeper.Next(2));
     }
+
+    [Fact]
+    public void A_changed_option_count_works_the_cost_out_from_the_game_own()
+    {
+        var keeper = new CostKeeper(RewardSettings.From(6, -1));
+
+        keeper.Next(2);
+        keeper.Use(RewardSettings.From(10, -1));
+
+        Assert.Equal(new CostWrite(6, 2, IsPutBack: false), keeper.Next(4));
+        Assert.Null(keeper.Next(6));
+    }
+
+    [Fact]
+    public void Leaving_a_free_refresh_writes_the_new_cost()
+    {
+        var keeper = new CostKeeper(RewardSettings.From(10, 0));
+
+        keeper.Next(2);
+        keeper.Use(RewardSettings.From(6, -1));
+
+        Assert.Equal(new CostWrite(4, 2, IsPutBack: false), keeper.Next(0));
+    }
+
+    [Fact]
+    public void A_change_before_the_cost_has_loaded_waits_for_it()
+    {
+        var keeper = new CostKeeper(RewardSettings.From(6, -1));
+
+        keeper.Use(RewardSettings.From(10, -1));
+
+        Assert.Null(keeper.Next(0));
+        Assert.Equal(6, keeper.Next(2)?.Cost);
+    }
+
+    [Fact]
+    public void Going_back_to_the_game_settings_puts_the_game_cost_back()
+    {
+        var keeper = new CostKeeper(RewardSettings.From(6, -1));
+
+        keeper.Next(2);
+        keeper.Use(RewardSettings.From(3, -1));
+
+        Assert.Equal(new CostWrite(2, 2, IsPutBack: false), keeper.Next(4));
+    }
 }

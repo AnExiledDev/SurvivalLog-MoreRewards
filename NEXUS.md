@@ -31,11 +31,13 @@ Works in English and Chinese.
 [list]
 [*]Survival Log 1.1.18902. A game update can break it until the mod is updated.[/*]
 [*][url=https://www.nexusmods.com/survivallog/mods/12]BepInEx for Survival Log[/url] (BepInEx 6.0.0-be.788, IL2CPP). Install it first.[/*]
+[*]Exiled's Toolkit 0.4.0 or newer, which applies changed settings at once. More Rewards does not load without it.[/*]
 [/list]
 
 [size=5]Installation[/size]
 [list=1]
 [*]Install [url=https://www.nexusmods.com/survivallog/mods/12]BepInEx[/url] [i](if no other mods were installed before, start the game once so BepInEx finishes setup, then quit)[/i].[/*]
+[*]Install Exiled's Toolkit the same way: download its zip and extract it into the game folder.[/*]
 [*]Download the zip from the Files tab.[/*]
 [*]Extract it into the game folder (the folder with [font=Courier New]SurvivalLog.exe[/font]). The zip holds a BepInEx folder, so the DLL lands in the right place. When asked, merge the folders. The result should be:
 [code]C:\Program Files (x86)\Steam\steamapps\common\Survival Log\BepInEx\plugins\MoreRewards.dll[/code][/*]
@@ -46,7 +48,7 @@ Works in English and Chinese.
 Delete [font=Courier New]MoreRewards.dll[/font] from the [font=Courier New]BepInEx\plugins[/font] folder.
 
 [size=5]Configuration[/size]
-Edit [font=Courier New]BepInEx\config\com.dev.survivallog.morerewards.cfg[/font] while the game is closed (see [url=https://github.com/AnExiledDev/SurvivalLog-MoreRewards/blob/main/CONFIG.md]CONFIG.md[/url] for every setting and the full cost table). Changes apply at the next game start.
+Edit [font=Courier New]BepInEx\config\com.dev.survivallog.morerewards.cfg[/font] while the game is closed, or do it in game on the Mod Manager's Mods screen (see [url=https://github.com/AnExiledDev/SurvivalLog-MoreRewards/blob/main/CONFIG.md]CONFIG.md[/url] for every setting and the full cost table). Changed there, OptionCount, RefreshCost and InterestRate take effect at once; Enabled and MaxInterest take effect at the next game start.
 [list]
 [*][b]OptionCount[/b] (default 3): how many rewards to choose from, 3 to 20.[/*]
 [*][b]RefreshCost[/b] (default -1): -1 scales the cost with OptionCount, 0 makes every refresh free, and 1 to 99 is the cost of every refresh.[/*]
@@ -93,11 +95,13 @@ Open source under MIT: [url=https://github.com/AnExiledDev/SurvivalLog-MoreRewar
 [list]
 [*]Survival Log 1.1.18902。游戏更新后模组可能暂时失效，直到模组更新为止。[/*]
 [*][url=https://www.nexusmods.com/survivallog/mods/12]BepInEx for Survival Log[/url]（BepInEx 6.0.0-be.788，IL2CPP），请先安装。[/*]
+[*]Exiled's Toolkit 0.4.0 或更新版本，用于让改动的设置立即生效。没有它，More Rewards 无法加载。[/*]
 [/list]
 
 [size=5]安装[/size]
 [list=1]
 [*]安装 [url=https://www.nexusmods.com/survivallog/mods/12]BepInEx[/url] [i]（如果之前没有装过其他模组，先启动一次游戏，让 BepInEx 完成初始化，然后退出）[/i]。[/*]
+[*]用同样的方式安装 Exiled's Toolkit：下载它的压缩包并解压到游戏目录。[/*]
 [*]在「文件」页下载压缩包。[/*]
 [*]把压缩包解压到游戏目录（[font=Courier New]SurvivalLog.exe[/font] 所在的文件夹）。压缩包里带有 BepInEx 文件夹，DLL 会自动放到正确位置。如果提示合并文件夹，选择合并。解压后应为：
 [code]C:\Program Files (x86)\Steam\steamapps\common\Survival Log\BepInEx\plugins\MoreRewards.dll[/code][/*]
@@ -108,7 +112,7 @@ Open source under MIT: [url=https://github.com/AnExiledDev/SurvivalLog-MoreRewar
 从 [font=Courier New]BepInEx\plugins[/font] 文件夹中删除 [font=Courier New]MoreRewards.dll[/font]。
 
 [size=5]配置[/size]
-请在游戏关闭时编辑 [font=Courier New]BepInEx\config\com.dev.survivallog.morerewards.cfg[/font]。配置文件中每项设置都有中文说明，所有设置和完整的刷新花费表见 [url=https://github.com/AnExiledDev/SurvivalLog-MoreRewards/blob/main/CONFIG.md]CONFIG.md[/url]（英文）。修改会在下次启动游戏时生效。
+可以在游戏内 Mod Manager 的「模组」界面修改，也可以在游戏关闭时编辑 [font=Courier New]BepInEx\config\com.dev.survivallog.morerewards.cfg[/font]。配置文件中每项设置都有中文说明，所有设置和完整的刷新花费表见 [url=https://github.com/AnExiledDev/SurvivalLog-MoreRewards/blob/main/CONFIG.md]CONFIG.md[/url]（英文）。在「模组」界面修改时，OptionCount、RefreshCost 和 InterestRate 立即生效；Enabled 和 MaxInterest 在下次启动游戏时生效。
 [list]
 [*][b]OptionCount[/b]（默认 3）：可供选择的规划卡数量，3 到 20。[/*]
 [*][b]RefreshCost[/b]（默认 -1）：-1 表示刷新花费随 OptionCount 自动调整，0 表示每次刷新免费，1 到 99 则是每次刷新的固定花费。[/*]

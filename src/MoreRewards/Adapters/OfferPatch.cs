@@ -31,11 +31,27 @@ internal static class OfferPatch
     private static readonly Type[] RefreshParameters = { typeof(int), typeof(Il2CppInts), typeof(Il2CppInts), typeof(Il2CppIntSet) };
 
     private static int _optionCount = RewardSettings.GameOptionCount;
+    private static bool _isHooked;
 
-    public static void Apply(Harmony harmony, int optionCount)
+    /// <summary>
+    /// Called on the main thread at start and after each change; the next pick offers that many. The hooks go in the
+    /// first time the count is above the game's 3, and stay: with 3 they add nothing.
+    /// </summary>
+    /// <returns>True when this call put the hooks in.</returns>
+    public static bool Use(Harmony harmony, int optionCount)
     {
         _optionCount = optionCount;
 
+        if (_isHooked || optionCount <= RewardSettings.GameOptionCount) return false;
+
+        _isHooked = true;
+        Hook(harmony, optionCount);
+
+        return true;
+    }
+
+    private static void Hook(Harmony harmony, int optionCount)
+    {
         var type = typeof(SurvivalPlanningComponent);
         const string method = nameof(SurvivalPlanningComponent.GetRandomSurvivalPlanIds);
 

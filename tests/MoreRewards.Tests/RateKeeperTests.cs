@@ -62,4 +62,48 @@ public class RateKeeperTests
 
         Assert.Null(keeper.Next(GameBaseUnits, 0, GameScaling));
     }
+
+    [Fact]
+    public void A_changed_rate_is_written_as_a_fresh_one()
+    {
+        var keeper = new RateKeeper(10);
+
+        keeper.Next(GameBaseUnits, 0, GameScaling);
+        keeper.Use(20);
+
+        Assert.Equal(new RateWrite(150, GameBaseUnits, IsPutBack: false), keeper.Next(GameBaseUnits, 50, GameScaling));
+    }
+
+    [Fact]
+    public void Turning_the_rate_off_takes_the_mod_strengthening_off_once()
+    {
+        var keeper = new RateKeeper(10);
+
+        keeper.Next(GameBaseUnits, 0, GameScaling);
+        keeper.Use(null);
+
+        Assert.Equal(new RateWrite(0, GameBaseUnits, IsPutBack: false), keeper.Next(GameBaseUnits, 50, GameScaling));
+        Assert.Null(keeper.Next(GameBaseUnits, 30, GameScaling));
+    }
+
+    [Fact]
+    public void A_rate_that_was_never_on_leaves_the_attribute_alone()
+    {
+        var keeper = new RateKeeper(null);
+
+        Assert.Null(keeper.Next(GameBaseUnits, 30, GameScaling));
+    }
+
+    [Fact]
+    public void Off_on_and_off_again_between_checks_still_takes_the_strengthening_off()
+    {
+        var keeper = new RateKeeper(10);
+
+        keeper.Next(GameBaseUnits, 0, GameScaling);
+        keeper.Use(null);
+        keeper.Use(20);
+        keeper.Use(null);
+
+        Assert.Equal(0, keeper.Next(GameBaseUnits, 50, GameScaling)?.Strengthening);
+    }
 }

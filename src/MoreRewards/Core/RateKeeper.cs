@@ -16,14 +16,26 @@ public readonly record struct RateWrite(int Strengthening, int BaseUnits, bool I
 public sealed class RateKeeper
 {
     private bool _hasWritten;
+    private bool _isHolding;
 
-    public RateKeeper(int rate)
+    /// <param name="rate">Null keeps the character's own rate, and the attribute is never written.</param>
+    public RateKeeper(int? rate)
     {
         Rate = rate;
     }
 
-    /// <summary>The rate to keep, in percent.</summary>
-    public int Rate { get; }
+    /// <summary>The rate to keep, in percent, or null for the character's own.</summary>
+    public int? Rate { get; private set; }
+
+    /// <summary>
+    /// A change of the setting. The next write is a fresh one, not a put-back. With no rate, a strengthening the mod
+    /// wrote is taken off once, and from then on the attribute is left alone.
+    /// </summary>
+    public void Use(int? rate)
+    {
+        _hasWritten = false;
+        Rate = rate;
+    }
 
     /// <param name="baseUnits">The attribute's base, the part the save keeps.</param>
     /// <param name="strengthening">The attribute's strengthening value now.</param>
@@ -31,13 +43,25 @@ public sealed class RateKeeper
     /// <returns>The strengthening to write, or null when the attribute already totals the rate.</returns>
     public RateWrite? Next(int baseUnits, int strengthening, float scaling)
     {
-        var wanted = InterestRate.Units(Rate, scaling) - baseUnits;
+        if (Rate is not { } rate) return Release(baseUnits, strengthening);
+
+        var wanted = InterestRate.Units(rate, scaling) - baseUnits;
 
         if (wanted == strengthening) return null;
 
         var isPutBack = _hasWritten;
         _hasWritten = true;
+        _isHolding = true;
 
         return new RateWrite(wanted, baseUnits, isPutBack);
+    }
+
+    private RateWrite? Release(int baseUnits, int strengthening)
+    {
+        if (!_isHolding) return null;
+
+        _isHolding = false;
+
+        return strengthening == 0 ? null : new RateWrite(0, baseUnits, IsPutBack: false);
     }
 }

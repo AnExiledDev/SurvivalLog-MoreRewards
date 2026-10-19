@@ -59,6 +59,13 @@ internal sealed class RateField
     /// <summary>The first write happens once; writing it again comes with every character made or loaded, so it is reported once.</summary>
     private void Report(RateWrite write, float scaling)
     {
+        if (_keeper.Rate == null)
+        {
+            _log(FormattableString.Invariant($"interest rate is back to the character's own, {write.BaseUnits * 100f / scaling:0.#}%"));
+
+            return;
+        }
+
         if (!write.IsPutBack)
         {
             _log(FormattableString.Invariant($"interest rate is now {_keeper.Rate}% (the character's own is {write.BaseUnits * 100f / scaling:0.#}%)"));

@@ -33,14 +33,16 @@ More Rewards adds no data to your save and does not edit game files. Your save k
 
 - Survival Log 1.1.18902. Built for this version; a game update can break it until the mod is updated.
 - The [BepInEx Pack for Survival Log](https://www.nexusmods.com/survivallog/mods/12), the BepInEx 6 (IL2CPP) build for the game, version `6.0.0-be.788`.
+- [Exiled's Toolkit](https://github.com/AnExiledDev/SurvivalLog-ExiledToolkit) 0.4.0 or newer, which applies changed settings at once. More Rewards does not load without it.
 
 ## Install
 
 1. Install the [BepInEx Pack for Survival Log](https://www.nexusmods.com/survivallog/mods/12) (if no other mods were installed before, start the game once so BepInEx finishes setup, then quit).
-2. Download `MoreRewards-x.y.z.zip` from the [latest release](https://github.com/AnExiledDev/SurvivalLog-MoreRewards/releases/latest) or from [Nexus Mods](https://www.nexusmods.com/survivallog/mods/49).
-3. Extract the zip into the game folder (the folder with `SurvivalLog.exe`). It holds a `BepInEx` folder, so the DLL lands in the right place. When asked, merge the folders. The result should be:
+2. Install Exiled's Toolkit: download `ExiledToolkit-x.y.z.zip` from [its latest release](https://github.com/AnExiledDev/SurvivalLog-ExiledToolkit/releases/latest) or from Nexus Mods, and extract it into the game folder (the folder with `SurvivalLog.exe`).
+3. Download `MoreRewards-x.y.z.zip` from the [latest release](https://github.com/AnExiledDev/SurvivalLog-MoreRewards/releases/latest) or from [Nexus Mods](https://www.nexusmods.com/survivallog/mods/49).
+4. Extract the zip into the game folder (the folder with `SurvivalLog.exe`). It holds a `BepInEx` folder, so the DLL lands in the right place. When asked, merge the folders. The result should be:
    `C:\Program Files (x86)\Steam\steamapps\common\Survival Log\BepInEx\plugins\MoreRewards.dll`
-4. Start the game once, quit, and set `OptionCount` in the settings file (see [Configuration](#configuration)). Until you do, you get the game's 3 rewards; the higher interest rate and limit apply right away.
+5. Start the game once, quit, and set `OptionCount` in the settings file (see [Configuration](#configuration)). Until you do, you get the game's 3 rewards; the higher interest rate and limit apply right away.
 
 ## Uninstall
 
@@ -48,15 +50,15 @@ Delete `MoreRewards.dll` from the `BepInEx\plugins` folder. For a clean slate, a
 
 ## Configuration
 
-Settings live in `BepInEx\config\com.dev.survivallog.morerewards.cfg`, created the first time the game starts with the mod. Edit it while the game is closed; changes apply at the next game start. See [CONFIG.md](CONFIG.md) for every setting and the full refresh cost table.
+Settings live in `BepInEx\config\com.dev.survivallog.morerewards.cfg`, created the first time the game starts with the mod. Change them in game on the Mod Manager's Mods screen, or edit the file while the game is closed. Changed on the Mods screen, OptionCount, RefreshCost and InterestRate take effect at once; Enabled and MaxInterest take effect at the next game start. See [CONFIG.md](CONFIG.md) for every setting and the full refresh cost table.
 
 ## Troubleshooting
 
 Built against BepInEx `6.0.0-be.788`.
 
-Check `BepInEx\LogOutput.log` for a line starting `===== More Rewards 0.3.0 started`. It says whether the mod is on, how many rewards it offers, the refresh cost, the interest rate and the interest limit. The next lines should say the changes went in, for example `interest is now up to 20 survival points a day` and `hooked the end-of-day rewards: up to 10 to choose from`. Once a game is loaded, a line says `interest rate is now 10%`.
+Check `BepInEx\LogOutput.log` for a line starting `===== More Rewards 0.4.0 started`. It says whether the mod is on and the interest limit. The lines after it say what took effect: the interest limit (`interest is now up to 20 survival points a day`), how many rewards and the refresh cost (`10 rewards, refresh cost automatic`), the interest rate, and `hooked the end-of-day rewards: up to 10 to choose from` when `OptionCount` is above 3. Changing one of these on the Mods screen writes its line again. Once a game is loaded, a line says `interest rate is now 10%`.
 
-Each time a day ends or you refresh, the log gets a line saying how many rewards the game offered and how many the mod added. Shortly after the game starts, a line says what a refresh costs now. The reward lines are only written when `OptionCount` is above 3, and the cost line only when the mod changes the cost. When the rewards and the refresh cost match the game's own, the log says so once at the start and stays quiet about them after that.
+Each time a day ends or you refresh, the log gets a line saying how many rewards the game offered and how many the mod added. Shortly after the game starts, a line says what a refresh costs now. The reward lines are only written when `OptionCount` is above 3, and the cost line only when the mod changes the cost.
 
 The same lines are in `BepInEx\more-rewards.log`, which survives restarts.
 
