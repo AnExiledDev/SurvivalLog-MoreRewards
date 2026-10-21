@@ -1,5 +1,5 @@
 Name: More Rewards
-Summary: Choose from more rewards at the end of the day, up to 20 instead of 3, with a refresh cost that scales to match, and earn 10% daily interest on your survival points instead of 5%. 每天结束时可选的规划卡从 3 张增加到最多 20 张，刷新花费随之调整，生存点每日回息从 5% 提高到 10%。
+Summary: Choose from up to 20 rewards at the end of each day instead of 3, drawn from the game's own pool with no repeats, and earn 10% daily interest on your survival points instead of 5%. The refresh cost scales with the number of cards, or make it free or set your own. Cards shrink and wrap into rows so they all fit on screen.
 
 Description (BBCode):
 At the end of each day, Survival Log offers 3 rewards you can buy with survival points, and a refresh for 2 points draws 3 new ones. More Rewards lets you raise that to any number up to 20, from the same reward pool the game draws from. The refresh cost goes up with the number of rewards on its own, or you can make it free or set any cost you like. The interest your survival points earn each day goes from 5% to 10%, and can go up to 20 instead of 10.
