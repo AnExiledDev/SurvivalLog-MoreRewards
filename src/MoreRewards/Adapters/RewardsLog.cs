@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using BepInEx.Logging;
+using MoreRewards.Core;
 
 namespace MoreRewards.Adapters;
 
@@ -26,7 +27,8 @@ internal sealed class RewardsLog
 
     public void Write(string message)
     {
-        _bepinex.LogInfo(message);
+        if (HookFailure.Is(message)) _bepinex.LogError(message);
+        else _bepinex.LogInfo(message);
 
         lock (_gate)
         {

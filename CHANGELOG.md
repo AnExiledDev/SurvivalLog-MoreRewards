@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4.2
+
+- After a game update, a hook that can no longer be placed is logged as an error, so the Mod Manager can mark the mod as maybe needing an update.
+- Made for Survival Log 1.1.19131.
+
 ## 0.4.1
 
 - Works with Survival Log 1.1.19131. That game update added card pinning and the extra rewards stopped showing; they show again, and a pinned card stays among the choices.
