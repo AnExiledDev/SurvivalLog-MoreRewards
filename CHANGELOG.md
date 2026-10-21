@@ -3,6 +3,7 @@
 ## 0.4.1
 
 - Works with Survival Log 1.1.19131. That game update added card pinning and the extra rewards stopped showing; they show again, and a pinned card stays among the choices.
+- The higher interest cap (MaxInterest) works again; since that game update the game's cap of 10 applied.
 
 ## 0.4.0
 
