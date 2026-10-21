@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Works with Survival Log 1.1.19131. That game update added card pinning and the extra rewards stopped showing; they show again, and a pinned card stays among the choices.
+
 ## 0.4.0
 
 - The Mods screen links this changelog.

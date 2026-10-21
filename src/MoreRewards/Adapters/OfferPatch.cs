@@ -11,15 +11,17 @@ namespace MoreRewards.Adapters;
 
 /// <summary>
 /// Adds rewards to the end-of-day choice. The game picks the rewards in SurvivalPlanningComponent's
-/// GetRandomSurvivalPlanIds: GetRandomSurvivalPlanIds(int) (rva 0x2e129e0) when a day ends, from
-/// CountUpTimer.TriggerDaySettlement, and GetRandomSurvivalPlanIds(int, List, List) (rva 0x2e126c0) on a refresh, from
-/// SurvivalResultsManager.OnRefreshSurvivalPlans. Both read the day's Config_DailyRandom, draw RandomAmount[i] rewards
-/// from each group RandomPlanID[i] with GetRandomIdsFromGroup, and cut the list to 3. A day with no groups gets its
-/// fixed SpecifiedPlanID list instead, which is left alone. The hooks run after the game's pick and draw the extras
-/// from the same groups the same way, keeping out every reward already offered. Buying does not check the offer list
-/// (SurvivalResultsManager.OnBuySurvivalPlan, rva 0x2699610), so an extra reward is bought like the game's own.
-/// Since the 2026-10-17 game build both overloads end in a cooldownIds collection (rewards shown recently, which the
-/// game keeps out); the extras pass it on to GetRandomIdsFromGroup so they skip the same rewards.
+/// GetRandomSurvivalPlanIds: GetRandomSurvivalPlanIds(int, ICollection, int, int) (rva 0x2fd6b40) when a day ends, from
+/// CountUpTimer.TriggerDaySettlement, and GetRandomSurvivalPlanIds(int, List, List, ICollection, int, int) (rva 0x2fd6eb0)
+/// on a refresh, from SurvivalResultsManager.OnRefreshSurvivalPlans. Both read the day's Config_DailyRandom, draw
+/// RandomAmount[i] rewards from each group RandomPlanID[i] with GetRandomIdsFromGroup, and cut the list to 3. A day with
+/// no groups gets its fixed SpecifiedPlanID list instead, which is left alone. The hooks run after the game's pick and
+/// draw the extras from the same groups the same way, keeping out every reward already offered. Buying does not check
+/// the offer list (SurvivalResultsManager.OnBuySurvivalPlan), so an extra reward is bought like the game's own.
+/// Both overloads end in a cooldownIds collection (rewards shown recently, which the game keeps out); the extras pass it
+/// on to GetRandomIdsFromGroup so they skip the same rewards. The last two ints are the pinned reward and its slot: with
+/// a pin the game draws 2 others and puts the pinned one at that slot, still 3 in all, so the extras skip it like any
+/// other reward already offered.
 /// Static because Harmony hooks are.
 /// </summary>
 internal static class OfferPatch
@@ -27,8 +29,8 @@ internal static class OfferPatch
     private const string DoingDay = "adding end-of-day rewards, the game's own rewards stay";
     private const string DoingRefresh = "adding refresh rewards, the game's own rewards stay";
 
-    private static readonly Type[] DayParameters = { typeof(int), typeof(Il2CppIntSet) };
-    private static readonly Type[] RefreshParameters = { typeof(int), typeof(Il2CppInts), typeof(Il2CppInts), typeof(Il2CppIntSet) };
+    private static readonly Type[] DayParameters = { typeof(int), typeof(Il2CppIntSet), typeof(int), typeof(int) };
+    private static readonly Type[] RefreshParameters = { typeof(int), typeof(Il2CppInts), typeof(Il2CppInts), typeof(Il2CppIntSet), typeof(int), typeof(int) };
 
     private static int _optionCount = RewardSettings.GameOptionCount;
     private static bool _isHooked;
