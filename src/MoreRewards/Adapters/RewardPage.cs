@@ -23,6 +23,7 @@ internal sealed class RewardPage
     private const string TakeAfterInstall = "\n;(function(){try{return String(window.__slmorerewards.take());}catch(e){return 'page script did not start: '+e;}})()";
 
     private readonly Action<string> _log;
+    private readonly Action _onNeedsSetup;
     private readonly HashSet<string> _loggedNotes = new();
     private string? _script;
     private string? _reply;
@@ -30,9 +31,11 @@ internal sealed class RewardPage
     private int _sends;
     private bool _hasReportedRunFailure;
 
-    public RewardPage(Action<string> log)
+    /// <param name="onNeedsSetup">Called when the rewards screen is open and the page has not been told how to draw the mod's buttons.</param>
+    public RewardPage(Action<string> log, Action onNeedsSetup)
     {
         _log = log;
+        _onNeedsSetup = onNeedsSetup;
     }
 
     public void Tick(float now)
@@ -43,6 +46,8 @@ internal sealed class RewardPage
         {
             if (_loggedNotes.Add(note)) _log("page: " + note);
         }
+
+        if (turn.NeedsSetup) _onNeedsSetup();
 
         if (turn.NeedsScript)
         {
@@ -55,19 +60,24 @@ internal sealed class RewardPage
         if (now < _nextCheckAt) return;
 
         _nextCheckAt = now + CheckSeconds;
-        Run(Check);
+        Run(Check, keepsReply: true);
     }
 
     private void Install()
     {
-        if (!Run(Script() + TakeAfterInstall)) return;
+        if (!Run(Script() + TakeAfterInstall, keepsReply: true)) return;
 
         _sends++;
 
         if (_sends <= MostLoggedSends) _log("page script sent to the web UI" + (_sends == MostLoggedSends ? $" ({MostLoggedSends} times; further sends are not logged)" : ""));
     }
 
-    private bool Run(string javaScript)
+    /// <summary>Hands the page a call from the plugin; what it returns is not read.</summary>
+    public void Send(string javaScript) => Run(javaScript, keepsReply: false);
+
+    /// <param name="keepsReply">The result is the page's answer to a check, read on the next frame.</param>
+    /// <returns>Whether the web UI was there to run it.</returns>
+    private bool Run(string javaScript, bool keepsReply)
     {
         var webView = GameSingleton.Existing<ReduxUISystem>()?.GetWebUILayer()?.canvasWebViewPrefab?.WebView;
 
@@ -75,7 +85,10 @@ internal sealed class RewardPage
 
         try
         {
-            webView.ExecuteJavaScript(javaScript, (Action<string>)(result => Interlocked.Exchange(ref _reply, result ?? "")));
+            webView.ExecuteJavaScript(javaScript, (Action<string>)(result =>
+            {
+                if (keepsReply) Interlocked.Exchange(ref _reply, result ?? "");
+            }));
 
             return true;
         }

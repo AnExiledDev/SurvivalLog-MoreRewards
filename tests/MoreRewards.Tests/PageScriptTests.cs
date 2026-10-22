@@ -156,7 +156,7 @@ public class PageScriptTests
     {
         var page = new PageScript();
 
-        page.Run("var frame = addRewardsFrame(); showCards(frame, 10);");
+        page.Run("var frame = addRewardsFrame(); showCards(frame, 10); setupWith();");
         page.Tick();
 
         Assert.Equal("showing 10 rewards in 2 rows of up to 5", page.Take());

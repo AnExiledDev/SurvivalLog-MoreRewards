@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using BepInEx;
 using BepInEx.Configuration;
@@ -49,15 +50,17 @@ public sealed class Plugin : BasePlugin
 
         if (interestCap is { } cap) InterestCode.Apply(cap, log.Write);
 
-        WatchRewards(optionCount, refreshCost, log);
-        WatchRate(interestRate, log);
+        var rateKeeper = WatchRate(interestRate, log);
+        var screen = new ScreenConfig(Config, optionCount);
+
+        WatchRewards(optionCount, refreshCost, screen, log);
+        WatchScreen(() => new InterestTerms((rateKeeper.Rate ?? InterestRate.GameRate) / 100f, interestCap ?? InterestCap.GameCap), log);
         RewardsTicker.Log = log.Write;
         AddComponent<RewardsTicker>();
     }
 
-    private static void WatchRewards(ConfigEntry<int> optionCount, ConfigEntry<int> refreshCost, RewardsLog log)
+    private static void WatchRewards(ConfigEntry<int> optionCount, ConfigEntry<int> refreshCost, ScreenConfig screen, RewardsLog log)
     {
-        var harmony = new Harmony(Guid);
         var costKeeper = new CostKeeper(RewardSettings.From(optionCount.Value, refreshCost.Value));
 
         RewardsTicker.Checks.Add(new CostField(costKeeper, log.Write).Tick);
@@ -67,14 +70,31 @@ public sealed class Plugin : BasePlugin
             var settings = RewardSettings.From(optionCount.Value, refreshCost.Value);
 
             costKeeper.Use(settings);
-
-            if (OfferPatch.Use(harmony, settings.OptionCount)) RewardsTicker.Checks.Add(new RewardPage(log.Write).Tick);
-
             log.Write($"{settings.OptionCount} rewards, refresh cost {RefreshCostText(settings)}");
         }, optionCount, refreshCost);
+        OptionalLive.Watch(() =>
+        {
+            LiveScreen.Settings = screen.Read();
+            log.Write("rewards screen: " + LiveScreen.Settings);
+        }, screen.Entries);
     }
 
-    private static void WatchRate(ConfigEntry<int> interestRate, RewardsLog log)
+    /// <summary>Hooks the rewards screen and wires the page's buttons to the actions that carry them out.</summary>
+    private static void WatchScreen(Func<InterestTerms> interest, RewardsLog log)
+    {
+        var harmony = new Harmony(Guid);
+        RewardActions? actions = null;
+        var page = new RewardPage(log.Write, () => actions?.AskSetup());
+
+        actions = new RewardActions(page, new RewardCatalog(), interest, log.Write);
+        OfferPatch.Apply(harmony);
+        ListPatch.Apply(harmony);
+        PageMessages.Apply(harmony, log.Write);
+        RewardsTicker.Checks.Add(page.Tick);
+        RewardsTicker.Checks.Add(actions.Tick);
+    }
+
+    private static RateKeeper WatchRate(ConfigEntry<int> interestRate, RewardsLog log)
     {
         var rateKeeper = new RateKeeper(InterestRate.From(interestRate.Value));
 
@@ -87,6 +107,8 @@ public sealed class Plugin : BasePlugin
             rateKeeper.Use(rate);
             log.Write($"interest rate {RateText(rate)}");
         });
+
+        return rateKeeper;
     }
 
     private static string RefreshCostText(RewardSettings settings) => settings.FixedRefreshCost switch

@@ -1,6 +1,6 @@
 # More Rewards
 
-Choose from more rewards at the end of the day, set what a refresh costs, and earn more interest on your survival points.
+Choose from more rewards at the end of the day, lock more than one, pass on or ban the ones you do not want, and earn more interest on your survival points. An optional shop lets you buy any reward you can get.
 
 At the end of each day, Survival Log offers 3 rewards you can buy with survival points, and a refresh for 2 points draws 3 new ones. More Rewards lets you raise that to any number up to 20, from the same reward pool the game draws from. The refresh cost goes up with the number of rewards on its own, or you can make it free or set any cost you like. The interest your survival points earn each day goes from 5% to 10%, and can go up to 20 instead of 10.
 
@@ -10,15 +10,22 @@ At the end of each day, Survival Log offers 3 rewards you can buy with survival 
 - **The game's own rewards**: the extra rewards come from the same groups the game picks that day's rewards from, never repeat a reward already on offer, skip the rewards the game has on cooldown just as its own picks do, and are bought like any other.
 - **A fair refresh cost**: by default the cost goes up by 1 survival point at 4, 6, 8 rewards and so on (3 rewards cost 2, 4 or 5 cost 3, 6 or 7 cost 4, 10 cost 6). Or make every refresh free, or set a fixed cost of your own.
 - **More interest**: when a day ends, the game pays interest on the survival points you hold, 5% of them, at most 10. The mod raises the rate to 10% and the limit to 20, so saving up to 200 points pays off. Set your own rate and limit up to 100, or keep the game's. The Savings Plan reward keeps paying its own bonus on top.
+- **Lock more than one reward**: set `MaxLocked` and lock up to 1 less than the number of rewards. Locked rewards stay through a refresh and are still there the next day. The footer shows how many locks are in use.
+- **Not interested and Ban**: a 「Not interested」 button swaps a card for another and keeps it away for the day, free. A 「Ban」 button keeps it away for the rest of the run, for a few survival points (2 by default), and can ban every level of the same reward.
+- **Permanent or one-time**: each card says whether its reward lasts or is used once.
+- **No repeats on refresh** (off by default): a refresh shows rewards you have not seen yet that day.
+- **Tomorrow's interest**: the footer shows the interest you will get when the day ends.
+- **Cash out** (off by default): survival points left when you leave the rewards screen turn into cash.
+- **The shop** (off by default): a 「Shop」 button opens a searchable list of every reward you can get, by category. Shop prices are 25% above card prices and go up 15% with each purchase until the next day, all of it configurable. Rewards you cannot buy now are greyed out with the reason, or hidden. You can limit purchases a day, and allow buying a reward before the one it needs at double the price.
 - **Room for every card**: up to 5 rewards sit in one row. More are spread over even rows with smaller cards, and the area scrolls if they still do not fit.
 - **Rewards stay as they are until you ask**: with the default settings you get the game's 3 rewards and its own refresh cost.
 - **A log file**: what the mod did is written to `BepInEx\more-rewards.log`.
 
-There are no new keys or buttons.
+There are no new keys. The new buttons are 「Not interested」 and 「Ban」 on each card and 「Shop」 in the footer, each switched by its setting.
 
-Works in English and Chinese. The mod puts no text of its own on screen, and the settings file describes every setting in English and Simplified Chinese. The log is in English.
+Works in English and Chinese. The buttons and labels the mod adds follow the game's language, and the settings file describes every setting in English and Simplified Chinese. The log is in English.
 
-More Rewards adds no data to your save and does not edit game files. Your save keeps the game's own interest rate. You can remove it at any time.
+More Rewards does not edit game files. Extra locks, bans and shop purchases are kept in the run's own counters, so they are saved with the run and start over with each loop; without the mod the game ignores them. Your save keeps the game's own interest rate. You can remove it at any time.
 
 ## Known issues and limits
 
@@ -27,6 +34,8 @@ More Rewards adds no data to your save and does not edit game files. Your save k
 - A refresh that finds no new rewards at all stays empty and costs nothing, as in the game. It is not filled up with the rewards you already saw.
 - The new refresh cost applies a moment after the game starts, once the game has loaded its own cost.
 - The new interest rate applies a moment after a game is loaded, long before the day ends.
+- The interest shown in the footer is worked out from your points, the rate and the limit; the Savings Plan bonus is not in it.
+- The shop leaves out rewards the game has no name for and rewards it never offers.
 - The tip on the end-of-day page still says interest is 5% and at most 10. The interest you are paid follows `InterestRate` and `MaxInterest`.
 
 ## Requirements
@@ -50,13 +59,13 @@ Delete `MoreRewards.dll` from the `BepInEx\plugins` folder. For a clean slate, a
 
 ## Configuration
 
-Settings live in `BepInEx\config\com.dev.survivallog.morerewards.cfg`, created the first time the game starts with the mod. Change them in game on the Mod Manager's Mods screen, or edit the file while the game is closed. Changed on the Mods screen, OptionCount, RefreshCost and InterestRate take effect at once; Enabled and MaxInterest take effect at the next game start. See [CONFIG.md](CONFIG.md) for every setting and the full refresh cost table. Without Exiled's Toolkit installed, changes made on the Mods screen take effect at the next game start instead.
+Settings live in `BepInEx\config\com.dev.survivallog.morerewards.cfg`, created the first time the game starts with the mod. Change them in game on the Mod Manager's Mods screen, or edit the file while the game is closed. Changed on the Mods screen, every setting except Enabled and MaxInterest takes effect at once; those two take effect at the next game start. See [CONFIG.md](CONFIG.md) for every setting and the full refresh cost table. Without Exiled's Toolkit installed, changes made on the Mods screen take effect at the next game start instead.
 
 ## Troubleshooting
 
 Built against BepInEx `6.0.0-be.788`.
 
-Check `BepInEx\LogOutput.log` for a line starting `===== More Rewards 0.4.2 started`. It says whether the mod is on and the interest limit. The lines after it say what took effect: the interest limit (`interest is now up to 20 survival points a day`), how many rewards and the refresh cost (`10 rewards, refresh cost automatic`), the interest rate, and `hooked the end-of-day rewards: up to 10 to choose from` when `OptionCount` is above 3. Changing one of these on the Mods screen writes its line again. Once a game is loaded, a line says `interest rate is now 10%`.
+Check `BepInEx\LogOutput.log` for a line starting `===== More Rewards 0.5.0 started`. It says whether the mod is on and the interest limit. The lines after it say what took effect: the interest limit (`interest is now up to 20 survival points a day`), how many rewards and the refresh cost (`10 rewards, refresh cost automatic`), the interest rate, and `hooked the end-of-day rewards: up to 10 to choose from` when `OptionCount` is above 3. Changing one of these on the Mods screen writes its line again. Once a game is loaded, a line says `interest rate is now 10%`.
 
 Each time a day ends or you refresh, the log gets a line saying how many rewards the game offered and how many the mod added. Shortly after the game starts, a line says what a refresh costs now. The reward lines are only written when `OptionCount` is above 3, and the cost line only when the mod changes the cost.
 
@@ -82,7 +91,7 @@ dotnet build src/MoreRewards -c Release -p:GameDir="C:\path\to\Survival Log"
 
 `GameDir` is the game folder. The default in the project file is a local path you will almost certainly need to override. The output DLL is at `src\MoreRewards\bin\Release\MoreRewards.dll`.
 
-The unit tests cover the pure rules (the settings, the refresh cost, how extra rewards are drawn, the interest rate and limit) and the page script that lays out the cards, and need nothing from the game:
+The unit tests cover the pure rules (the settings, the refresh cost, how extra rewards are drawn, the interest rate and limit, locks, bans and shop prices) and the page script that lays out the cards and draws the buttons and the shop, and need nothing from the game:
 
 ```
 dotnet test tests/MoreRewards.Tests

@@ -23,10 +23,13 @@
     <Reference Include="$(BepInExCore)\Il2CppInterop.Common.dll" Private="false" />
     <Reference Include="$(Interop)\HotUpdate.dll" Private="false" />
     <Reference Include="$(Interop)\Il2Cppmscorlib.dll" Private="false" />
+    <Reference Include="$(Interop)\Il2CppSystem.Core.dll" Private="false" />
     <Reference Include="$(Interop)\UnityEngine.CoreModule.dll" Private="false" />
     <Reference Include="$(Interop)\UnityEngine.UIModule.dll" Private="false" />
     <Reference Include="$(Interop)\UnityEngine.UI.dll" Private="false" />
     <Reference Include="$(Interop)\Vuplex.WebView.dll" Private="false" />
+    <Reference Include="$(Interop)\R3.dll" Private="false" />
+    <Reference Include="$(Interop)\ObservableCollections.dll" Private="false" />
     <Reference Include="$(ToolkitDll)" Private="false" />
   </ItemGroup>
 
@@ -37,7 +40,7 @@
   <!-- What the Mod Manager's Mods screen shows about this mod. -->
   <ItemGroup>
     <AssemblyMetadata Include="ModManager.Name" Value="More Rewards&#10;更多奖励" />
-    <AssemblyMetadata Include="ModManager.Description" Value="Choose from more rewards at the end of the day, up to 20 instead of 3, with a refresh cost that scales to match, and earn 10% daily interest on your survival points instead of 5%.&#10;每天结束时可选的规划卡从 3 张增加到最多 20 张，刷新花费随之调整，生存点每日回息从 5% 提高到 10%。" />
+    <AssemblyMetadata Include="ModManager.Description" Value="Choose from up to 20 rewards at the end of the day instead of 3, lock more than one, pass on or ban cards you do not want, and earn more interest on your survival points. An optional shop lets you buy any reward you can get.&#10;每天结束时可选的规划卡从 3 张增加到最多 20 张，可锁定多张，可跳过或禁用不想要的卡，生存点回息更高。可选的商店能购买任何可获得的生存规划。" />
     <AssemblyMetadata Include="ModManager.Author" Value="AnExiledDev" />
     <AssemblyMetadata Include="ModManager.Category" Value="Balance" />
     <AssemblyMetadata Include="ModManager.GameVersion" Value="1.1.19131" />

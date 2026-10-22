@@ -34,5 +34,16 @@ public class PageReplyTests
 
         Assert.False(turn.NeedsScript);
         Assert.Equal(new[] { "showing 10 rewards in 2 rows of up to 5", "cannot reach the rewards page document" }, turn.Notes);
+        Assert.False(turn.NeedsSetup);
+    }
+
+    [Fact]
+    public void A_rewards_screen_without_its_setup_asks_for_it_and_logs_nothing_for_it()
+    {
+        var turn = PageReply.Read("showing 10 rewards in 2 rows of up to 5\nneeds setup");
+
+        Assert.True(turn.NeedsSetup);
+        Assert.False(turn.NeedsScript);
+        Assert.Equal(new[] { "showing 10 rewards in 2 rows of up to 5" }, turn.Notes);
     }
 }

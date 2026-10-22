@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.5.0
+
+- Lock more than one reward. `MaxLocked` sets how many; locked rewards stay through a refresh and are still there the next day. The footer shows how many locks are in use.
+- A 「Not interested」 button on each card swaps it for another reward and keeps it away for the rest of the day.
+- A 「Ban」 button on each card swaps it out and keeps it away for the rest of the run. `BanCost` sets its price in survival points, and `BanWholeLine` bans every level of the same reward.
+- Each card says whether its reward is permanent or one-time (`Labels`).
+- `NoRepeatOnRefresh` makes a refresh show rewards you have not seen yet that day.
+- The footer shows the interest you will get tomorrow.
+- `CashOut` turns the survival points left when you leave the rewards screen into cash.
+- An optional shop (`ShopEnabled`, off by default): search every reward you can get, sorted by category, and buy it for survival points. Shop prices are above card prices (`ShopMarkup`) and go up with each purchase (`ShopIncrease`) until they reset (`ShopReset`). Rewards you cannot buy now are greyed out with the reason, or hidden (`ShopUnavailable`). `ShopPerDay` limits purchases a day, and `ShopLocked` lets you buy a reward before the one it needs, at double the price.
+- With Exiled's Toolkit, every new setting can be changed on the Mods screen without a restart.
+- Made for Survival Log 1.1.19131.
+
 ## 0.4.2
 
 - After a game update, a hook that can no longer be placed is logged as an error, so the Mod Manager can mark the mod as maybe needing an update.
