@@ -1,3 +1,5 @@
+using System;
+using System.Linq;
 using MoreRewards.Core;
 using Xunit;
 
@@ -32,22 +34,89 @@ public class RunBookTests
         var book = new RunBook(new FakeCounters());
 
         Assert.Empty(book.Locks());
-        Assert.False(book.IsUnwanted(30011, 3));
+        Assert.False(book.IsBanned(30011));
+        Assert.Empty(book.Bans(new[] { 30011 }));
         Assert.Equal(new ShopTally(0, 0), book.Shop(3, ShopReset.Never));
     }
 
     [Fact]
-    public void A_skipped_card_comes_back_the_next_day_but_a_banned_one_never_does()
+    public void A_whole_line_ban_is_listed_and_lifted_as_one_with_what_it_cost()
+    {
+        var book = new RunBook(new FakeCounters());
+        var ids = new[] { 1, 2, 3, 4 };
+
+        Assert.Equal(new[] { 2, 1, 3 }, book.Ban(2, new[] { 1, 2, 3 }, 6));
+
+        var ban = Assert.Single(book.Bans(ids));
+
+        Assert.Equal(2, ban.Head);
+        Assert.Equal(new[] { 1, 2, 3 }, ban.Members);
+        Assert.Equal(6, ban.Paid);
+
+        Assert.Equal(ban.Members, book.Unban(2, ids)?.Members);
+        Assert.False(book.IsBanned(1) || book.IsBanned(2) || book.IsBanned(3));
+        Assert.Empty(book.Bans(ids));
+        Assert.Null(book.Unban(2, ids));
+    }
+
+    [Fact]
+    public void A_reward_already_banned_stays_in_its_own_ban()
+    {
+        var book = new RunBook(new FakeCounters());
+        var ids = new[] { 1, 2, 3 };
+
+        book.Ban(1, Array.Empty<int>(), 2);
+
+        Assert.Equal(new[] { 3, 2 }, book.Ban(3, new[] { 1, 2 }, 4));
+        Assert.Equal(new[] { new[] { 1 }, new[] { 2, 3 } }, book.Bans(ids).Select(ban => ban.Members.ToArray()));
+
+        book.Unban(3, ids);
+
+        Assert.True(book.IsBanned(1));
+        Assert.False(book.IsBanned(2));
+    }
+
+    [Fact]
+    public void A_ban_made_before_bans_kept_their_cost_stands_alone_with_no_price()
+    {
+        var counters = new FakeCounters();
+        var book = new RunBook(counters);
+
+        counters.Set("slmr.ban.5", 1);
+        counters.Set("slmr.ban.6", 1);
+
+        var bans = book.Bans(new[] { 5, 6 });
+
+        Assert.Equal(new[] { 5, 6 }, bans.Select(ban => ban.Head));
+        Assert.All(bans, ban => Assert.Null(ban.Paid));
+    }
+
+    [Fact]
+    public void A_free_ban_keeps_a_price_of_zero_rather_than_none()
     {
         var book = new RunBook(new FakeCounters());
 
-        book.Skip(30011, 4);
-        book.Ban(30021);
+        book.Ban(7, Array.Empty<int>(), 0);
 
-        Assert.True(book.IsUnwanted(30011, 4));
-        Assert.False(book.IsUnwanted(30011, 5));
-        Assert.True(book.IsUnwanted(30021, 5));
-        Assert.True(book.IsUnwanted(30021, 40));
+        Assert.Equal(0, Assert.Single(book.Bans(new[] { 7 })).Paid);
+    }
+
+    [Theory]
+    [InlineData(10, 50, 5)]
+    [InlineData(5, 50, 2)]
+    [InlineData(10, 0, 0)]
+    [InlineData(10, 100, 10)]
+    [InlineData(10, 300, 10)]
+    public void Lifting_a_ban_gives_back_the_set_share_of_what_it_cost(int paid, int percent, int refund)
+    {
+        Assert.Equal(refund, BanRefund.Of(new BanGroup(1, new[] { 1 }, paid), 99, percent));
+    }
+
+    [Fact]
+    public void A_ban_with_no_kept_price_refunds_a_share_of_the_ban_cost_now()
+    {
+        Assert.Equal(4, BanRefund.Of(new BanGroup(1, new[] { 1 }, null), 8, 50));
+        Assert.Equal(0, BanRefund.Of(new BanGroup(1, new[] { 1 }, 0), 8, 50));
     }
 
     [Fact]

@@ -6,8 +6,9 @@ using MoreRewards.Core;
 namespace MoreRewards.Adapters;
 
 /// <summary>
-/// Writes the mod's interest cap into the game's code (<see cref="InterestCap"/>), once, while the plugin loads: no day
-/// has ended yet, so the code is not running. There is no hook, so the 14-byte rule for hook targets does not apply;
+/// Writes the mod's interest cap into the game's code (<see cref="InterestCap"/>) while the plugin loads, and again on
+/// the main thread when MaxInterest changes; the code runs on the main thread when a day ends, so it is never running
+/// while it is written. There is no hook, so the 14-byte rule for hook targets does not apply;
 /// only two numbers inside the method change, and the bytes around them are checked first, so a game build with
 /// different code keeps its own cap. Before those bytes are read, the module's size from its PE header must reach past
 /// them, so a smaller module is never read beyond its end. The code is in GameAssembly.dll's executable il2cpp section, so it is made
@@ -18,9 +19,11 @@ internal static class InterestCode
     private const string GameModule = "GameAssembly.dll";
     private const uint ExecuteReadWrite = 0x40;
 
-    public static void Apply(int cap, Action<string> log)
+    /// <param name="cap">The cap to write; <see cref="InterestCap.GameCap"/> puts the game's own back.</param>
+    /// <returns>Whether the code now holds <paramref name="cap"/>.</returns>
+    public static bool Apply(int cap, Action<string> log)
     {
-        var keepsGameCap = $"interest keeps the game's cap of {InterestCap.GameCap}";
+        var keepsGameCap = "the interest cap is left as it was";
 
         try
         {
@@ -30,14 +33,14 @@ internal static class InterestCode
             {
                 log($"could not find {GameModule}, {keepsGameCap}");
 
-                return;
+                return false;
             }
 
             if (!HoldsGameCode(module))
             {
                 log($"the interest code would lie outside {GameModule} (a game update?), so it is not read; {keepsGameCap}");
 
-                return;
+                return false;
             }
 
             var address = module + InterestCap.GameCodeRva;
@@ -49,15 +52,19 @@ internal static class InterestCode
             {
                 log($"the game's interest code is not the one this mod knows (a game update?), {keepsGameCap}");
 
-                return;
+                return false;
             }
 
             Write(address, rewritten, log);
-            log($"interest is now up to {cap} survival points a day (the game's own cap is {InterestCap.GameCap})");
+            log(cap == InterestCap.GameCap ? $"interest is back to the game's cap of {cap}" : $"interest is now up to {cap} survival points a day (the game's own cap is {InterestCap.GameCap})");
+
+            return true;
         }
         catch (Exception ex)
         {
             log($"could not change the interest cap, {keepsGameCap}: {ex}");
+
+            return false;
         }
     }
 

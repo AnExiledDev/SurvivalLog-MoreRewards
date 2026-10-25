@@ -112,10 +112,11 @@ internal sealed class RewardCatalog
     {
         if (_kinds.TryGetValue(talent.ID, out var known)) return known;
 
-        var effect = Effect(talent);
+        var buff = Buff(talent);
+        var effect = buff != null ? Effect(buff) : null;
         var script = effect?.ConfigName ?? RewardKind.DefaultScript;
         var category = RewardKind.Category(script, script == RewardKind.DefaultScript && effect != null ? SetFields(effect) : Array.Empty<string>());
-        var kind = (category, RewardKind.Life(category, script, effect?.BuffInterval ?? 0f));
+        var kind = (category, RewardKind.Life(category, buff?.BuffDuring));
 
         return _kinds[talent.ID] = kind;
     }
@@ -125,14 +126,11 @@ internal sealed class RewardCatalog
     private static Config_ConditionSet? Condition(Config_Talent talent) =>
         talent.ConditionSetId > 0 && Configs()?._Config_ConditionSet_Dict is { } table && table.TryGetValue(talent.ConditionSetId, out var condition) ? condition : null;
 
-    private static Config_Effect? Effect(Config_Talent talent)
-    {
-        var configs = Configs();
+    private static Config_Buff? Buff(Config_Talent talent) =>
+        Configs()?._Config_Buff_Dict is { } buffs && buffs.TryGetValue(talent.BuffID, out var buff) ? buff : null;
 
-        if (configs?._Config_Buff_Dict is not { } buffs || !buffs.TryGetValue(talent.BuffID, out var buff) || buff == null) return null;
-
-        return configs._Config_Effect_Dict is { } effects && effects.TryGetValue(buff.EffectConfigId, out var effect) ? effect : null;
-    }
+    private static Config_Effect? Effect(Config_Buff buff) =>
+        Configs()?._Config_Effect_Dict is { } effects && effects.TryGetValue(buff.EffectConfigId, out var effect) ? effect : null;
 
     /// <summary>The names of the effect's number fields that are set; the default script's category depends on them.</summary>
     private static IEnumerable<string> SetFields(Config_Effect effect) =>

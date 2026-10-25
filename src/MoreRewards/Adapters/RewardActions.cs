@@ -12,7 +12,7 @@ namespace MoreRewards.Adapters;
 internal readonly record struct InterestTerms(float Rate, int Cap);
 
 /// <summary>
-/// Carries out what the rewards page asks for (locks, not interested, ban, the shop, cashing out) on the next frame,
+/// Carries out what the rewards page asks for (locks, bans and the ban list, the shop, the settings, cashing out) on the next frame,
 /// and tells the page what it needs to draw the mod's buttons whenever the screen's card list is rebuilt or the page
 /// asks for it. Every action checks the screen still shows what the page saw, so a click that arrives late does nothing.
 /// The game's own lock is still the game's: the mod moves it with the game's own pin call, and keeps only the extras.
@@ -22,15 +22,18 @@ internal sealed class RewardActions
     private readonly RewardPage _page;
     private readonly RewardCatalog _catalog;
     private readonly Func<InterestTerms> _interest;
+    private readonly SettingsBoard _settings;
     private readonly Action<string> _log;
     private int _sentVersion = -1;
+    private int _sentSettings = -1;
     private bool _isSetupAsked;
 
-    public RewardActions(RewardPage page, RewardCatalog catalog, Func<InterestTerms> interest, Action<string> log)
+    public RewardActions(RewardPage page, RewardCatalog catalog, Func<InterestTerms> interest, SettingsBoard settings, Action<string> log)
     {
         _page = page;
         _catalog = catalog;
         _interest = interest;
+        _settings = settings;
         _log = log;
     }
 
@@ -41,10 +44,11 @@ internal sealed class RewardActions
     {
         while (PageMessages.TryTake(out var command)) Do(command);
 
-        if (ListPatch.State is not { } state || (!_isSetupAsked && _sentVersion == ListPatch.Version)) return;
+        if (ListPatch.State is not { } state || (!_isSetupAsked && _sentVersion == ListPatch.Version && _sentSettings == LiveScreen.Version)) return;
 
         _isSetupAsked = false;
         _sentVersion = ListPatch.Version;
+        _sentSettings = LiveScreen.Version;
         SendSetup(state);
     }
 
@@ -55,11 +59,14 @@ internal sealed class RewardActions
             switch (command.Verb)
             {
                 case PageVerb.Pin: Pin(command.Id, command.Slot); break;
-                case PageVerb.Skip: PassOn(command.Id, command.Slot, isBan: false); break;
-                case PageVerb.Ban: PassOn(command.Id, command.Slot, isBan: true); break;
+                case PageVerb.Ban: Ban(command.Id, command.Slot); break;
                 case PageVerb.Shop: SendShop(); break;
                 case PageVerb.ShopBuy: ShopBuy(command.Id); break;
                 case PageVerb.CashOut: CashOut(); break;
+                case PageVerb.Bans: SendBans(); break;
+                case PageVerb.Unban: Unban(command.Id); break;
+                case PageVerb.Settings: SendSettings(); break;
+                case PageVerb.Set: Set(command.Key ?? "", command.Value ?? ""); break;
                 default: throw new ArgumentOutOfRangeException(nameof(command), command.Verb, null);
             }
         }
@@ -107,42 +114,71 @@ internal sealed class RewardActions
         }
     }
 
-    /// <summary>Not interested (gone for the day) or ban (gone for the run), then the card's slot is filled from the day's groups.</summary>
-    private void PassOn(int id, int slot, bool isBan)
+    /// <summary>Keeps the card (and its line, with BanWholeLine) away for the rest of the run, then fills its slot from the day's groups.</summary>
+    private void Ban(int id, int slot)
     {
         var settings = LiveScreen.Settings;
 
-        if ((isBan ? !settings.BanButton : !settings.NotInterested) || !IsShown(id, slot)) return;
+        if (!settings.BanButton || !IsShown(id, slot)) return;
 
         if (RunGame.Results() is not { } results || RunGame.Planning() is not { } planning || ListPatch.State is not { } state) return;
 
-        var book = LiveScreen.Book;
-        var day = RunGame.Day();
-        var gone = new List<int> { id };
-
-        if (isBan)
+        if (settings.BanCost > 0 && !results.TrySpendSurvivalPoint(settings.BanCost))
         {
-            if (settings.BanCost > 0 && !results.TrySpendSurvivalPoint(settings.BanCost))
-            {
-                Toast(Say($"Banning costs {settings.BanCost} survival points", $"禁用需要 {settings.BanCost} 生存点"));
+            Toast(Say($"Banning costs {settings.BanCost} survival points", $"禁用需要 {settings.BanCost} 生存点"));
 
-                return;
-            }
-
-            if (settings.BanWholeLine) gone = _catalog.LineOf(id).Union(gone).ToList();
-
-            foreach (var banned in gone) book.Ban(banned);
-
-            Release(results, gone);
-            Toast(Say("Banned: ", "已禁用：") + string.Join(Say(", ", "、"), gone.Select(_catalog.NameOf)));
-        }
-        else
-        {
-            book.Skip(id, day);
+            return;
         }
 
-        SwapOut(results, planning, state, day, gone);
+        var line = settings.BanWholeLine ? _catalog.LineOf(id) : Array.Empty<int>();
+        var gone = LiveScreen.Book.Ban(id, line, settings.BanCost);
+
+        Release(results, gone);
+        Toast(Say("Banned: ", "已禁用：") + Names(gone));
+        SwapOut(results, planning, state, RunGame.Day(), gone);
     }
+
+    private void SendBans()
+    {
+        var settings = LiveScreen.Settings;
+        var rows = Bans().Select(ban => new BanRow(ban.Head, ban.Members.Select(_catalog.NameOf).ToList(), BanRefund.Of(ban, settings.BanCost, settings.UnbanRefund))).ToList();
+
+        _page.Send(PageData.BansCall(rows, settings.UnbanRefund, GameLanguage.Current()));
+    }
+
+    /// <summary>The ban's rewards can be offered again from the next draw, and part of what it cost comes back.</summary>
+    private void Unban(int head)
+    {
+        if (RunGame.Results() is not { } results) return;
+
+        var settings = LiveScreen.Settings;
+
+        if (LiveScreen.Book.Unban(head, _catalog.Plans().Select(talent => talent.ID)) is { } ban)
+        {
+            var refund = BanRefund.Of(ban, settings.BanCost, settings.UnbanRefund);
+
+            if (refund > 0) results.AddSurvivalPoint(refund);
+
+            _log($"unbanned {string.Join(", ", ban.Members)}, refunded {refund} survival points");
+            Toast(Say("Ban removed: ", "已解除禁用：") + Names(ban.Members) + (refund > 0 ? Say($" (+{refund} survival points)", $"（+{refund} 生存点）") : ""));
+        }
+
+        SendBans();
+    }
+
+    private IReadOnlyList<BanGroup> Bans() => LiveScreen.Book.Bans(_catalog.Plans().Select(talent => talent.ID));
+
+    private void SendSettings() => _page.Send(PageData.SettingsCall(_settings.Rows(GameLanguage.Current()), GameLanguage.Current()));
+
+    private void Set(string key, string value)
+    {
+        if (_settings.Set(key, value) is { } problem) _log("the rewards screen's settings could not change a setting: " + problem);
+        else _log($"the rewards screen set {key} to {value}");
+
+        SendSettings();
+    }
+
+    private string Names(IEnumerable<int> ids) => string.Join(Say(", ", "、"), ids.Select(_catalog.NameOf));
 
     /// <summary>A banned card loses its lock, so it does not come back tomorrow.</summary>
     private static void Release(SurvivalResultsManager results, IReadOnlyCollection<int> gone)

@@ -2,10 +2,11 @@
 // page (RogueSelect.html) it:
 // - lays out more than the game's three cards in even rows of at most five, smaller once there is more than one row,
 //   and lets the cards scroll when they still do not fit, so no card is ever cut off;
-// - adds the mod's buttons to the cards (not interested, ban, a permanent or one-time label) and to the footer (the
-//   lock count, tomorrow's interest, the cash-out note and the shop), and draws the shop and short notices;
+// - adds the mod's buttons to the cards (ban, and a permanent, one-time or how-long label) and to the footer (the
+//   lock count, tomorrow's interest, the cash-out note, the shop, the ban list and the settings), and draws the shop,
+//   the ban list, the settings and short notices;
 // - takes over the lock button when the player may lock more than one card.
-// The plugin tells the page what to draw through window.__slmorerewards.setup/shop/toast, collects notes for its log
+// The plugin tells the page what to draw through window.__slmorerewards.setup/shop/bans/settings/toast, collects notes for its log
 // through take(), and hears the buttons through vuplex.postMessage("slmod|morerewards|<verb>|<args>"). The page draws
 // only what the plugin said; every click is checked again by the plugin, which owns the points and the cards.
 (function () {
@@ -59,13 +60,14 @@
     '.card .mr-life{position:absolute;top:14px;left:14px;z-index:3;font:11px var(--font-num);letter-spacing:2px;padding:2px 7px;border:1px solid;background:rgba(0,0,0,0.35)}',
     '.card .mr-life.perm{color:#9fd38a;border-color:rgba(140,210,120,0.45)}',
     '.card .mr-life.once{color:#e0b070;border-color:rgba(224,176,112,0.5)}',
+    '.card .mr-life.timed{color:#8ec5e8;border-color:rgba(142,197,232,0.5)}',
     '.mr-acts{display:flex;justify-content:space-between;margin-top:10px;gap:8px}',
     '.mr-acts button{flex:1;background:transparent;border:1px solid var(--border-light);color:var(--text-meta);font:12px var(--font-main);letter-spacing:1px;padding:5px 4px;cursor:pointer}',
     '.mr-acts button:hover{color:var(--text-main);border-color:var(--border-highlight)}',
     '.mr-acts button.ban:hover{color:var(--danger);border-color:rgba(255,82,82,0.6)}',
     '.mr-acts button b{font-family:var(--font-num);color:var(--highlight);font-weight:normal;margin-left:3px}',
     '.pin-count{font-family:var(--font-num);color:var(--highlight);margin-left:14px;font-size:14px}',
-    '.mr-shop-btn{margin-left:18px;border-color:var(--border-highlight) !important;color:var(--highlight) !important}',
+    '.mr-foot-btns .ghost-btn{margin-left:18px;border-color:var(--border-highlight) !important;color:var(--highlight) !important}',
     '.mr-foot small{display:block;color:var(--text-meta);font-size:13px;margin-top:2px}',
     '.shop{position:fixed;inset:0;z-index:200;background:rgba(8,6,4,0.82);display:flex;align-items:center;justify-content:center}',
     '.shop[hidden]{display:none}',
@@ -106,17 +108,43 @@
     '.sr .tag{font:11px var(--font-num);letter-spacing:2px;padding:1px 6px;border:1px solid;font-weight:normal}',
     '.sr .tag.perm{color:#9fd38a;border-color:rgba(140,210,120,0.45)}',
     '.sr .tag.once{color:#e0b070;border-color:rgba(224,176,112,0.5)}',
+    '.sr .tag.timed{color:#8ec5e8;border-color:rgba(142,197,232,0.5)}',
     '.shop-ft{display:flex;align-items:center;gap:20px;padding:14px 28px;border-top:1px solid var(--border-divider);color:var(--text-dim);font-size:15px}',
     '.shop-ft b{color:var(--highlight);font-family:var(--font-num);font-size:20px}',
     '.shop-ft .sp{flex:1}',
     '.shop-none{grid-column:1 / -1;padding:60px;text-align:center;color:var(--text-dim)}',
+    '.mr-pane{position:fixed;inset:0;z-index:200;background:rgba(8,6,4,0.82);display:flex;align-items:center;justify-content:center}',
+    '.mr-pane[hidden]{display:none}',
+    '.mr-pane-card{width:min(1100px,90vw);max-height:88vh;display:flex;flex-direction:column;border:1px solid var(--border-highlight);background:linear-gradient(180deg,rgba(40,34,26,0.98),rgba(22,18,14,0.98));box-shadow:0 30px 90px rgba(0,0,0,0.8)}',
+    '.mr-pane-hd{display:flex;align-items:center;padding:20px 28px 8px}',
+    '.mr-pane-hd h2{color:#fff;font-size:28px;letter-spacing:8px;font-weight:bold;margin:0}',
+    '.mr-pane-hd .sp{flex:1}',
+    '.mr-pane-hd .x{font-size:28px;color:var(--text-dim);cursor:pointer;background:none;border:0}',
+    '.mr-pane-hd .x:hover{color:#fff}',
+    '.mr-pane-note{color:var(--text-dim);font-size:14px;line-height:1.5;padding:0 28px 12px;border-bottom:1px solid var(--border-divider)}',
+    '.mr-pane-list{overflow-y:auto;padding:10px 28px 20px;min-height:0}',
+    '.mr-pane-list::-webkit-scrollbar{width:8px}',
+    '.mr-pane-list::-webkit-scrollbar-thumb{background:rgba(255,200,80,.35)}',
+    '.mr-pane-list h3{color:var(--highlight);font-size:15px;letter-spacing:3px;margin:16px 0 6px}',
+    '.mr-pane-none{padding:40px;text-align:center;color:var(--text-dim)}',
+    '.mr-row{display:flex;align-items:center;gap:16px;padding:10px 14px;border:1px solid var(--border-card);background:rgba(40,34,26,0.85);margin-bottom:6px}',
+    '.mr-row .txt{flex:1;min-width:0}',
+    '.mr-row .n{color:#fff;font-size:16px}',
+    '.mr-row .d{color:var(--text-dim);font-size:13px;line-height:1.45;margin-top:3px}',
+    '.mr-row .rs{color:#e0b070;font-size:12px;margin-left:10px}',
+    '.mr-row .r{font-family:var(--font-num);color:var(--highlight);font-size:18px}',
+    '.mr-row .ctl{display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end;max-width:45%}',
+    '.mr-row button{background:rgba(255,200,58,0.12);border:1px solid var(--border-highlight);color:var(--highlight);padding:6px 14px;font:bold 14px var(--font-main);letter-spacing:2px;cursor:pointer}',
+    '.mr-row button:hover{background:rgba(255,200,58,0.28);color:#fff}',
+    '.mr-row button.off{background:transparent;color:var(--text-meta);border-color:var(--border-light)}',
+    '.mr-row input{width:72px;background:rgba(0,0,0,0.45);border:1px solid var(--border-light);color:#fff;padding:6px 8px;font:16px var(--font-num);text-align:center;outline:none;user-select:text}',
+    '.mr-row input:focus{border-color:var(--highlight)}',
     '.toast2{position:fixed;left:50%;top:40px;transform:translateX(-50%);z-index:300;background:rgba(20,16,12,0.95);border:1px solid var(--border-highlight);color:var(--text-main);padding:10px 22px;font-size:16px}'
   ];
 
   var TEXT = {
     perm: ['PERMANENT', '永久'],
     once: ['ONE-TIME', '一次性'],
-    notInterested: ['Not interested', '不感兴趣'],
     ban: ['Ban', '禁用'],
     lock: ['Lock: keep it through refreshes and into tomorrow', '锁定：刷新和第二天都会保留它'],
     unlock: ['Locked: kept through refreshes and into tomorrow. Click again to unlock.', '已锁定：刷新和第二天都会保留。再点一次解除锁定。'],
@@ -137,8 +165,20 @@
     buy: ['BUY', '购买'],
     early: ['Bought before its needs are met: double price', '未满足条件提前购买：双倍价格'],
     noBuys: ['No shop buys left today', '今日购买次数已用完'],
-    none: ['No reward matches.', '没有匹配的奖励。']
+    none: ['No reward matches.', '没有匹配的奖励。'],
+    bans: ['BANS', '禁用列表'],
+    bansNote: ['Removing a ban lets its rewards be offered again and gives back ', '解除禁用后，这些奖励可以再次出现，并退还禁用花费的 '],
+    bansNoteEnd: ['% of what it cost.', '%。'],
+    noBans: ['Nothing is banned this run.', '本局没有禁用任何奖励。'],
+    remove: ['REMOVE', '解除'],
+    settings: ['SETTINGS', '设 置'],
+    settingsNote: ['More Rewards settings. Changes are saved and apply at once, except the ones marked as needing a restart.', '更多奖励的设置。修改会保存并立即生效，标明需要重启的除外。'],
+    restart: ['takes effect after a restart', '重启游戏后生效'],
+    on: ['ON', '开'],
+    off: ['OFF', '关']
   };
+
+  var SECTIONS = { General: '通用', Rewards: '奖励', Interest: '利息', Locks: '锁定', Cards: '卡片', Shop: '商店' };
 
   var CATS = [['all', 'All', '全部'], ['body', 'Body', '身体'], ['food', 'Food', '食物'], ['farming', 'Farming', '种植'], ['recipes', 'Recipes', '配方'],
     ['cooking', 'Cooking', '烹饪'], ['traps', 'Traps', '陷阱'], ['trade', 'Trade', '交易'], ['power', 'Power', '电力'], ['airdrops', 'Airdrops', '空投'],
@@ -152,6 +192,9 @@
   var setupData = null;
   var shopData = null;
   var isShopAsked = false;
+  var bansData = null;
+  var settingsData = null;
+  var asked = { bans: false, settings: false };
   var rewardsDoc = null;
   var shopView = { query: '', cat: 'all', onlyBuyable: false };
 
@@ -203,6 +246,29 @@
     };
   }
 
+  // A card's or shop row's label from how long its reward lasts, in game seconds: below 0 is permanent, 0 is one-time,
+  // and anything else is how long, in whole days from 2 days up, otherwise in hours or minutes.
+  function lifeLabel(seconds, lang) {
+    var isZh = lang === 'zh';
+
+    if (seconds === undefined || seconds === null || seconds < 0) return { kind: 'perm', text: say(TEXT.perm, lang) };
+
+    if (seconds === 0) return { kind: 'once', text: say(TEXT.once, lang) };
+
+    var count = Math.round(seconds / 60);
+    var unit = isZh ? '分钟' : ' MIN';
+
+    if (seconds >= 2 * 86400 && seconds % 86400 === 0) {
+      count = seconds / 86400;
+      unit = isZh ? '天' : ' DAYS';
+    } else if (seconds % 3600 === 0) {
+      count = seconds / 3600;
+      unit = isZh ? '小时' : count === 1 ? ' HOUR' : ' HOURS';
+    }
+
+    return { kind: 'timed', text: isZh ? '持续' + count + unit : count + unit };
+  }
+
   function say(text, lang) {
     return text[lang === 'zh' ? 1 : 0];
   }
@@ -226,6 +292,30 @@
 
     isShopAsked = false;
     drawShop(doc);
+  }
+
+  function bans(data) {
+    bansData = data;
+    drawIfWanted('bans', drawBans);
+  }
+
+  function settings(data) {
+    settingsData = data;
+    drawIfWanted('settings', drawSettings);
+  }
+
+  // A panel is drawn when it was just opened, or again with new data while it is open.
+  function drawIfWanted(name, draw) {
+    var doc = rewardsDoc;
+
+    if (!doc || !doc.body) return;
+
+    var panel = doc.body.querySelector('.mr-pane-' + name);
+
+    if (!asked[name] && !(panel && !panel.hidden)) return;
+
+    asked[name] = false;
+    draw(doc);
   }
 
   function toast(text) {
@@ -339,7 +429,7 @@
     if (!cardEl) return;
 
     var isOpen = card.state !== 'bought' && card.state !== 'locked' && !card.pinned;
-    var key = [card.id, isOpen, lang(), setupData.labels, setupData.notInterested, setupData.ban, setupData.banCost].join('|');
+    var key = [card.id, isOpen, lang(), setupData.labels, setupData.ban, setupData.banCost].join('|');
 
     if (cardEl.__slmrKey !== key) {
       cardEl.__slmrKey = key;
@@ -348,29 +438,24 @@
 
       if (setupData.labels) addLife(cardEl, card);
 
-      if (isOpen && (setupData.notInterested || setupData.ban)) addActs(cardEl, card, slot);
+      if (isOpen && setupData.ban) addActs(cardEl, card, slot);
     }
 
     if (setupData.maxLocked > 1) setTip(cardEl, card, locked);
   }
 
   function addLife(cardEl, card) {
-    var life = setupData.life && setupData.life[card.id] ? 'once' : 'perm';
+    var label = lifeLabel(setupData.life ? setupData.life[card.id] : undefined, lang());
 
-    cardEl.insertBefore(el(cardEl.ownerDocument, 'span', 'mr-life ' + life, t(TEXT[life])), cardEl.firstChild);
+    cardEl.insertBefore(el(cardEl.ownerDocument, 'span', 'mr-life ' + label.kind, label.text), cardEl.firstChild);
   }
 
   function addActs(cardEl, card, slot) {
     var doc = cardEl.ownerDocument;
     var acts = el(doc, 'div', 'mr-acts');
+    var ban = acts.appendChild(button(doc, 'ban', t(TEXT.ban), function () { post('ban|' + card.id + '|' + slotIndex(slot)); }));
 
-    if (setupData.notInterested) acts.appendChild(button(doc, '', t(TEXT.notInterested), function () { post('skip|' + card.id + '|' + slotIndex(slot)); }));
-
-    if (setupData.ban) {
-      var ban = acts.appendChild(button(doc, 'ban', t(TEXT.ban), function () { post('ban|' + card.id + '|' + slotIndex(slot)); }));
-
-      if (setupData.banCost > 0) ban.appendChild(el(doc, 'b', '', String(setupData.banCost)));
-    }
+    if (setupData.banCost > 0) ban.appendChild(el(doc, 'b', '', String(setupData.banCost)));
 
     cardEl.appendChild(acts);
   }
@@ -403,7 +488,7 @@
       footLines(left, points);
     }
 
-    if (center) shopButton(doc, center);
+    if (center) footButtons(doc, center);
   }
 
   function footLines(left, points) {
@@ -421,24 +506,34 @@
     lines.forEach(function (line) { foot.appendChild(el(left.ownerDocument, 'small', '', line)); });
   }
 
-  function shopButton(doc, center) {
-    var existing = center.querySelector('.mr-shop-btn');
+  // Shop (when it is on), the ban list (when bans are on) and the settings, in that order, drawn again only when one
+  // of them comes or goes or the language changes.
+  function footButtons(doc, center) {
+    var box = center.querySelector('.mr-foot-btns') || center.appendChild(el(doc, 'span', 'mr-foot-btns'));
+    var key = [lang(), setupData.shop, setupData.ban].join('|');
 
-    if (!setupData.shop) {
-      if (existing) existing.remove();
+    if (box.__slmrKey === key) return;
 
-      return;
+    box.__slmrKey = key;
+    removeChildren(box);
+
+    if (setupData.shop) {
+      box.appendChild(button(doc, 'ghost-btn mr-shop-btn', t(TEXT.shop), function () {
+        isShopAsked = true;
+        post('shop');
+      }));
     }
 
-    if (existing) {
-      if (existing.textContent !== t(TEXT.shop)) existing.textContent = t(TEXT.shop);
-
-      return;
+    if (setupData.ban) {
+      box.appendChild(button(doc, 'ghost-btn mr-bans-btn', t(TEXT.bans), function () {
+        asked.bans = true;
+        post('bans');
+      }));
     }
 
-    center.appendChild(button(doc, 'ghost-btn mr-shop-btn', t(TEXT.shop), function () {
-      isShopAsked = true;
-      post('shop');
+    box.appendChild(button(doc, 'ghost-btn mr-set-btn', t(TEXT.settings), function () {
+      asked.settings = true;
+      post('settings');
     }));
   }
 
@@ -625,7 +720,11 @@
       line.appendChild(el(doc, 'span'));
     }
 
-    if (setupData && setupData.labels) name.appendChild(el(doc, 'span', 'tag ' + (row.once ? 'once' : 'perm'), t(row.once ? TEXT.once : TEXT.perm)));
+    if (setupData && setupData.labels) {
+      var label = lifeLabel(row.life, lang());
+
+      name.appendChild(el(doc, 'span', 'tag ' + label.kind, label.text));
+    }
 
     text.appendChild(el(doc, 'div', 'd', row.desc));
 
@@ -641,6 +740,145 @@
     line.appendChild(buy);
 
     return line;
+  }
+
+  // ---------- The ban list and the settings ----------
+
+  // The frame both panels share, built once: a title, a note, and a list drawn again with each answer from the plugin.
+  function pane(doc, name) {
+    var panel = doc.body.querySelector('.mr-pane-' + name);
+
+    if (panel) return panel;
+
+    panel = el(doc, 'div', 'mr-pane mr-pane-' + name);
+
+    var card = panel.appendChild(el(doc, 'div', 'mr-pane-card'));
+    var head = card.appendChild(el(doc, 'div', 'mr-pane-hd'));
+
+    head.appendChild(el(doc, 'h2'));
+    head.appendChild(el(doc, 'span', 'sp'));
+    head.appendChild(button(doc, 'x', '\u2715', function () { panel.hidden = true; }));
+    card.appendChild(el(doc, 'div', 'mr-pane-note'));
+    card.appendChild(el(doc, 'div', 'mr-pane-list'));
+    panel.addEventListener('click', function (e) {
+      if (e.target === panel) panel.hidden = true;
+    });
+    doc.body.appendChild(panel);
+
+    return panel;
+  }
+
+  // Opens the panel with its title and note, and hands back its list, emptied, keeping how far it was scrolled.
+  function openPane(doc, name, title, note) {
+    addStyle(doc);
+
+    var panel = pane(doc, name);
+    var list = panel.querySelector('.mr-pane-list');
+    var scrolled = list.scrollTop || 0;
+
+    panel.hidden = false;
+    panel.querySelector('h2').textContent = title;
+    panel.querySelector('.mr-pane-note').textContent = note;
+    removeChildren(list);
+    setTimeout(function () { list.scrollTop = scrolled; });
+
+    return list;
+  }
+
+  function drawBans(doc) {
+    if (!bansData) return;
+
+    var list = openPane(doc, 'bans', t(TEXT.bans), t(TEXT.bansNote) + bansData.refund + t(TEXT.bansNoteEnd));
+
+    if (!bansData.rows.length) list.appendChild(el(doc, 'div', 'mr-pane-none', t(TEXT.noBans)));
+
+    bansData.rows.forEach(function (row) {
+      var line = list.appendChild(el(doc, 'div', 'mr-row mr-ban'));
+
+      line.appendChild(el(doc, 'div', 'txt')).appendChild(el(doc, 'div', 'n', row.names.join(lang() === 'zh' ? '、' : ', ')));
+
+      if (row.refund > 0) line.appendChild(el(doc, 'span', 'r', '+' + row.refund));
+
+      line.appendChild(button(doc, '', t(TEXT.remove), function () { post('unban|' + row.id); }));
+    });
+  }
+
+  function drawSettings(doc) {
+    if (!settingsData) return;
+
+    var list = openPane(doc, 'settings', t(TEXT.settings), t(TEXT.settingsNote));
+    var section = '';
+
+    settingsData.rows.forEach(function (row) {
+      if (!row.shown) return;
+
+      if (row.section !== section) {
+        section = row.section;
+        list.appendChild(el(doc, 'h3', '', lang() === 'zh' && SECTIONS[section] ? SECTIONS[section] : section));
+      }
+
+      list.appendChild(settingRow(doc, row));
+    });
+  }
+
+  function settingRow(doc, row) {
+    var line = el(doc, 'div', 'mr-row mr-setting');
+    var text = line.appendChild(el(doc, 'div', 'txt'));
+    var name = text.appendChild(el(doc, 'div', 'n', row.name));
+    var controls = line.appendChild(el(doc, 'div', 'ctl'));
+
+    if (row.restart) name.appendChild(el(doc, 'span', 'rs', t(TEXT.restart)));
+
+    text.appendChild(el(doc, 'div', 'd', row.desc));
+
+    if (row.kind === 'bool') {
+      var isOn = row.value === 'true';
+
+      controls.appendChild(button(doc, isOn ? 'on' : 'off', t(isOn ? TEXT.on : TEXT.off), function () { setSetting(row, isOn ? 'false' : 'true'); }));
+    } else if (row.kind === 'choice') {
+      var chips = controls.appendChild(el(doc, 'div', 'chips'));
+
+      row.options.forEach(function (option) {
+        var chip = chips.appendChild(el(doc, 'span', option === row.value ? 'on' : '', option));
+
+        chip.addEventListener('click', function () { setSetting(row, option); });
+      });
+    } else {
+      numberControls(doc, controls, row);
+    }
+
+    return line;
+  }
+
+  // A number box between - and +. A typed number is sent when the box loses focus or on Enter, held to the range.
+  function numberControls(doc, controls, row) {
+    var value = Number(row.value) || 0;
+    var input = doc.createElement('input');
+    var send = function (number) {
+      if (isNaN(number)) return;
+
+      var held = Math.max(row.min, Math.min(row.max, Math.round(number)));
+
+      if (String(held) !== row.value) setSetting(row, String(held));
+    };
+
+    controls.appendChild(button(doc, '', '-', function () { send(value - 1); }));
+    controls.appendChild(input);
+    controls.appendChild(button(doc, '', '+', function () { send(value + 1); }));
+    input.value = row.value;
+    input.addEventListener('change', function () { send(Number(input.value)); });
+    // Typed keys stay in the box: the game must not read them as hotkeys.
+    input.addEventListener('keydown', function (e) {
+      e.stopPropagation();
+
+      if (e.key === 'Enter') send(Number(input.value));
+
+      if (e.key === 'Escape') input.closest('.mr-pane').hidden = true;
+    });
+  }
+
+  function setSetting(row, value) {
+    post('set|' + row.key + '|' + value);
   }
 
   // ---------- Small DOM helpers ----------
@@ -747,5 +985,5 @@
     }
   }, CHECK_MS);
 
-  window.__slmorerewards = { take: take, check: check, layout: layout, setup: setup, shop: shop, toast: toast, interest: interest, shopList: shopList };
+  window.__slmorerewards = { take: take, check: check, layout: layout, setup: setup, shop: shop, bans: bans, settings: settings, toast: toast, interest: interest, shopList: shopList, lifeLabel: lifeLabel };
 })();

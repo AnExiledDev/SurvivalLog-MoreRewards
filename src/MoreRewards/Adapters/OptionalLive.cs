@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using BepInEx.Configuration;
 using BepInEx.Logging;
@@ -9,28 +10,40 @@ namespace MoreRewards.Adapters;
 
 /// <summary>
 /// Applies settings through Exiled's Toolkit when it is installed, so a change on the Mod Manager's Mods screen takes
-/// effect at once. Without the Toolkit, or with one older than 0.4.0, each setting is applied once at start and a
-/// change waits for the next game start. Only <see cref="WatchWithToolkit"/> names a Toolkit type, so the mod loads
-/// without it.
+/// effect at once. Without the Toolkit, or with one older than 0.4.0, the mod listens for changes itself, so a change
+/// made on the rewards screen's settings still applies at once. Only <see cref="WatchWithToolkit"/> names a Toolkit
+/// type, so the mod loads without it.
 /// </summary>
 internal static class OptionalLive
 {
     public const string ToolkitGuid = "com.dev.survivallog.exiledtoolkit";
 
-    public const string MissingNote = "Exiled's Toolkit is not installed, so settings are read once at start. Install Toolkit 0.4.0 or newer to change settings in game without a restart.";
+    public const string MissingNote = "Exiled's Toolkit is not installed. Settings changed on the rewards screen still apply at once; install Toolkit 0.4.0 or newer to change them from the Mod Manager too.";
 
     private static readonly Lazy<ManualLogSource> Log = new(() => Logger.CreateLogSource(typeof(OptionalLive).Assembly.GetName().Name ?? "Settings"));
 
     /// <summary>Whether a Toolkit is installed. Valid from the mod's Load on, since the Toolkit loads first.</summary>
     public static bool IsToolkitInstalled => IL2CPPChainloader.Instance.Plugins.ContainsKey(ToolkitGuid);
 
-    /// <summary>Calls <paramref name="apply"/> with the entry's value now, and again after each change while the Toolkit is installed.</summary>
+    /// <summary>Calls <paramref name="apply"/> with the entry's value now, and again after each change.</summary>
     public static void Watch<T>(ConfigEntry<T> entry, Action<T> apply) => Watch(() => apply(entry.Value), entry);
 
-    /// <summary>Calls <paramref name="apply"/> now, and again after any of the entries changes while the Toolkit is installed.</summary>
+    /// <summary>
+    /// Calls <paramref name="apply"/> now, and again after any of the entries changes: through the Toolkit on the next
+    /// frame when it is installed, otherwise straight away on the thread that made the change (the rewards screen's
+    /// settings change them on the main thread).
+    /// </summary>
     public static void Watch(Action apply, params ConfigEntryBase[] entries)
     {
         if (IsToolkitInstalled && TryWatchWithToolkit(apply, entries)) return;
+
+        foreach (var file in entries.Select(entry => entry.ConfigFile).Distinct())
+        {
+            file.SettingChanged += (_, args) =>
+            {
+                if (entries.Contains(args.ChangedSetting)) ApplyOnce(apply);
+            };
+        }
 
         ApplyOnce(apply);
     }
@@ -45,7 +58,7 @@ internal static class OptionalLive
         }
         catch (Exception ex) when (ex is TypeLoadException or MissingMethodException or FileNotFoundException or FileLoadException)
         {
-            Log.Value.LogWarning("Exiled's Toolkit is older than 0.4.0, so settings are read once at start: " + ex.Message);
+            Log.Value.LogWarning("Exiled's Toolkit is older than 0.4.0, so only the rewards screen's settings apply at once: " + ex.Message);
 
             return false;
         }

@@ -1,26 +1,37 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 
 namespace MoreRewards.Core;
 
-/// <summary>Whether a reward keeps working for the rest of the run or does its thing once.</summary>
-public enum RewardLife
+/// <summary>Whether a reward keeps working for the rest of the run, does its thing once, or lasts a while.</summary>
+public readonly record struct RewardLife
 {
-    Permanent,
-    OneTime,
+    public static readonly RewardLife Permanent = new(-1);
+    public static readonly RewardLife OneTime = new(0);
+
+    private RewardLife(int seconds) => Seconds = seconds;
+
+    /// <summary>How long the reward lasts, in game seconds (a day is 86400); -1 for permanent and 0 for one-time.</summary>
+    public int Seconds { get; }
+
+    public bool IsTimed => Seconds > 0;
+
+    /// <returns>A reward that lasts <paramref name="seconds"/>; none at all is one-time.</returns>
+    public static RewardLife Timed(int seconds) => seconds > 0 ? new RewardLife(seconds) : OneTime;
 }
 
 /// <summary>
 /// Sorts rewards for the shop's chips and the cards' labels, from the script the reward's buff runs (Config_Effect's
-/// ConfigName, such as "Buff/Buff_Trap_Damage") and the fields that script is given.
+/// ConfigName, such as "Buff/Buff_Trap_Damage") and the fields that script is given, and how long the buff lasts.
 /// </summary>
 public static class RewardKind
 {
     public const string DefaultScript = "Buff/Buff_Default";
 
-    /// <summary>A buff that ticks once a day (86400 seconds) and is then gone.</summary>
-    public const float OneDay = 86400f;
+    /// <summary>Config_Buff.BuffDuring of a buff that acts once, on the spot, and is gone (-1 is a buff that stays).</summary>
+    public const float Instant = 1f;
 
     /// <summary>The first pattern that matches names the category; "body" takes the rest.</summary>
     private static readonly (string Category, Regex Pattern)[] Categories =
@@ -39,9 +50,6 @@ public static class RewardKind
         ("food", new Regex("Food|Satiety|Nutrition|Eat|Metabolism|Stomach|Corrosion|Endurance|Process_Adapt|Deep_Sleep|Tired")),
     };
 
-    /// <summary>Scripts that act once: a bonus paid on the spot, a one-off fire fight, a start-of-day notice.</summary>
-    private static readonly Regex OnceScripts = new("Buff_306110|Buff_306310|Buff_306410|Multitask|Annual_Bonus|Default_StartNotify|Buff_3058|Buff_3059|Fight_Fire");
-
     /// <param name="setFields">The names of the script's fields that are set (not zero or empty); only the default script needs them.</param>
     public static string Category(string script, IEnumerable<string> setFields)
     {
@@ -57,6 +65,13 @@ public static class RewardKind
         return Categories.FirstOrDefault(entry => entry.Pattern.IsMatch(script)).Category ?? "body";
     }
 
-    public static RewardLife Life(string category, string script, float buffInterval) =>
-        category == "airdrops" || buffInterval == OneDay || OnceScripts.IsMatch(script) ? RewardLife.OneTime : RewardLife.Permanent;
+    /// <param name="buffDuring">The reward's Config_Buff.BuffDuring, in game seconds; null for a reward with no buff, a lasting upgrade.</param>
+    public static RewardLife Life(string category, float? buffDuring)
+    {
+        if (category == "airdrops") return RewardLife.OneTime;
+
+        if (buffDuring is not { } during || during < 0) return RewardLife.Permanent;
+
+        return during > Instant ? RewardLife.Timed((int)Math.Round(during)) : RewardLife.OneTime;
+    }
 }

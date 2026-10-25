@@ -12,6 +12,25 @@ namespace MoreRewards.Core;
 /// <param name="IsEarly">Its needs are not met yet, so the price is doubled.</param>
 public sealed record ShopRow(int Id, string Name, string Desc, string Icon, int Cost, int Price, string? Why, RewardLife Life, string Category, bool IsEarly);
 
+/// <summary>A ban as the ban list shows it: the rewards it keeps away, by name, and what removing it pays back.</summary>
+public sealed record BanRow(int Head, IReadOnlyList<string> Names, int Refund);
+
+public enum SettingKind
+{
+    Bool,
+    Int,
+    Choice,
+}
+
+/// <summary>A setting as the rewards screen's settings show it.</summary>
+/// <param name="Key">"Section.Key", what the page sends back to change it.</param>
+/// <param name="Value">The value now, as the config file writes it.</param>
+/// <param name="Options">The names a <see cref="SettingKind.Choice"/> can take.</param>
+/// <param name="Desc">The description in the game's language.</param>
+/// <param name="IsRestart">A change waits for the next game start.</param>
+/// <param name="IsShown">False while the setting it depends on is off.</param>
+public sealed record SettingRow(string Key, string Section, string Name, SettingKind Kind, string Value, int Min, int Max, IReadOnlyList<string> Options, string Desc, bool IsRestart, bool IsShown);
+
 /// <summary>What the page is told when the rewards screen opens, so it can draw the mod's buttons.</summary>
 /// <param name="InterestRate">The fraction of the points held that is paid as interest when the day ends.</param>
 /// <param name="InterestCap">The most interest a day can pay.</param>
@@ -28,6 +47,12 @@ public static class PageData
     public static string ShopCall(IReadOnlyList<ShopRow> rows, int points, int? leftToday, int rise, Language language) =>
         "window.__slmorerewards && window.__slmorerewards.shop(" + Shop(rows, points, leftToday, rise, language) + ")";
 
+    public static string BansCall(IReadOnlyList<BanRow> rows, int refundPercent, Language language) =>
+        "window.__slmorerewards && window.__slmorerewards.bans(" + Bans(rows, refundPercent, language) + ")";
+
+    public static string SettingsCall(IReadOnlyList<SettingRow> rows, Language language) =>
+        "window.__slmorerewards && window.__slmorerewards.settings(" + Settings(rows, language) + ")";
+
     public static string ToastCall(string text) => "window.__slmorerewards && window.__slmorerewards.toast(" + Text(text) + ")";
 
     public static string Setup(PageSetup setup)
@@ -39,7 +64,6 @@ public static class PageData
         json.Append(",\"maxLocked\":").Append(s.MaxLocked);
         json.Append(",\"gamePin\":").Append(setup.GamePin);
         json.Append(",\"extras\":[").Append(string.Join(",", setup.Extras.Select(held => held.Id))).Append(']');
-        json.Append(",\"notInterested\":").Append(Flag(s.NotInterested));
         json.Append(",\"ban\":").Append(Flag(s.BanButton));
         json.Append(",\"banCost\":").Append(s.BanCost);
         json.Append(",\"labels\":").Append(Flag(s.Labels));
@@ -49,7 +73,7 @@ public static class PageData
         json.Append(",\"shopReset\":").Append(Text(s.ShopReset.ToString().ToLowerInvariant()));
         json.Append(",\"rate\":").Append(setup.InterestRate.ToString("0.####", CultureInfo.InvariantCulture));
         json.Append(",\"cap\":").Append(setup.InterestCap);
-        json.Append(",\"life\":{").Append(string.Join(",", setup.Lives.Where(entry => entry.Value == RewardLife.OneTime).Select(entry => "\"" + entry.Key + "\":1"))).Append('}');
+        json.Append(",\"life\":{").Append(string.Join(",", setup.Lives.Where(entry => entry.Value != RewardLife.Permanent).Select(entry => "\"" + entry.Key + "\":" + entry.Value.Seconds))).Append('}');
 
         return json.Append('}').ToString();
     }
@@ -67,6 +91,15 @@ public static class PageData
 
         return json.ToString();
     }
+
+    /// <param name="refundPercent">The share of a ban's cost that removing it pays back, in percent.</param>
+    public static string Bans(IReadOnlyList<BanRow> rows, int refundPercent, Language language) =>
+        "{\"lang\":" + Text(LanguageCode(language)) +
+        ",\"refund\":" + refundPercent +
+        ",\"rows\":[" + string.Join(",", rows.Select(row => "{\"id\":" + row.Head + ",\"names\":[" + string.Join(",", row.Names.Select(Text)) + "],\"refund\":" + row.Refund + "}")) + "]}";
+
+    public static string Settings(IReadOnlyList<SettingRow> rows, Language language) =>
+        "{\"lang\":" + Text(LanguageCode(language)) + ",\"rows\":[" + string.Join(",", rows.Select(Setting)) + "]}";
 
     /// <summary>A JSON string; the separators U+2028 and U+2029 are escaped too, as older JavaScript reads them as line ends.</summary>
     public static string Text(string? text)
@@ -102,9 +135,22 @@ public static class PageData
         ",\"cost\":" + row.Cost +
         ",\"price\":" + row.Price +
         ",\"why\":" + (row.Why == null ? "null" : Text(row.Why)) +
-        ",\"once\":" + Flag(row.Life == RewardLife.OneTime) +
+        ",\"life\":" + row.Life.Seconds +
         ",\"cat\":" + Text(row.Category) +
         ",\"early\":" + Flag(row.IsEarly) + "}";
+
+    private static string Setting(SettingRow row) =>
+        "{\"key\":" + Text(row.Key) +
+        ",\"section\":" + Text(row.Section) +
+        ",\"name\":" + Text(row.Name) +
+        ",\"kind\":" + Text(row.Kind.ToString().ToLowerInvariant()) +
+        ",\"value\":" + Text(row.Value) +
+        ",\"min\":" + row.Min +
+        ",\"max\":" + row.Max +
+        ",\"options\":[" + string.Join(",", row.Options.Select(Text)) + "]" +
+        ",\"desc\":" + Text(row.Desc) +
+        ",\"restart\":" + Flag(row.IsRestart) +
+        ",\"shown\":" + Flag(row.IsShown) + "}";
 
     private static string Flag(bool value) => value ? "true" : "false";
 

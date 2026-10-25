@@ -25,6 +25,7 @@ public sealed record ScreenSettings
 {
     public const int GameMaxLocked = 1;
     public const int MostBanCost = 99;
+    public const int MostUnbanRefund = 100;
     public const int MostCashOut = 1000;
     public const int MostShopMarkup = 200;
     public const int MostShopIncrease = 100;
@@ -38,10 +39,13 @@ public sealed record ScreenSettings
     public int MaxLocked { get; private init; }
 
     public bool NoRepeatOnRefresh { get; private init; }
-    public bool NotInterested { get; private init; }
     public bool BanButton { get; private init; }
     public int BanCost { get; private init; }
     public bool BanWholeLine { get; private init; }
+
+    /// <summary>The percent of a ban's cost paid back when it is removed.</summary>
+    public int UnbanRefund { get; private init; }
+
     public bool Labels { get; private init; }
 
     /// <summary>Cash per survival point left when the player leaves the screen; 0 is off.</summary>
@@ -69,10 +73,10 @@ public sealed record ScreenSettings
             OptionCount = optionCount,
             MaxLocked = Math.Clamp(input.MaxLocked, GameMaxLocked, optionCount - 1),
             NoRepeatOnRefresh = input.NoRepeatOnRefresh,
-            NotInterested = input.NotInterested,
             BanButton = input.BanButton,
             BanCost = Math.Clamp(input.BanCost, 0, MostBanCost),
             BanWholeLine = input.BanWholeLine,
+            UnbanRefund = Math.Clamp(input.UnbanRefund, 0, MostUnbanRefund),
             Labels = input.Labels,
             CashOut = Math.Clamp(input.CashOut, 0, MostCashOut),
             ShopEnabled = input.ShopEnabled,
@@ -92,10 +96,10 @@ public sealed record ScreenInput
     public int OptionCount { get; init; } = RewardSettings.GameOptionCount;
     public int MaxLocked { get; init; } = ScreenSettings.GameMaxLocked;
     public bool NoRepeatOnRefresh { get; init; }
-    public bool NotInterested { get; init; }
     public bool BanButton { get; init; }
     public int BanCost { get; init; }
     public bool BanWholeLine { get; init; }
+    public int UnbanRefund { get; init; }
     public bool Labels { get; init; }
     public int CashOut { get; init; }
     public bool ShopEnabled { get; init; }

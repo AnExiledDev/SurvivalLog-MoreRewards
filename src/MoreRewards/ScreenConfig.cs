@@ -12,10 +12,10 @@ internal sealed class ScreenConfig
     private readonly ConfigEntry<int> _optionCount;
     private readonly ConfigEntry<int> _maxLocked;
     private readonly ConfigEntry<bool> _noRepeatOnRefresh;
-    private readonly ConfigEntry<bool> _notInterested;
     private readonly ConfigEntry<bool> _banButton;
     private readonly ConfigEntry<int> _banCost;
     private readonly ConfigEntry<bool> _banWholeLine;
+    private readonly ConfigEntry<int> _unbanRefund;
     private readonly ConfigEntry<bool> _labels;
     private readonly ConfigEntry<int> _cashOut;
     private readonly ConfigEntry<bool> _shopEnabled;
@@ -36,9 +36,6 @@ internal sealed class ScreenConfig
         _noRepeatOnRefresh = config.Bind("Cards", "NoRepeatOnRefresh", false, new ConfigDescription(
             "true makes a refresh show rewards you have not seen yet that day, while the day's groups still have others to give.\n" +
             "设为 true 时，刷新只会给出当天还没出现过的生存规划，直到当天的规划组没有其他可给为止。", null, Shown));
-        _notInterested = config.Bind("Cards", "NotInterested", true, new ConfigDescription(
-            "Adds a free 「Not interested」 button to each card. The card is swapped for another and does not come back that day.\n" +
-            "在每张卡上加一个免费的「不感兴趣」按钮。该卡会换成另一张，当天不会再出现。", null, Shown));
         _banButton = config.Bind("Cards", "BanButton", true, new ConfigDescription(
             "Adds a 「Ban」 button to each card. A banned reward is swapped for another and never comes back for the rest of the run.\n" +
             "在每张卡上加一个「禁用」按钮。被禁用的生存规划会换成另一张，本局剩余时间内不会再出现。", null, Shown));
@@ -49,9 +46,13 @@ internal sealed class ScreenConfig
         _banWholeLine = config.Bind("Cards", "BanWholeLine", false, new ConfigDescription(
             "true makes a ban also ban every level of the same reward (for example all levels of one recipe line).\n" +
             "设为 true 时，禁用一张卡也会禁用同一系列的所有等级（例如同一配方线的全部等级）。", null, Shown));
+        _unbanRefund = config.Bind("Cards", "UnbanRefund", 50, new ConfigDescription(
+            "How much of what a ban cost, in percent, you get back when you remove it from the 「Bans」 list. Points round down.\n" +
+            "在「禁用列表」中解除禁用时退还禁用花费的百分比。生存点向下取整。",
+            new AcceptableValueRange<int>(0, ScreenSettings.MostUnbanRefund), Shown));
         _labels = config.Bind("Cards", "Labels", true, new ConfigDescription(
-            "Shows on each card whether its reward is permanent or one-time.\n" +
-            "在每张卡上显示该生存规划是永久效果还是一次性效果。", null, Shown));
+            "Shows on each card whether its reward is permanent, one-time, or lasts for a time (for example 3 DAYS).\n" +
+            "在每张卡上显示该生存规划是永久、一次性，还是持续一段时间（例如持续3天）。", null, Shown));
         _cashOut = config.Bind("Cards", "CashOut", 0, new ConfigDescription(
             "Cash you get for each survival point you still hold when you leave the rewards screen; the points are spent. 0 is off and keeps your points.\n" +
             "离开生存规划界面时，每个剩余生存点可换得的现金，生存点会被用掉。0 为关闭，保留生存点。",
@@ -73,18 +74,18 @@ internal sealed class ScreenConfig
         _shopReset = config.Bind("Shop", "ShopReset", ShopReset.Day, new ConfigDescription(
             "When the shop's price increase goes back to the markup alone: every Day, every Week (7 days), or Never.\n" +
             "商店的涨价何时恢复为只有加价：Day 每天，Week 每 7 天，Never 从不。", null, ShopShown));
-        _shopPerDay = config.Bind("Shop", "ShopPerDay", 0, new ConfigDescription(
+        _shopPerDay = config.Bind("Shop", "ShopPerDay", 2, new ConfigDescription(
             "How many shop purchases you can make in a day. 0 is no limit.\n" +
             "每天可在商店购买的次数。0 表示不限。",
             new AcceptableValueRange<int>(0, ScreenSettings.MostShopPerDay), ShopShown));
-        _shopLocked = config.Bind("Shop", "ShopLocked", false, new ConfigDescription(
+        _shopLocked = config.Bind("Shop", "ShopLocked", true, new ConfigDescription(
             "true lets the shop sell a reward before the reward it needs first, at double the price.\n" +
             "设为 true 时，商店可以在前置规划之前出售生存规划，价格翻倍。", null, ShopShown));
     }
 
     public ConfigEntryBase[] Entries => new ConfigEntryBase[]
     {
-        _optionCount, _maxLocked, _noRepeatOnRefresh, _notInterested, _banButton, _banCost, _banWholeLine, _labels, _cashOut,
+        _optionCount, _maxLocked, _noRepeatOnRefresh, _banButton, _banCost, _banWholeLine, _unbanRefund, _labels, _cashOut,
         _shopEnabled, _shopUnavailable, _shopMarkup, _shopIncrease, _shopReset, _shopPerDay, _shopLocked,
     };
 
@@ -93,10 +94,10 @@ internal sealed class ScreenConfig
         OptionCount = _optionCount.Value,
         MaxLocked = _maxLocked.Value,
         NoRepeatOnRefresh = _noRepeatOnRefresh.Value,
-        NotInterested = _notInterested.Value,
         BanButton = _banButton.Value,
         BanCost = _banCost.Value,
         BanWholeLine = _banWholeLine.Value,
+        UnbanRefund = _unbanRefund.Value,
         Labels = _labels.Value,
         CashOut = _cashOut.Value,
         ShopEnabled = _shopEnabled.Value,

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace MoreRewards.Core;
 
@@ -15,12 +16,19 @@ public interface ICounters
 /// <summary>A card the player locked, and the slot it keeps.</summary>
 public readonly record struct RewardLock(int Id, int Slot);
 
+/// <summary>
+/// One ban as the player made it: the card banned (<paramref name="Head"/>), every reward it kept away (the card
+/// itself, and the rest of its line when the whole line was banned), and the survival points it cost, null for a ban
+/// made before the mod kept the price.
+/// </summary>
+public sealed record BanGroup(int Head, IReadOnlyList<int> Members, int? Paid);
+
 /// <summary>How many shop buys raise today's prices, and how many were made today.</summary>
 public readonly record struct ShopTally(int Buys, int Today);
 
 /// <summary>
 /// What the mod remembers for the run, kept in the run's own counters so it is saved with the run and starts over
-/// with each loop: the extra locks (the game keeps its one lock itself), banned and skipped rewards, and the shop's
+/// with each loop: the extra locks (the game keeps its one lock itself), the bans and what each cost, and the shop's
 /// buys. A counter left at 0 means nothing is there.
 /// </summary>
 public sealed class RunBook
@@ -31,7 +39,8 @@ public sealed class RunBook
     private const string LockKey = "slmr.lock.";
     private const string LockSlotKey = "slmr.lockslot.";
     private const string BanKey = "slmr.ban.";
-    private const string SkipKey = "slmr.skip.";
+    private const string BanPaidKey = "slmr.banpaid.";
+    private const string BanByKey = "slmr.banby.";
     private const string ShopBuysKey = "slmr.shop.buys";
     private const string ShopStartKey = "slmr.shop.reset";
     private const string ShopTodayKey = "slmr.shop.today";
@@ -79,15 +88,74 @@ public sealed class RunBook
 
     public bool IsBanned(int id) => _counters.Get(BanKey + id) > 0;
 
-    public void Ban(int id) => _counters.Set(BanKey + id, 1);
+    /// <summary>
+    /// Bans <paramref name="ids"/> as one ban made on <paramref name="head"/> for <paramref name="paid"/> points. A reward
+    /// already banned stays in the ban it came from.
+    /// </summary>
+    /// <returns>The rewards this ban newly keeps away.</returns>
+    public IReadOnlyList<int> Ban(int head, IEnumerable<int> ids, int paid)
+    {
+        var added = new List<int>();
 
-    /// <summary>A skipped card stays away until the day ends.</summary>
-    public bool IsSkipped(int id, int day) => _counters.Get(SkipKey + id) == day;
+        foreach (var id in ids.Prepend(head).Distinct())
+        {
+            if (IsBanned(id)) continue;
 
-    public void Skip(int id, int day) => _counters.Set(SkipKey + id, day);
+            _counters.Set(BanKey + id, 1);
+            _counters.Set(BanByKey + id, head);
+            added.Add(id);
+        }
 
-    /// <summary>Whether the player has passed on <paramref name="id"/> today or for the run.</summary>
-    public bool IsUnwanted(int id, int day) => IsBanned(id) || IsSkipped(id, day);
+        if (added.Contains(head)) _counters.Set(BanPaidKey + head, Math.Max(paid, 0) + 1);
+
+        return added;
+    }
+
+    /// <summary>The bans among <paramref name="ids"/>, one group for each ban the player made, in the order of <paramref name="ids"/>.</summary>
+    public IReadOnlyList<BanGroup> Bans(IEnumerable<int> ids)
+    {
+        var members = new Dictionary<int, List<int>>();
+        var heads = new List<int>();
+
+        foreach (var id in ids.Distinct())
+        {
+            if (!IsBanned(id)) continue;
+
+            var head = HeadOf(id);
+
+            if (!members.TryGetValue(head, out var group))
+            {
+                members[head] = group = new List<int>();
+                heads.Add(head);
+            }
+
+            group.Add(id);
+        }
+
+        return heads.Select(head => new BanGroup(head, members[head], PaidFor(head))).ToList();
+    }
+
+    /// <summary>Lifts the ban made on <paramref name="head"/>, every reward in it among <paramref name="ids"/>.</summary>
+    /// <returns>The ban that was lifted, null when there was none.</returns>
+    public BanGroup? Unban(int head, IEnumerable<int> ids)
+    {
+        if (Bans(ids).FirstOrDefault(group => group.Head == head) is not { } ban) return null;
+
+        foreach (var id in ban.Members)
+        {
+            _counters.Set(BanKey + id, 0);
+            _counters.Set(BanByKey + id, 0);
+        }
+
+        _counters.Set(BanPaidKey + head, 0);
+
+        return ban;
+    }
+
+    /// <summary>A ban made before the mod kept who it was made on stands alone.</summary>
+    private int HeadOf(int id) => _counters.Get(BanByKey + id) is var head && head > 0 ? head : id;
+
+    private int? PaidFor(int head) => _counters.Get(BanPaidKey + head) is var paid && paid > 0 ? paid - 1 : null;
 
     public ShopTally Shop(int day, ShopReset reset)
     {

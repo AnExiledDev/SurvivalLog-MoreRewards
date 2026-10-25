@@ -57,19 +57,38 @@ public static class InterestCap
     public static int? From(int maxInterest) => maxInterest <= 0 || maxInterest == GameCap ? null : Math.Min(maxInterest, MostCap);
 
     /// <returns>
-    /// <paramref name="code"/> with <paramref name="cap"/> in place of the game's 10, or null when the code is not the
-    /// game's (an update moved or changed it), so nothing is written.
+    /// <paramref name="code"/> with <paramref name="cap"/> in place of the cap it holds (the game's 10, or a cap this
+    /// mod wrote before), or null when the code is not the game's (an update moved or changed it), so nothing is
+    /// written. A cap of <see cref="GameCap"/> puts the game's own code back.
     /// </returns>
     public static byte[]? Rewrite(IReadOnlyList<byte> code, int cap)
     {
-        if (cap < 1 || cap > MostCap) throw new ArgumentOutOfRangeException(nameof(cap), cap, "a cap comes from From");
+        if (cap < 1 || cap > MostCap) throw new ArgumentOutOfRangeException(nameof(cap), cap, "a cap comes from From, or is the game's");
 
-        if (!code.SequenceEqual(GameCode)) return null;
+        if (CapIn(code) is null) return null;
 
         var rewritten = GameCode.ToArray();
         rewritten[CompareCapAt] = (byte)cap;
         BinaryPrimitives.WriteInt32LittleEndian(rewritten.AsSpan(MoveCapAt), cap);
 
         return rewritten;
+    }
+
+    /// <returns>The cap <paramref name="code"/> holds, when it is the game's code with the same cap from 1 to <see cref="MostCap"/> in both places; otherwise null.</returns>
+    public static int? CapIn(IReadOnlyList<byte> code)
+    {
+        if (code.Count != GameCode.Count) return null;
+
+        var bytes = code.ToArray();
+        var cap = bytes[CompareCapAt];
+
+        if (cap < 1 || cap > MostCap || BinaryPrimitives.ReadInt32LittleEndian(bytes.AsSpan(MoveCapAt)) != cap) return null;
+
+        var asGame = GameCode.ToArray();
+
+        asGame[CompareCapAt] = cap;
+        BinaryPrimitives.WriteInt32LittleEndian(asGame.AsSpan(MoveCapAt), cap);
+
+        return bytes.SequenceEqual(asGame) ? cap : null;
     }
 }

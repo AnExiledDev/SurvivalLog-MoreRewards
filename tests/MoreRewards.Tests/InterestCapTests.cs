@@ -65,9 +65,31 @@ public class InterestCapTests
         var updated = Rewritten(20);
         var shifted = new byte[InterestCap.GameCode.Count];
 
+        updated[0] ^= 0xff;
+
         Assert.Null(InterestCap.Rewrite(updated, 30));
         Assert.Null(InterestCap.Rewrite(shifted, 20));
         Assert.Null(InterestCap.Rewrite(new byte[3], 20));
+    }
+
+    [Fact]
+    public void A_cap_the_mod_wrote_can_be_changed_again_or_put_back_to_the_game_own()
+    {
+        Assert.Equal(InterestCap.GameCap, InterestCap.CapIn(InterestCap.GameCode));
+        Assert.Equal(20, InterestCap.CapIn(Rewritten(20)));
+        Assert.Equal(Rewritten(30), InterestCap.Rewrite(Rewritten(20), 30));
+        Assert.Equal(InterestCap.GameCode, InterestCap.Rewrite(Rewritten(20), InterestCap.GameCap));
+    }
+
+    [Fact]
+    public void Code_with_two_caps_that_differ_is_not_the_game_own()
+    {
+        var mixed = Rewritten(20);
+
+        mixed[InterestCap.CapAt + 2] = 30;
+
+        Assert.Null(InterestCap.CapIn(mixed));
+        Assert.Null(InterestCap.Rewrite(mixed, 40));
     }
 
     [Fact]

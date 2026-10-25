@@ -8,7 +8,7 @@ namespace MoreRewards.Core;
 /// <param name="Count">How many cards the player asked for.</param>
 /// <param name="GamePin">The game's locked card, 0 for none, and <paramref name="GamePinSlot"/> its slot.</param>
 /// <param name="Extras">The mod's extra locks, all still worth keeping.</param>
-/// <param name="IsUnwanted">True for a card the player banned or skipped.</param>
+/// <param name="IsUnwanted">True for a card the player banned.</param>
 /// <param name="NoRepeat">A refresh never brings back a card that was just on screen.</param>
 public sealed record OfferAsk(int Count, int GamePin, int GamePinSlot, IReadOnlyList<RewardLock> Extras, Func<int, bool> IsUnwanted, bool NoRepeat = false);
 

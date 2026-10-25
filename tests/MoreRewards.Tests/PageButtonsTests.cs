@@ -44,23 +44,42 @@ public class PageButtonsTests
     }
 
     [Fact]
-    public void Only_cards_still_on_offer_get_not_interested_and_ban()
+    public void Only_cards_still_on_offer_get_a_ban_button()
     {
         var page = Rewards("[{id: 1, state: 'affordable', pinned: false}, {id: 2, state: 'bought', pinned: false}, {id: 3, state: 'affordable', pinned: true}, {id: 4, state: 'locked', pinned: false}]");
 
-        Assert.Equal(2, page.Number("slotOf(frame, 0).querySelectorAll('button').filter(function (b) { return b.parentElement.classList.contains('mr-acts'); }).length"));
+        Assert.Equal(1, page.Number("slotOf(frame, 0).querySelectorAll('button').filter(function (b) { return b.parentElement.classList.contains('mr-acts'); }).length"));
         Assert.False(HasActs(page, 1));
         Assert.False(HasActs(page, 2));
         Assert.False(HasActs(page, 3));
     }
 
     [Fact]
-    public void Each_card_says_whether_it_lasts_the_run_or_acts_once()
+    public void Each_card_says_whether_it_lasts_the_run_acts_once_or_lasts_a_time()
     {
-        var page = Rewards("[{id: 1, state: 'affordable', pinned: false}, {id: 2, state: 'affordable', pinned: false}]", setup: "life: {1: 1}");
+        var page = Rewards("[{id: 1, state: 'affordable', pinned: false}, {id: 2, state: 'affordable', pinned: false}, {id: 3, state: 'affordable', pinned: false}]", setup: "life: {1: 0, 3: 259200}");
 
         Assert.Equal("ONE-TIME", page.Text("slotOf(frame, 0).querySelector('.mr-life').textContent"));
         Assert.Equal("PERMANENT", page.Text("slotOf(frame, 1).querySelector('.mr-life').textContent"));
+        Assert.Equal("3 DAYS", page.Text("slotOf(frame, 2).querySelector('.mr-life').textContent"));
+        Assert.True(page.Is("slotOf(frame, 2).querySelector('.mr-life').classList.contains('timed')"));
+    }
+
+    [Theory]
+    [InlineData(-1, "en", "PERMANENT")]
+    [InlineData(0, "en", "ONE-TIME")]
+    [InlineData(259200, "en", "3 DAYS")]
+    [InlineData(432000, "zh", "持续5天")]
+    [InlineData(86400, "en", "24 HOURS")]
+    [InlineData(86400, "zh", "持续24小时")]
+    [InlineData(3600, "en", "1 HOUR")]
+    [InlineData(21600, "en", "6 HOURS")]
+    [InlineData(1800, "en", "30 MIN")]
+    public void A_timed_reward_reads_in_days_from_two_days_up_and_in_hours_below(int seconds, string lang, string label)
+    {
+        var page = new PageScript();
+
+        Assert.Equal(label, page.Text($"window.__slmorerewards.lifeLabel({seconds}, '{lang}').text"));
     }
 
     [Fact]
@@ -72,13 +91,151 @@ public class PageButtonsTests
     }
 
     [Fact]
-    public void Not_interested_and_ban_tell_the_plugin_the_card_and_its_slot()
+    public void Ban_tells_the_plugin_the_card_and_its_slot()
     {
         var page = Rewards("[{id: 11, state: 'affordable', pinned: false}, {id: 12, state: 'too-expensive', pinned: false}]");
 
-        page.Run("fire(slotOf(frame, 1).querySelector('.mr-acts').children[0], 'click'); fire(slotOf(frame, 1).querySelector('.ban'), 'click');");
+        page.Run("fire(slotOf(frame, 1).querySelector('.ban'), 'click');");
 
-        Assert.Equal(Prefix + "skip|12|1," + Prefix + "ban|12|1", page.Text("posted.join(',')"));
+        Assert.Equal(Prefix + "ban|12|1", page.Text("posted.join(',')"));
+    }
+
+    [Fact]
+    public void The_footer_has_shop_bans_and_settings_in_that_order_and_drops_the_ones_switched_off()
+    {
+        var page = Rewards("[{id: 11, state: 'affordable', pinned: false}]");
+        const string buttons = "frame.contentDocument.querySelector('.mr-foot-btns').children.map(function (b) { return b.textContent; }).join(',')";
+
+        Assert.Equal("SHOP,BANS,SETTINGS", page.Text(buttons));
+
+        page.Run("setupWith({shop: false, ban: false});");
+        page.Tick();
+
+        Assert.Equal("SETTINGS", page.Text(buttons));
+    }
+
+    [Fact]
+    public void The_ban_list_opens_from_its_button_and_each_remove_names_its_ban()
+    {
+        var page = Rewards("[{id: 11, state: 'affordable', pinned: false}]");
+
+        page.Run("fire(frame.contentDocument.querySelector('.mr-bans-btn'), 'click');");
+        Assert.Equal(Prefix + "bans", page.Text("posted.join(',')"));
+
+        page.Run("posted = []; window.__slmorerewards.bans({lang: 'en', refund: 50, rows: [{id: 30012, names: ['Axe', 'Saw'], refund: 3}, {id: 5, names: ['Rope'], refund: 0}]});");
+
+        Assert.Equal(2, page.Number("frame.contentDocument.querySelectorAll('.mr-ban').length"));
+        Assert.Equal("Axe, Saw+3REMOVE", page.Text("frame.contentDocument.querySelector('.mr-ban').textContent"));
+        Assert.Contains("50%", page.Text("frame.contentDocument.querySelector('.mr-pane-note').textContent"));
+
+        page.Run("fire(frame.contentDocument.querySelector('.mr-ban').querySelector('button'), 'click');");
+
+        Assert.Equal(Prefix + "unban|30012", page.Text("posted.join(',')"));
+    }
+
+    [Fact]
+    public void A_ban_list_nobody_asked_for_is_not_opened()
+    {
+        var page = Rewards("[{id: 11, state: 'affordable', pinned: false}]");
+
+        page.Run("window.__slmorerewards.bans({lang: 'en', refund: 50, rows: []});");
+
+        Assert.False(page.Is("frame.contentDocument.querySelector('.mr-pane-bans')"));
+    }
+
+    [Fact]
+    public void An_empty_ban_list_says_nothing_is_banned()
+    {
+        var page = Rewards("[{id: 11, state: 'affordable', pinned: false}]");
+
+        page.Run("fire(frame.contentDocument.querySelector('.mr-bans-btn'), 'click'); window.__slmorerewards.bans({lang: 'en', refund: 50, rows: []});");
+
+        Assert.Equal("Nothing is banned this run.", page.Text("frame.contentDocument.querySelector('.mr-pane-none').textContent"));
+    }
+
+    private const string SettingsData = "{lang: 'en', rows: [" +
+        "{key: 'General.Enabled', section: 'General', name: 'Enabled', kind: 'bool', value: 'true', min: 0, max: 0, options: [], desc: 'On', restart: true, shown: true}," +
+        "{key: 'Shop.ShopPerDay', section: 'Shop', name: 'ShopPerDay', kind: 'int', value: '2', min: 0, max: 20, options: [], desc: 'How many', restart: false, shown: true}," +
+        "{key: 'Shop.ShopReset', section: 'Shop', name: 'ShopReset', kind: 'choice', value: 'Day', min: 0, max: 0, options: ['Never', 'Day', 'Week'], desc: 'When', restart: false, shown: true}," +
+        "{key: 'Shop.Hidden', section: 'Shop', name: 'Hidden', kind: 'bool', value: 'false', min: 0, max: 0, options: [], desc: 'x', restart: false, shown: false}]}";
+
+    private static PageScript OpenSettings()
+    {
+        var page = Rewards("[{id: 11, state: 'affordable', pinned: false}]");
+
+        page.Run($"fire(frame.contentDocument.querySelector('.mr-set-btn'), 'click'); posted = []; window.__slmorerewards.settings({SettingsData});");
+
+        return page;
+    }
+
+    private static string Row(int index) => $"frame.contentDocument.querySelectorAll('.mr-setting')[{index}]";
+
+    [Fact]
+    public void The_settings_list_the_shown_ones_by_section_and_mark_a_restart()
+    {
+        var page = OpenSettings();
+
+        Assert.Equal(3, page.Number("frame.contentDocument.querySelectorAll('.mr-setting').length"));
+        Assert.Equal("General,Shop", page.Text("frame.contentDocument.querySelectorAll('h3').map(function (h) { return h.textContent; }).join(',')"));
+        Assert.True(page.Is(Row(0) + ".querySelector('.rs')"));
+        Assert.False(page.Is(Row(1) + ".querySelector('.rs')"));
+    }
+
+    [Fact]
+    public void A_switch_sends_the_other_value()
+    {
+        var page = OpenSettings();
+
+        page.Run("fire(" + Row(0) + ".querySelector('button'), 'click');");
+
+        Assert.Equal(Prefix + "set|General.Enabled|false", page.Text("posted.join(',')"));
+    }
+
+    [Fact]
+    public void A_number_steps_and_a_typed_one_is_held_to_its_range()
+    {
+        var page = OpenSettings();
+
+        page.Run("var b = " + Row(1) + ".querySelectorAll('button'); fire(b[0], 'click'); fire(b[1], 'click');");
+        page.Run("var box = " + Row(1) + ".querySelector('input'); box.value = '99'; fire(box, 'change'); box.value = 'abc'; fire(box, 'change');");
+
+        Assert.Equal(Prefix + "set|Shop.ShopPerDay|1," + Prefix + "set|Shop.ShopPerDay|3," + Prefix + "set|Shop.ShopPerDay|20", page.Text("posted.join(',')"));
+    }
+
+    [Fact]
+    public void Keys_typed_in_a_number_box_do_not_reach_the_game()
+    {
+        var page = OpenSettings();
+
+        page.Run(Row(1) + ".parentElement.addEventListener('keydown', function () { reachedParent = true; }); var reachedParent = false;");
+        page.Run("fire(" + Row(1) + ".querySelector('input'), 'keydown', 'e');");
+
+        Assert.False(page.Is("reachedParent"));
+    }
+
+    [Fact]
+    public void A_choice_sends_the_one_clicked()
+    {
+        var page = OpenSettings();
+
+        page.Run("fire(" + Row(2) + ".querySelectorAll('span')[2], 'click');");
+
+        Assert.Equal(Prefix + "set|Shop.ShopReset|Week", page.Text("posted.join(',')"));
+    }
+
+    [Fact]
+    public void The_open_settings_are_drawn_again_with_the_new_values()
+    {
+        var page = OpenSettings();
+
+        page.Run("window.__slmorerewards.settings({lang: 'en', rows: [{key: 'General.Enabled', section: 'General', name: 'Enabled', kind: 'bool', value: 'false', min: 0, max: 0, options: [], desc: 'On', restart: true, shown: true}]});");
+
+        Assert.Equal(1, page.Number("frame.contentDocument.querySelectorAll('.mr-setting').length"));
+        Assert.Equal("OFF", page.Text(Row(0) + ".querySelector('button').textContent"));
+
+        page.Run("frame.contentDocument.querySelector('.mr-pane-settings').hidden = true; window.__slmorerewards.settings(" + SettingsData + ");");
+
+        Assert.Equal(1, page.Number("frame.contentDocument.querySelectorAll('.mr-setting').length"));
     }
 
     [Fact]

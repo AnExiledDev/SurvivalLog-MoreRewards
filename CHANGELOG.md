@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.5.1
+
+- A 「Bans」 button in the footer lists this run's bans. Removing one lets its rewards be offered again and gives back part of what the ban cost (`UnbanRefund`, 50% by default). A ban made with `BanWholeLine` comes off as one.
+- A 「Settings」 button in the footer changes every More Rewards setting right on the rewards screen. Every setting except `Enabled` takes effect at once, with or without Exiled's Toolkit.
+- `MaxInterest` now takes effect at once instead of at the next game start.
+- The 「Not interested」 button and its `NotInterested` setting are gone. Use 「Ban」 instead, and remove the ban from the list when you want the reward back.
+- Card labels now read how long each reward lasts from the game's data: 「PERMANENT」, 「ONE-TIME」, or how long it lasts, such as 「3 DAYS」. Some labels were wrong before.
+- The shop's defaults are now 2 purchases a day (`ShopPerDay`) and rewards can be bought before the one they need (`ShopLocked`). A setting you already saved keeps its value.
+- Made for Survival Log 1.1.19611.
+
 ## 0.5.0
 
 - Lock more than one reward. `MaxLocked` sets how many; locked rewards stay through a refresh and are still there the next day. The footer shows how many locks are in use.

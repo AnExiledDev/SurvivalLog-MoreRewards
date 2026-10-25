@@ -11,4 +11,9 @@ internal static class LiveScreen
     public static ScreenSettings Settings { get; set; } = ScreenSettings.Game;
 
     public static readonly RunBook Book = new(new GameCounters());
+
+    /// <summary>Goes up whenever a setting the rewards page draws from changes, so the page is told again.</summary>
+    public static int Version { get; private set; }
+
+    public static void Changed() => Version++;
 }

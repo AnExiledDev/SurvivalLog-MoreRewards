@@ -295,7 +295,7 @@ function styleCount(frame) {
 
 // The plugin's setup with every button on; a test overrides what it is about.
 function setupWith(changes) {
-    var data = { lang: 'en', maxLocked: 1, gamePin: 0, extras: [], notInterested: true, ban: true, banCost: 2, labels: true, cashOut: 0, shop: true,
+    var data = { lang: 'en', maxLocked: 1, gamePin: 0, extras: [], ban: true, banCost: 2, labels: true, cashOut: 0, shop: true,
         shopIncrease: 15, shopReset: 'day', rate: 0.05, cap: 10, life: {} };
 
     Object.keys(changes || {}).forEach(function (key) { data[key] = changes[key]; });
@@ -303,5 +303,5 @@ function setupWith(changes) {
 }
 
 function shopRow(id, name, price, why, cat) {
-    return { id: id, name: name, desc: name + ' does things', icon: '', cost: price, price: price, why: why || null, once: false, cat: cat || 'body', early: false };
+    return { id: id, name: name, desc: name + ' does things', icon: '', cost: price, price: price, why: why || null, life: -1, cat: cat || 'body', early: false };
 }

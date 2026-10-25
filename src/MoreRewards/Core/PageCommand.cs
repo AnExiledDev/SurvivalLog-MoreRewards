@@ -8,9 +8,6 @@ public enum PageVerb
     /// <summary>Lock or unlock the card <see cref="PageCommand.Id"/> at <see cref="PageCommand.Slot"/>.</summary>
     Pin,
 
-    /// <summary>Not interested: swap the card out, and keep it away for the rest of the day.</summary>
-    Skip,
-
     /// <summary>Swap the card out and keep it away for the rest of the run.</summary>
     Ban,
 
@@ -22,12 +19,26 @@ public enum PageVerb
 
     /// <summary>The player is leaving the screen: turn the points left into cash.</summary>
     CashOut,
+
+    /// <summary>The ban list was opened and wants its rows.</summary>
+    Bans,
+
+    /// <summary>Lift the ban made on <see cref="PageCommand.Id"/> (with the rest of its line, if it was banned as one).</summary>
+    Unban,
+
+    /// <summary>The settings were opened and want their rows.</summary>
+    Settings,
+
+    /// <summary>Set the setting <see cref="PageCommand.Key"/> ("Section.Key") to <see cref="PageCommand.Value"/>.</summary>
+    Set,
 }
 
-public readonly record struct PageCommand(PageVerb Verb, int Id, int Slot);
+/// <param name="Key">The setting a <see cref="PageVerb.Set"/> changes, as "Section.Key".</param>
+/// <param name="Value">The value it is set to, as the page wrote it.</param>
+public readonly record struct PageCommand(PageVerb Verb, int Id, int Slot, string? Key = null, string? Value = null);
 
 /// <summary>
-/// Reads the messages the rewards page posts to the game, "slmod|morerewards|verb|id|slot". Anything else, or a
+/// Reads the messages the rewards page posts to the game, "slmod|morerewards|verb|args", args split by "|". Anything else, or a
 /// message with a bad number, is not ours or not usable and reads as null.
 /// </summary>
 public static class PageCommands
@@ -43,11 +54,14 @@ public static class PageCommands
         return parts[0] switch
         {
             "pin" => WithCard(PageVerb.Pin, parts),
-            "skip" => WithCard(PageVerb.Skip, parts),
             "ban" => WithCard(PageVerb.Ban, parts),
             "shop" => new PageCommand(PageVerb.Shop, 0, 0),
             "shopbuy" => parts.Length == 2 && Id(parts[1]) is int id ? new PageCommand(PageVerb.ShopBuy, id, 0) : null,
             "cashout" => new PageCommand(PageVerb.CashOut, 0, 0),
+            "bans" => new PageCommand(PageVerb.Bans, 0, 0),
+            "unban" => parts.Length == 2 && Id(parts[1]) is int head ? new PageCommand(PageVerb.Unban, head, 0) : null,
+            "settings" => new PageCommand(PageVerb.Settings, 0, 0),
+            "set" => parts.Length == 3 && parts[1].IndexOf('.') > 0 && parts[2].Length > 0 ? new PageCommand(PageVerb.Set, 0, 0, parts[1], parts[2]) : null,
             _ => null,
         };
     }

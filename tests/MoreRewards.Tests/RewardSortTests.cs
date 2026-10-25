@@ -44,11 +44,22 @@ public class RewardSortTests
     }
 
     [Fact]
-    public void Airdrops_daily_ticks_and_one_off_scripts_are_one_time()
+    public void How_long_a_reward_lasts_comes_from_its_buff_duration()
     {
-        Assert.Equal(RewardLife.OneTime, RewardKind.Life("airdrops", "Buff/Buff_AddItemToBag", 0f));
-        Assert.Equal(RewardLife.OneTime, RewardKind.Life("body", "Buff/Buff_X", RewardKind.OneDay));
-        Assert.Equal(RewardLife.OneTime, RewardKind.Life("trade", "Buff/Buff_Annual_Bonus", 0f));
-        Assert.Equal(RewardLife.Permanent, RewardKind.Life("traps", "Buff/Buff_Trap_Damage", 0f));
+        Assert.Equal(RewardLife.Permanent, RewardKind.Life("body", -1f));
+        Assert.Equal(RewardLife.Permanent, RewardKind.Life("traps", null));
+        Assert.Equal(RewardLife.OneTime, RewardKind.Life("body", RewardKind.Instant));
+        Assert.Equal(RewardLife.OneTime, RewardKind.Life("body", 0f));
+        Assert.Equal(RewardLife.Timed(259200), RewardKind.Life("trade", 259200f));
+        Assert.Equal(21600, RewardKind.Life("body", 21600f).Seconds);
+        Assert.True(RewardKind.Life("body", 86400f).IsTimed);
+        Assert.False(RewardLife.Permanent.IsTimed || RewardLife.OneTime.IsTimed);
+    }
+
+    [Fact]
+    public void Airdrops_are_one_time_whatever_their_buff_says()
+    {
+        Assert.Equal(RewardLife.OneTime, RewardKind.Life("airdrops", -1f));
+        Assert.Equal(RewardLife.OneTime, RewardKind.Life("airdrops", null));
     }
 }

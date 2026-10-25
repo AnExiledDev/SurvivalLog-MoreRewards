@@ -1,6 +1,6 @@
 # More Rewards
 
-Choose from more rewards at the end of the day, lock more than one, pass on or ban the ones you do not want, and earn more interest on your survival points. An optional shop lets you buy any reward you can get.
+Choose from more rewards at the end of the day, lock more than one, ban the ones you do not want, and earn more interest on your survival points. An optional shop lets you buy any reward you can get.
 
 At the end of each day, Survival Log offers 3 rewards you can buy with survival points, and a refresh for 2 points draws 3 new ones. More Rewards lets you raise that to any number up to 20, from the same reward pool the game draws from. The refresh cost goes up with the number of rewards on its own, or you can make it free or set any cost you like. The interest your survival points earn each day goes from 5% to 10%, and can go up to 20 instead of 10.
 
@@ -11,17 +11,19 @@ At the end of each day, Survival Log offers 3 rewards you can buy with survival 
 - **A fair refresh cost**: by default the cost goes up by 1 survival point at 4, 6, 8 rewards and so on (3 rewards cost 2, 4 or 5 cost 3, 6 or 7 cost 4, 10 cost 6). Or make every refresh free, or set a fixed cost of your own.
 - **More interest**: when a day ends, the game pays interest on the survival points you hold, 5% of them, at most 10. The mod raises the rate to 10% and the limit to 20, so saving up to 200 points pays off. Set your own rate and limit up to 100, or keep the game's. The Savings Plan reward keeps paying its own bonus on top.
 - **Lock more than one reward**: set `MaxLocked` and lock up to 1 less than the number of rewards. Locked rewards stay through a refresh and are still there the next day. The footer shows how many locks are in use.
-- **Not interested and Ban**: a 「Not interested」 button swaps a card for another and keeps it away for the day, free. A 「Ban」 button keeps it away for the rest of the run, for a few survival points (2 by default), and can ban every level of the same reward.
-- **Permanent or one-time**: each card says whether its reward lasts or is used once.
+- **Ban**: a 「Ban」 button swaps a card for another and keeps it away for the rest of the run, for a few survival points (2 by default), and can ban every level of the same reward.
+- **The ban list**: a 「Bans」 button in the footer lists this run's bans. Removing one lets its rewards come back and gives back half of what the ban cost (configurable).
+- **Settings on the rewards screen**: a 「Settings」 button in the footer changes every More Rewards setting right there, and the change takes effect at once.
+- **How long a reward lasts**: each card says whether its reward is permanent, one-time, or lasts for a time, such as 「3 DAYS」.
 - **No repeats on refresh** (off by default): a refresh shows rewards you have not seen yet that day.
 - **Tomorrow's interest**: the footer shows the interest you will get when the day ends.
 - **Cash out** (off by default): survival points left when you leave the rewards screen turn into cash.
-- **The shop** (off by default): a 「Shop」 button opens a searchable list of every reward you can get, by category. Shop prices are 25% above card prices and go up 15% with each purchase until the next day, all of it configurable. Rewards you cannot buy now are greyed out with the reason, or hidden. You can limit purchases a day, and allow buying a reward before the one it needs at double the price.
+- **The shop** (off by default): a 「Shop」 button opens a searchable list of every reward you can get, by category. Shop prices are 25% above card prices and go up 15% with each purchase until the next day, all of it configurable. Rewards you cannot buy now are greyed out with the reason, or hidden. Purchases are limited to 2 a day, and a reward can be bought before the one it needs at double the price; both are configurable.
 - **Room for every card**: up to 5 rewards sit in one row. More are spread over even rows with smaller cards, and the area scrolls if they still do not fit.
 - **Rewards stay as they are until you ask**: with the default settings you get the game's 3 rewards and its own refresh cost.
 - **A log file**: what the mod did is written to `BepInEx\more-rewards.log`.
 
-There are no new keys. The new buttons are 「Not interested」 and 「Ban」 on each card and 「Shop」 in the footer, each switched by its setting.
+There are no new keys. The new buttons are 「Ban」 on each card, and 「Shop」, 「Bans」 and 「Settings」 in the footer. 「Settings」 is always there; the others are switched by their settings.
 
 Works in English and Chinese. The buttons and labels the mod adds follow the game's language, and the settings file describes every setting in English and Simplified Chinese. The log is in English.
 
@@ -40,9 +42,9 @@ More Rewards does not edit game files. Extra locks, bans and shop purchases are 
 
 ## Requirements
 
-- Survival Log 1.1.19131. Built for this version; a game update can break it until the mod is updated.
+- Survival Log 1.1.19611. Built for this version; a game update can break it until the mod is updated.
 - The [BepInEx Pack for Survival Log](https://www.nexusmods.com/survivallog/mods/12), the BepInEx 6 (IL2CPP) build for the game, version `6.0.0-be.788`.
-- Optional: [Exiled's Toolkit](https://github.com/AnExiledDev/SurvivalLog-ExiledToolkit) 0.4.0 or newer. With it, settings changed on the Mod Manager's Mods screen take effect without restarting the game. Without it, they take effect at the next game start.
+- Optional: [Exiled's Toolkit](https://github.com/AnExiledDev/SurvivalLog-ExiledToolkit) 0.4.0 or newer. With it, settings changed on the Mod Manager's Mods screen take effect without restarting the game. Without it, those take effect at the next game start; settings changed on the rewards screen take effect at once either way.
 
 ## Install
 
@@ -59,7 +61,7 @@ Delete `MoreRewards.dll` from the `BepInEx\plugins` folder. For a clean slate, a
 
 ## Configuration
 
-Settings live in `BepInEx\config\com.dev.survivallog.morerewards.cfg`, created the first time the game starts with the mod. Change them in game on the Mod Manager's Mods screen, or edit the file while the game is closed. Changed on the Mods screen, every setting except Enabled and MaxInterest takes effect at once; those two take effect at the next game start. See [CONFIG.md](CONFIG.md) for every setting and the full refresh cost table. Without Exiled's Toolkit installed, changes made on the Mods screen take effect at the next game start instead.
+Settings live in `BepInEx\config\com.dev.survivallog.morerewards.cfg`, created the first time the game starts with the mod. Change them in game with the 「Settings」 button on the rewards screen or on the Mod Manager's Mods screen, or edit the file while the game is closed. Changed in game, every setting except Enabled takes effect at once; Enabled takes effect at the next game start. See [CONFIG.md](CONFIG.md) for every setting and the full refresh cost table. Without Exiled's Toolkit installed, changes made on the Mods screen take effect at the next game start instead; changes made on the rewards screen still take effect at once.
 
 ## Troubleshooting
 

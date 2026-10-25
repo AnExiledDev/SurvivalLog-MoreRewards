@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using BepInEx;
 using BepInEx.Configuration;
 using BepInEx.Unity.IL2CPP;
@@ -14,15 +15,16 @@ namespace MoreRewards;
 public sealed class Plugin : BasePlugin
 {
     private const string Guid = "com.dev.survivallog.morerewards";
-    private const string Version = "0.5.0";
+    private const string Version = "0.5.1";
 
     public override void Load()
     {
         if (!OptionalLive.IsToolkitInstalled) Log.LogInfo(OptionalLive.MissingNote);
 
-        var isEnabled = Config.Bind("General", "Enabled", true, new ConfigDescription(
+        var enabled = Config.Bind("General", "Enabled", true, new ConfigDescription(
             "Turn the mod on or off. false leaves the end-of-day rewards, the refresh cost and the interest on survival points as the game has them. Takes effect at the next game start.\n" +
-            "开启或关闭本模组。设为 false 时，每天结束时的生存规划、刷新花费和生存点回息都保持游戏原样。下次启动游戏时生效。", null, "ModManager.Restart")).Value;
+            "开启或关闭本模组。设为 false 时，每天结束时的生存规划、刷新花费和生存点回息都保持游戏原样。下次启动游戏时生效。", null, "ModManager.Restart"));
+        var isEnabled = enabled.Value;
         var optionCount = Config.Bind("Rewards", "OptionCount", RewardSettings.GameOptionCount, new ConfigDescription(
             "How many rewards you can choose from at the end of a day and after each refresh. 3 is the game's own number, and you can set any number from 3 to 20.\n" +
             "每天结束时和每次刷新后可供选择的生存规划数量。3 是游戏原本的数量，可设为 3 到 20 之间的任意数。",
@@ -36,10 +38,10 @@ public sealed class Plugin : BasePlugin
             "每天结算时持有生存点的回息比例（百分比）。设为 0 保持游戏原本的 5%，设为 1 到 100 则以该数作为新的比例；回息仍受 MaxInterest 上限限制。",
             new AcceptableValueRange<int>(0, InterestRate.MostRate), "ModManager.ShowWhen=General.Enabled"));
         var maxInterest = Config.Bind("Interest", "MaxInterest", InterestCap.DefaultCap, new ConfigDescription(
-            "The most interest your survival points can earn when a day ends. The interest is the points you hold times InterestRate, rounded down, and at least 1 while you hold any points; 0 keeps the game's limit of 10, and any number from 1 to 100 sets a new limit. Takes effect at the next game start.\n" +
-            "每天结算时生存点回息的上限。回息为持有生存点乘以 InterestRate 的比例，向下取整，只要持有生存点最少 1 点；设为 0 保持游戏原本的上限 10，设为 1 到 100 则以该数作为新的上限。下次启动游戏时生效。",
-            new AcceptableValueRange<int>(0, InterestCap.MostCap), "ModManager.Restart", "ModManager.ShowWhen=General.Enabled")).Value;
-        var interestCap = InterestCap.From(maxInterest);
+            "The most interest your survival points can earn when a day ends. The interest is the points you hold times InterestRate, rounded down, and at least 1 while you hold any points; 0 keeps the game's limit of 10, and any number from 1 to 100 sets a new limit.\n" +
+            "每天结算时生存点回息的上限。回息为持有生存点乘以 InterestRate 的比例，向下取整，只要持有生存点最少 1 点；设为 0 保持游戏原本的上限 10，设为 1 到 100 则以该数作为新的上限。",
+            new AcceptableValueRange<int>(0, InterestCap.MostCap), "ModManager.ShowWhen=General.Enabled"));
+        var interestCap = InterestCap.From(maxInterest.Value);
         var log = new RewardsLog(Log, Path.Combine(Paths.BepInExRootPath, "more-rewards.log"));
 
         PatchKit.Log = log.Write;
@@ -48,13 +50,13 @@ public sealed class Plugin : BasePlugin
 
         if (!isEnabled) return;
 
-        if (interestCap is { } cap) InterestCode.Apply(cap, log.Write);
-
+        var capKeeper = WatchCap(maxInterest, log);
         var rateKeeper = WatchRate(interestRate, log);
         var screen = new ScreenConfig(Config, optionCount);
+        var board = new SettingsBoard(new ConfigEntryBase[] { enabled, optionCount, refreshCost, interestRate, maxInterest }.Concat(screen.Entries).Distinct().ToList());
 
         WatchRewards(optionCount, refreshCost, screen, log);
-        WatchScreen(() => new InterestTerms((rateKeeper.Rate ?? InterestRate.GameRate) / 100f, interestCap ?? InterestCap.GameCap), log);
+        WatchScreen(() => new InterestTerms((rateKeeper.Rate ?? InterestRate.GameRate) / 100f, capKeeper()), board, log);
         RewardsTicker.Log = log.Write;
         AddComponent<RewardsTicker>();
     }
@@ -75,18 +77,19 @@ public sealed class Plugin : BasePlugin
         OptionalLive.Watch(() =>
         {
             LiveScreen.Settings = screen.Read();
+            LiveScreen.Changed();
             log.Write("rewards screen: " + LiveScreen.Settings);
         }, screen.Entries);
     }
 
     /// <summary>Hooks the rewards screen and wires the page's buttons to the actions that carry them out.</summary>
-    private static void WatchScreen(Func<InterestTerms> interest, RewardsLog log)
+    private static void WatchScreen(Func<InterestTerms> interest, SettingsBoard board, RewardsLog log)
     {
         var harmony = new Harmony(Guid);
         RewardActions? actions = null;
         var page = new RewardPage(log.Write, () => actions?.AskSetup());
 
-        actions = new RewardActions(page, new RewardCatalog(), interest, log.Write);
+        actions = new RewardActions(page, new RewardCatalog(), interest, board, log.Write);
         OfferPatch.Apply(harmony);
         ListPatch.Apply(harmony);
         PageMessages.Apply(harmony, log.Write);
@@ -105,10 +108,36 @@ public sealed class Plugin : BasePlugin
             var rate = InterestRate.From(percent);
 
             rateKeeper.Use(rate);
+            LiveScreen.Changed();
             log.Write($"interest rate {RateText(rate)}");
         });
 
         return rateKeeper;
+    }
+
+    /// <summary>
+    /// Writes MaxInterest into the game's code now and after each change, and puts the game's own cap back when it is
+    /// turned off. The code is only written once the cap differs from the game's, so with MaxInterest off from the
+    /// start the game's code is never touched.
+    /// </summary>
+    /// <returns>The cap in force now.</returns>
+    private static Func<int> WatchCap(ConfigEntry<int> maxInterest, RewardsLog log)
+    {
+        var written = InterestCap.GameCap;
+
+        OptionalLive.Watch(maxInterest, value =>
+        {
+            var cap = InterestCap.From(value) ?? InterestCap.GameCap;
+
+            if (cap == written) return;
+
+            if (!InterestCode.Apply(cap, log.Write)) return;
+
+            written = cap;
+            LiveScreen.Changed();
+        });
+
+        return () => written;
     }
 
     private static string RefreshCostText(RewardSettings settings) => settings.FixedRefreshCost switch

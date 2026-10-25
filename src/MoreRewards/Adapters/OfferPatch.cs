@@ -72,7 +72,7 @@ internal static class OfferPatch
 
         if (kept.Count != extras.Count) book.SetLocks(kept);
 
-        return new OfferAsk(settings.OptionCount, pinnedId, pinnedSlot, kept, id => book.IsUnwanted(id, day), settings.NoRepeatOnRefresh);
+        return new OfferAsk(settings.OptionCount, pinnedId, pinnedSlot, kept, book.IsBanned, settings.NoRepeatOnRefresh);
     }
 
     public static int? First(Il2CppInts? rewards) => rewards != null && rewards.Count > 0 ? rewards[0] : null;
