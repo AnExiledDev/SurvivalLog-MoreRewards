@@ -7,6 +7,8 @@
 - `MaxInterest` now takes effect at once instead of at the next game start.
 - The 「Not interested」 button and its `NotInterested` setting are gone. Use 「Ban」 instead, and remove the ban from the list when you want the reward back.
 - Card labels now read how long each reward lasts from the game's data: 「PERMANENT」, 「ONE-TIME」, or how long it lasts, such as 「3 DAYS」. Some labels were wrong before.
+- The shop can be filtered by how long a reward lasts: 「Permanent」, 「One-time」 or 「Temporary」, next to the categories.
+- The footer's 「Interest tomorrow」 line no longer gets cut off.
 - The shop's defaults are now 2 purchases a day (`ShopPerDay`) and rewards can be bought before the one they need (`ShopLocked`). A setting you already saved keeps its value.
 - Made for Survival Log 1.1.19611.
 

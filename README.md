@@ -18,7 +18,7 @@ At the end of each day, Survival Log offers 3 rewards you can buy with survival 
 - **No repeats on refresh** (off by default): a refresh shows rewards you have not seen yet that day.
 - **Tomorrow's interest**: the footer shows the interest you will get when the day ends.
 - **Cash out** (off by default): survival points left when you leave the rewards screen turn into cash.
-- **The shop** (off by default): a 「Shop」 button opens a searchable list of every reward you can get, by category. Shop prices are 25% above card prices and go up 15% with each purchase until the next day, all of it configurable. Rewards you cannot buy now are greyed out with the reason, or hidden. Purchases are limited to 2 a day, and a reward can be bought before the one it needs at double the price; both are configurable.
+- **The shop** (off by default): a 「Shop」 button opens a searchable list of every reward you can get, by category and by permanent, one-time or temporary. Shop prices are 25% above card prices and go up 15% with each purchase until the next day, all of it configurable. Rewards you cannot buy now are greyed out with the reason, or hidden. Purchases are limited to 2 a day, and a reward can be bought before the one it needs at double the price; both are configurable.
 - **Room for every card**: up to 5 rewards sit in one row. More are spread over even rows with smaller cards, and the area scrolls if they still do not fit.
 - **Rewards stay as they are until you ask**: with the default settings you get the game's 3 rewards and its own refresh cost.
 - **A log file**: what the mod did is written to `BepInEx\more-rewards.log`.

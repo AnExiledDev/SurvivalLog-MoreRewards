@@ -68,7 +68,8 @@
     '.mr-acts button b{font-family:var(--font-num);color:var(--highlight);font-weight:normal;margin-left:3px}',
     '.pin-count{font-family:var(--font-num);color:var(--highlight);margin-left:14px;font-size:14px}',
     '.mr-foot-btns .ghost-btn{margin-left:18px;border-color:var(--border-highlight) !important;color:var(--highlight) !important}',
-    '.mr-foot small{display:block;color:var(--text-meta);font-size:13px;margin-top:2px}',
+    '.footer-left{min-width:max-content;overflow:visible}',
+    '.mr-foot small{display:block;color:var(--text-meta);font-size:13px;margin-top:2px;white-space:nowrap}',
     '.shop{position:fixed;inset:0;z-index:200;background:rgba(8,6,4,0.82);display:flex;align-items:center;justify-content:center}',
     '.shop[hidden]{display:none}',
     '.shop-card{width:min(1500px,92vw);height:min(900px,88vh);display:grid;grid-template-rows:auto auto auto 1fr auto;border:1px solid var(--border-highlight);background:linear-gradient(180deg,rgba(40,34,26,0.98),rgba(22,18,14,0.98));box-shadow:0 30px 90px rgba(0,0,0,0.8)}',
@@ -184,6 +185,9 @@
     ['cooking', 'Cooking', '烹饪'], ['traps', 'Traps', '陷阱'], ['trade', 'Trade', '交易'], ['power', 'Power', '电力'], ['airdrops', 'Airdrops', '空投'],
     ['skills', 'Skills', '技能'], ['defense', 'Defense', '防御'], ['storage', 'Storage', '储物'], ['crafting', 'Crafting', '制作'], ['speed', 'Speed', '速度']];
 
+  // The shop's how-long-it-lasts filter, keyed by the kind lifeLabel gives.
+  var LIVES = [['all', 'All', '全部'], ['perm', 'Permanent', '永久'], ['once', 'One-time', '一次性'], ['timed', 'Temporary', '限时']];
+
   var notes = [];
   var shownShape = '';
   var hasReportedAccess = false;
@@ -196,7 +200,7 @@
   var settingsData = null;
   var asked = { bans: false, settings: false };
   var rewardsDoc = null;
-  var shopView = { query: '', cat: 'all', onlyBuyable: false };
+  var shopView = { query: '', cat: 'all', life: 'all', onlyBuyable: false };
 
   // ---------- Pure helpers (also used by the tests) ----------
 
@@ -217,33 +221,55 @@
     return Math.max(1, Math.min(cap, Math.floor(points * rate + 1e-9)));
   }
 
-  // What the shop lists for a search: the category chips with their counts, and the rows in the chosen category, the
-  // ones that can be bought first, cheapest first. With no buys left today every row says so.
+  // What the shop lists for a search: the category chips and the how-long-it-lasts chips with their counts, and the
+  // rows in the chosen category and kind, the ones that can be bought first, cheapest first. Each set of counts follows
+  // the other filter, and a choice with nothing in it falls back to all. With no buys left today every row says so.
   function shopList(data, view, lang) {
     var query = (view.query || '').trim().toLowerCase();
     var noBuys = data.left === 0 ? say(TEXT.noBuys, lang) : null;
     var matching = data.rows.map(function (row) {
-      return { row: row, why: row.why || noBuys, isPoor: !row.why && !noBuys && row.price > data.points };
+      return { row: row, life: lifeLabel(row.life, lang).kind, why: row.why || noBuys, isPoor: !row.why && !noBuys && row.price > data.points };
     }).filter(function (entry) {
       if (view.onlyBuyable && (entry.why || entry.isPoor)) return false;
 
       return !query || (entry.row.name + ' ' + entry.row.desc).toLowerCase().indexOf(query) >= 0;
     });
-    var counts = {};
+    var inLife = function (life) { return function (entry) { return life === 'all' || entry.life === life; }; };
+    var inCat = function (cat) { return function (entry) { return cat === 'all' || entry.row.cat === cat; }; };
+    var catCounts = tally(matching.filter(inLife(view.life || 'all')), 'cat');
+    var cat = catCounts[view.cat] ? view.cat : 'all';
+    var lifeCounts = tally(matching.filter(inCat(cat)), 'life');
+    var life = lifeCounts[view.life] ? view.life : 'all';
 
-    matching.forEach(function (entry) { counts[entry.row.cat] = (counts[entry.row.cat] || 0) + 1; });
-    counts.all = matching.length;
+    catCounts = tally(matching.filter(inLife(life)), 'cat');
 
-    var cat = counts[view.cat] ? view.cat : 'all';
-    var rows = matching.filter(function (entry) { return cat === 'all' || entry.row.cat === cat; });
+    var rows = matching.filter(function (entry) { return inCat(cat)(entry) && inLife(life)(entry); });
 
     rows.sort(function (a, b) { return (a.why ? 1 : 0) - (b.why ? 1 : 0) || a.row.price - b.row.price; });
 
     return {
       cat: cat,
-      cats: CATS.filter(function (c) { return counts[c[0]]; }).map(function (c) { return { key: c[0], label: lang === 'zh' ? c[2] : c[1], count: counts[c[0]] }; }),
+      cats: chipsOf(CATS, catCounts, lang),
+      life: life,
+      lives: chipsOf(LIVES, lifeCounts, lang),
       rows: rows
     };
+  }
+
+  function tally(entries, key) {
+    var counts = { all: entries.length };
+
+    entries.forEach(function (entry) {
+      var value = key === 'cat' ? entry.row.cat : entry.life;
+
+      counts[value] = (counts[value] || 0) + 1;
+    });
+
+    return counts;
+  }
+
+  function chipsOf(list, counts, lang) {
+    return list.filter(function (c) { return counts[c[0]]; }).map(function (c) { return { key: c[0], label: lang === 'zh' ? c[2] : c[1], count: counts[c[0]] }; });
   }
 
   // A card's or shop row's label from how long its reward lasts, in game seconds: below 0 is permanent, 0 is one-time,
@@ -616,6 +642,7 @@
     var head = card.appendChild(el(doc, 'div', 'shop-hd'));
     var tools = card.appendChild(el(doc, 'div', 'shop-tools'));
     var input = tools.appendChild(doc.createElement('input'));
+    var lives = tools.appendChild(el(doc, 'div', 'shop-life chips'));
     var chips = tools.appendChild(el(doc, 'div', 'chips'));
     var only = chips.appendChild(el(doc, 'span', 'only-buyable'));
 
@@ -686,22 +713,31 @@
     var list = panel.querySelector('.shop-list');
 
     shopView.cat = view.cat;
+    shopView.life = view.life;
+    drawChips(panel, panel.querySelector('.shop-life'), view.lives, view.life, 'life');
     panel.querySelector('.only-buyable').className = 'only-buyable' + (shopView.onlyBuyable ? ' on' : '');
-    removeChildren(cats);
-    view.cats.forEach(function (cat) {
-      var chip = cats.appendChild(el(doc, 'span', cat.key === view.cat ? 'on' : '', cat.label));
-
-      chip.appendChild(el(doc, 'i', '', String(cat.count)));
-      chip.addEventListener('click', function () {
-        shopView.cat = cat.key;
-        drawShopList(panel);
-      });
-    });
+    drawChips(panel, cats, view.cats, view.cat, 'cat');
     removeChildren(list);
 
     if (!view.rows.length) list.appendChild(el(doc, 'div', 'shop-none', t(TEXT.none)));
 
     view.rows.forEach(function (entry) { list.appendChild(shopRow(doc, entry)); });
+  }
+
+  // One row of filter chips, each with its count; clicking one sets that filter and draws the list again.
+  function drawChips(panel, box, chips, chosen, key) {
+    var doc = panel.ownerDocument;
+
+    removeChildren(box);
+    chips.forEach(function (chipData) {
+      var chip = box.appendChild(el(doc, 'span', chipData.key === chosen ? 'on' : '', chipData.label));
+
+      chip.appendChild(el(doc, 'i', '', String(chipData.count)));
+      chip.addEventListener('click', function () {
+        shopView[key] = chipData.key;
+        drawShopList(panel);
+      });
+    });
   }
 
   function shopRow(doc, entry) {

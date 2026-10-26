@@ -302,6 +302,6 @@ function setupWith(changes) {
     window.__slmorerewards.setup(data);
 }
 
-function shopRow(id, name, price, why, cat) {
-    return { id: id, name: name, desc: name + ' does things', icon: '', cost: price, price: price, why: why || null, life: -1, cat: cat || 'body', early: false };
+function shopRow(id, name, price, why, cat, life) {
+    return { id: id, name: name, desc: name + ' does things', icon: '', cost: price, price: price, why: why || null, life: life === undefined ? -1 : life, cat: cat || 'body', early: false };
 }

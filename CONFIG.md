@@ -101,7 +101,7 @@ The buttons show only on cards you can still act on: not bought and not locked. 
 | `ShopPerDay` | `2` | How many shop purchases you can make in a day, 0 to 99. `0` is no limit. |
 | `ShopLocked` | `true` | `true` lets the shop sell a reward before the reward it needs first, at double the price. |
 
-A shop price is the card price times (100 + `ShopMarkup` + `ShopIncrease` x purchases since the last reset) / 100, rounded up. With the defaults, a reward that costs 8 on a card costs 10 in the shop, then 12 after one purchase, then 13 after two. The shop lists rewards by category, with a search box and a switch to show only what you can buy now. Rewards you cannot buy say why: you own it, it needs another reward first, it is banned this run, not available yet, and so on.
+A shop price is the card price times (100 + `ShopMarkup` + `ShopIncrease` x purchases since the last reset) / 100, rounded up. With the defaults, a reward that costs 8 on a card costs 10 in the shop, then 12 after one purchase, then 13 after two. The shop lists rewards by category, with a search box, a filter for permanent, one-time or temporary rewards, and a switch to show only what you can buy now. Rewards you cannot buy say why: you own it, it needs another reward first, it is banned this run, not available yet, and so on.
 
 ## How many rewards fit
 

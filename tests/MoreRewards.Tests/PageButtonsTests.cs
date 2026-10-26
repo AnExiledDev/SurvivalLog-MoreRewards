@@ -390,6 +390,45 @@ public class PageButtonsTests
     }
 
     [Fact]
+    public void The_shop_filters_by_how_long_a_reward_lasts()
+    {
+        var page = new PageScript();
+        const string data = "{points: 99, left: null, rows: [shopRow(1, 'Axe', 5, null, 'body', -1), shopRow(2, 'Bow', 3, null, 'body', 0), shopRow(3, 'Cart', 4, null, 'body', 86400), shopRow(4, 'Dam', 6, null, 'body', 259200)]}";
+
+        Assert.Equal("all4,perm1,once1,timed2", page.Text($"window.__slmorerewards.shopList({data}, {{query: ''}}, 'en').lives.map(function (c) {{ return c.key + c.count; }}).join(',')"));
+        Assert.Equal("3,4", page.Text($"window.__slmorerewards.shopList({data}, {{query: '', life: 'timed'}}, 'en').rows.map(function (e) {{ return e.row.id; }}).join(',')"));
+        Assert.Equal("1", page.Text($"window.__slmorerewards.shopList({data}, {{query: '', life: 'perm'}}, 'en').rows.map(function (e) {{ return e.row.id; }}).join(',')"));
+        Assert.Equal("2", page.Text($"window.__slmorerewards.shopList({data}, {{query: '', life: 'once'}}, 'en').rows.map(function (e) {{ return e.row.id; }}).join(',')"));
+    }
+
+    [Fact]
+    public void Category_and_lasting_counts_follow_each_other_and_an_empty_choice_falls_back_to_all()
+    {
+        var page = new PageScript();
+        const string data = "{points: 99, left: null, rows: [shopRow(1, 'Axe', 5, null, 'traps', -1), shopRow(2, 'Bow', 3, null, 'food', 0), shopRow(3, 'Cart', 4, null, 'food', -1)]}";
+
+        Assert.Equal("all2,perm1,once1", page.Text($"window.__slmorerewards.shopList({data}, {{query: '', cat: 'food'}}, 'en').lives.map(function (c) {{ return c.key + c.count; }}).join(',')"));
+        Assert.Equal("all2,food1,traps1", page.Text($"window.__slmorerewards.shopList({data}, {{query: '', life: 'perm'}}, 'en').cats.map(function (c) {{ return c.key + c.count; }}).join(',')"));
+        Assert.Equal("all", page.Text($"window.__slmorerewards.shopList({data}, {{query: '', cat: 'traps', life: 'once'}}, 'en').cat"));
+        Assert.Equal("all", page.Text($"window.__slmorerewards.shopList({data}, {{query: '', life: 'timed'}}, 'en').life"));
+        Assert.Equal("2", page.Text($"window.__slmorerewards.shopList({data}, {{query: '', cat: 'traps', life: 'once'}}, 'en').rows.map(function (e) {{ return e.row.id; }}).join(',')"));
+    }
+
+    [Fact]
+    public void Clicking_a_lasting_chip_in_the_shop_shows_only_that_kind()
+    {
+        var page = Rewards("[{id: 11, state: 'affordable', pinned: false}]");
+
+        page.Run("fire(frame.contentDocument.querySelector('.mr-shop-btn'), 'click');");
+        page.Run("window.__slmorerewards.shop({lang: 'en', points: 99, rise: 0, left: null, rows: [shopRow(1, 'Axe', 5, null, 'body', -1), shopRow(2, 'Bow', 3, null, 'body', 0)]});");
+        page.Run("var lifeChips = frame.contentDocument.body.querySelector('.shop-life').children; fire(lifeChips[lifeChips.length - 1], 'click');");
+
+        Assert.Equal("One-time1", page.Text("frame.contentDocument.body.querySelector('.shop-life').querySelector('.on').textContent"));
+        Assert.Equal(1, page.Number("frame.contentDocument.body.querySelector('.shop-list').children.length"));
+        Assert.Contains("Bow", page.Text("frame.contentDocument.body.querySelector('.shop-list').textContent"));
+    }
+
+    [Fact]
     public void With_no_buys_left_today_nothing_in_the_shop_can_be_bought()
     {
         var page = new PageScript();
