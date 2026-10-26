@@ -18,7 +18,8 @@ internal sealed class RateField
 
     private readonly RateKeeper _keeper;
     private readonly Action<string> _log;
-    private float _nextCheckAt;
+    /// <summary>Half a second after the refresh cost's check, so the two once-a-second checks never share a frame.</summary>
+    private float _nextCheckAt = CheckSeconds / 2;
     private bool _hasLoggedPutBack;
 
     public RateField(RateKeeper keeper, Action<string> log)

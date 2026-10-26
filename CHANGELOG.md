@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.2
+
+- Fixed: a short stutter when the rewards screen or the shop opened.
+- More Rewards now does much less work while you play, so the game runs smoother with it on.
+- Made for Survival Log 1.1.19611.
+
 ## 0.5.1
 
 - A 「Bans」 button in the footer lists this run's bans. Removing one lets its rewards be offered again and gives back part of what the ban cost (`UnbanRefund`, 50% by default). A ban made with `BanWholeLine` comes off as one.

@@ -80,17 +80,25 @@ internal static class ListPatch
 
             if (extras.Count == 0) return;
 
-            var kept = extras.ToList();
+            var kept = new List<RewardLock>(extras);
+            var list = __0.List;
+            var count = list.Count;
 
-            for (var i = 0; i < __0.List.Count; i++)
+            for (var i = 0; i < count; i++)
             {
-                var item = __0.List[i];
+                var item = list[i];
                 var id = item.Id.Value;
 
-                if (extras.All(held => held.Id != id)) continue;
+                if (IndexOf(extras, id) < 0) continue;
 
-                if (item.Bought.Value) kept.RemoveAll(held => held.Id == id);
-                else item.Pinned.Value = true;
+                if (item.Bought.Value)
+                {
+                    for (var at = IndexOf(kept, id); at >= 0; at = IndexOf(kept, id)) kept.RemoveAt(at);
+                }
+                else
+                {
+                    item.Pinned.Value = true;
+                }
             }
 
             if (kept.Count != extras.Count) book.SetLocks(kept);
@@ -99,5 +107,16 @@ internal static class ListPatch
         {
             PatchKit.Fail(Doing, ex);
         }
+    }
+
+    /// <returns>Where the lock on <paramref name="id"/> is in <paramref name="locks"/>, or -1. A plain loop: the hook runs on every rebuild.</returns>
+    private static int IndexOf(IReadOnlyList<RewardLock> locks, int id)
+    {
+        for (var i = 0; i < locks.Count; i++)
+        {
+            if (locks[i].Id == id) return i;
+        }
+
+        return -1;
     }
 }

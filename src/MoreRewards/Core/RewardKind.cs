@@ -50,6 +50,15 @@ public static class RewardKind
         ("food", new Regex("Food|Satiety|Nutrition|Eat|Metabolism|Stomach|Corrosion|Endurance|Process_Adapt|Deep_Sleep|Tired")),
     };
 
+    private const string SatietyField = "Satiety";
+    private const string SpeedField = "Speed";
+
+    /// <summary>
+    /// Whether the default script's field <paramref name="name"/> can change its category. Only these fields need to
+    /// be read: <see cref="Category"/> gives the same answer for them alone as for every set field.
+    /// </summary>
+    public static bool IsTellingField(string name) => name.Contains(SatietyField) || name.Contains(SpeedField);
+
     /// <param name="setFields">The names of the script's fields that are set (not zero or empty); only the default script needs them.</param>
     public static string Category(string script, IEnumerable<string> setFields)
     {
@@ -57,9 +66,9 @@ public static class RewardKind
         {
             var fields = setFields.ToList();
 
-            if (fields.Any(field => field.Contains("Satiety"))) return "food";
+            if (fields.Any(field => field.Contains(SatietyField))) return "food";
 
-            return fields.Any(field => field.Contains("Speed")) ? "speed" : "body";
+            return fields.Any(field => field.Contains(SpeedField)) ? "speed" : "body";
         }
 
         return Categories.FirstOrDefault(entry => entry.Pattern.IsMatch(script)).Category ?? "body";

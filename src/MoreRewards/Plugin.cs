@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using BepInEx;
 using BepInEx.Configuration;
 using BepInEx.Unity.IL2CPP;
@@ -15,7 +16,7 @@ namespace MoreRewards;
 public sealed class Plugin : BasePlugin
 {
     private const string Guid = "com.dev.survivallog.morerewards";
-    private const string Version = "0.5.1";
+    private const string Version = "0.5.2";
 
     public override void Load()
     {
@@ -58,8 +59,25 @@ public sealed class Plugin : BasePlugin
         WatchRewards(optionCount, refreshCost, screen, log);
         WatchScreen(() => new InterestTerms((rateKeeper.Rate ?? InterestRate.GameRate) / 100f, capKeeper()), board, log);
         RewardsTicker.Log = log.Write;
+        RewardsTicker.OnQuit = () => log.Finish(TimeSpan.FromSeconds(2));
         AddComponent<RewardsTicker>();
+        WarmUpOnWorker(log);
     }
+
+    /// <summary>Compiles the mod's own code on a worker, so the first rewards screen and shop do not pay for it in a frame.</summary>
+    private static void WarmUpOnWorker(RewardsLog log) =>
+        Task.Run(() =>
+        {
+            try
+            {
+                WarmUp.Run();
+            }
+            catch (Exception ex)
+            {
+                // Only the first screen is slower; a worker writes only to the mod's file.
+                log.WriteFileOnly("warm-up failed (harmless): " + ex.Message);
+            }
+        });
 
     private static void WatchRewards(ConfigEntry<int> optionCount, ConfigEntry<int> refreshCost, ScreenConfig screen, RewardsLog log)
     {
@@ -88,13 +106,16 @@ public sealed class Plugin : BasePlugin
         var harmony = new Harmony(Guid);
         RewardActions? actions = null;
         var page = new RewardPage(log.Write, () => actions?.AskSetup());
+        var budget = new FrameBudget();
+        var catalog = new RewardCatalog(budget);
 
-        actions = new RewardActions(page, new RewardCatalog(), interest, board, log.Write);
+        actions = new RewardActions(page, catalog, interest, board, budget, log.Write);
         OfferPatch.Apply(harmony);
         ListPatch.Apply(harmony);
         PageMessages.Apply(harmony, log.Write);
         RewardsTicker.Checks.Add(page.Tick);
         RewardsTicker.Checks.Add(actions.Tick);
+        RewardsTicker.Checks.Add(catalog.Tick);
     }
 
     private static RateKeeper WatchRate(ConfigEntry<int> interestRate, RewardsLog log)

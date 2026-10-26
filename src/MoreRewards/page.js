@@ -17,6 +17,7 @@
   var CHECK_MS = 250;
   var TOAST_MS = 2200;
   var PREFIX = 'slmod|morerewards|';
+  var REWARDS_PAGE = 'RogueSelect.html';
   var STYLE_ID = 'slmr-style';
   var MANY = 'slmr-many';
   var COMPACT = 'slmr-compact';
@@ -200,6 +201,7 @@
   var settingsData = null;
   var asked = { bans: false, settings: false };
   var rewardsDoc = null;
+  var rewardsFrame = null;
   var shopView = { query: '', cat: 'all', life: 'all', onlyBuyable: false };
 
   // ---------- Pure helpers (also used by the tests) ----------
@@ -368,7 +370,10 @@
   // The page's own Vue state, where the cards and the points are. The production build of Vue keeps the root
   // component on the mount element as _vnode; a development build also has it on __vue_app__.
   function vueState(doc) {
-    var app = doc.getElementById('app');
+    var app = doc.__slmrApp;
+
+    if (!app || !app.isConnected) app = doc.__slmrApp = doc.getElementById('app');
+
     var component = app && app._vnode && app._vnode.component;
 
     if (component && component.setupState) return component.setupState;
@@ -378,10 +383,37 @@
     return vueApp && vueApp._instance ? vueApp._instance.setupState : null;
   }
 
-  function arrange(doc) {
+  // One of the game page's own elements, found once and kept on its document so the next check does not search for
+  // it; searched again once the page has dropped it. (check() has already made sure the document is still shown.)
+  function keptOnDoc(doc, key, selector) {
+    var node = doc[key];
+
+    if (node && node.isConnected) return node;
+
+    node = doc[key] = doc.querySelector(selector);
+
+    return node;
+  }
+
+  // The card slots, read off the grid's own children: the game's page draws them straight into the grid.
+  function cardSlots(doc) {
+    var grid = keptOnDoc(doc, '__slmrGrid', '.card-grid');
+    var slots = [];
+
+    if (!grid) return slots;
+
+    var children = grid.children;
+
+    for (var i = 0; i < children.length; i++) {
+      if (children[i].classList.contains('card-slot')) slots.push(children[i]);
+    }
+
+    return slots;
+  }
+
+  function arrange(doc, slots) {
     var root = doc.documentElement;
-    var grid = doc.querySelector('.card-grid');
-    var cardCount = grid ? grid.querySelectorAll('.card-slot').length : 0;
+    var cardCount = slots.length;
     var shape = layout(cardCount);
 
     if (!shape) {
@@ -398,7 +430,10 @@
     if (shape.rows > 1) root.classList.add(COMPACT);
     else root.classList.remove(COMPACT);
 
-    root.style.setProperty(COLUMNS, String(shape.columns));
+    var columns = String(shape.columns);
+
+    if (root.style.getPropertyValue(COLUMNS) !== columns) root.style.setProperty(COLUMNS, columns);
+
     noteShape(cardCount, shape);
   }
 
@@ -411,19 +446,27 @@
     notes.push('showing ' + cardCount + ' rewards in ' + shape.rows + (shape.rows === 1 ? ' row' : ' rows') + ' of up to ' + shape.columns);
   }
 
-  // The page may reload and lose the style, so it is looked for on every check; it is never added twice.
+  // The page may reload and lose the style, so it is checked on every check, through the one kept on the document; it
+  // is never added twice.
   function addStyle(doc) {
-    if (doc.getElementById(STYLE_ID)) return;
+    var style = doc.__slmrStyle;
 
-    var style = doc.createElement('style');
+    if (style && style.isConnected) return;
 
-    style.id = STYLE_ID;
-    style.textContent = LAYOUT_CSS.concat(MOD_CSS).join('\n');
-    doc.head.appendChild(style);
+    style = doc.getElementById(STYLE_ID);
+
+    if (!style) {
+      style = doc.createElement('style');
+      style.id = STYLE_ID;
+      style.textContent = LAYOUT_CSS.concat(MOD_CSS).join('\n');
+      doc.head.appendChild(style);
+    }
+
+    doc.__slmrStyle = style;
   }
 
   // The mod's additions, once the plugin has said what to draw.
-  function decorate(doc) {
+  function decorate(doc, slots) {
     var state = vueState(doc);
 
     if (!state || !state.cards) {
@@ -437,8 +480,11 @@
     addStyle(doc);
     listen(doc);
 
-    var slots = doc.querySelectorAll('.card-slot');
-    var locked = state.cards.filter(function (card) { return card.pinned; }).length;
+    var locked = 0;
+
+    for (var c = 0; c < state.cards.length; c++) {
+      if (state.cards[c] && state.cards[c].pinned) locked++;
+    }
 
     for (var i = 0; i < slots.length; i++) {
       if (state.cards[i]) decorateCard(slots[i], state.cards[i], locked);
@@ -450,7 +496,9 @@
 
   // Rebuilt only when what the card shows changes (Vue keeps the slot and swaps its card after a refresh).
   function decorateCard(slot, card, locked) {
-    var cardEl = slot.querySelector('.card');
+    var cardEl = slot.__slmrCard;
+
+    if (!cardEl || cardEl.parentElement !== slot) cardEl = slot.__slmrCard = slot.querySelector('.card');
 
     if (!cardEl) return;
 
@@ -486,8 +534,14 @@
     cardEl.appendChild(acts);
   }
 
+  // The game draws the lock button (and its tip) only on cards that are not bought or locked.
   function setTip(cardEl, card, locked) {
-    var tip = cardEl.querySelector('.pin-tip');
+    if (card.state === 'bought' || card.state === 'locked') return;
+
+    var tip = cardEl.__slmrTip;
+
+    if (!tip || !tip.isConnected) tip = cardEl.__slmrTip = cardEl.querySelector('.pin-tip');
+
     var text = card.pinned ? t(TEXT.unlock) : locked < setupData.maxLocked ? t(TEXT.lock) + ' (' + locked + '/' + setupData.maxLocked + ')' : t(TEXT.full);
 
     if (tip && tip.textContent !== text) tip.textContent = text;
@@ -505,8 +559,8 @@
   }
 
   function decorateFooter(doc, state, locked) {
-    var left = doc.querySelector('.footer-left');
-    var center = doc.querySelector('.footer-center');
+    var left = keptOnDoc(doc, '__slmrLeft', '.footer-left');
+    var center = keptOnDoc(doc, '__slmrCenter', '.footer-center');
     var points = Number(state.ownPoints) || 0;
 
     if (left) {
@@ -518,7 +572,7 @@
   }
 
   function footLines(left, points) {
-    var foot = left.querySelector('.mr-foot') || left.appendChild(el(left.ownerDocument, 'div', 'mr-foot'));
+    var foot = ownChild(left, '__slmrFoot', '.mr-foot') || (left.__slmrFoot = left.appendChild(el(left.ownerDocument, 'div', 'mr-foot')));
     var lines = [t(TEXT.interest) + interest(points, setupData.rate, setupData.cap)];
 
     if (setupData.cashOut > 0) lines.push(t(TEXT.cashOut) + points * setupData.cashOut);
@@ -535,7 +589,7 @@
   // Shop (when it is on), the ban list (when bans are on) and the settings, in that order, drawn again only when one
   // of them comes or goes or the language changes.
   function footButtons(doc, center) {
-    var box = center.querySelector('.mr-foot-btns') || center.appendChild(el(doc, 'span', 'mr-foot-btns'));
+    var box = ownChild(center, '__slmrButtons', '.mr-foot-btns') || (center.__slmrButtons = center.appendChild(el(doc, 'span', 'mr-foot-btns')));
     var key = [lang(), setupData.shop, setupData.ban].join('|');
 
     if (box.__slmrKey === key) return;
@@ -942,17 +996,33 @@
   }
 
   function setText(parent, className, text) {
-    var node = parent.querySelector('.' + className);
+    var key = '__slmr_' + className;
+    var node = ownChild(parent, key, '.' + className);
 
     if (text === null) {
       if (node) node.remove();
 
+      parent[key] = null;
+
       return;
     }
 
-    if (!node) node = parent.appendChild(el(parent.ownerDocument, 'span', className));
+    if (!node) node = parent[key] = parent.appendChild(el(parent.ownerDocument, 'span', className));
 
     if (node.textContent !== text) node.textContent = text;
+  }
+
+  // One of the mod's own nodes straight under parent, kept on parent so later checks do not search for it. Only the
+  // mod adds these nodes, and it keeps what it kept up to date when it adds or removes one, so "there is none" is kept
+  // too; it is searched again only once the game's page has moved or dropped it.
+  function ownChild(parent, key, selector) {
+    var node = parent[key];
+
+    if (node === null || (node && node.parentElement === parent)) return node;
+
+    node = parent[key] = parent.querySelector(selector);
+
+    return node;
   }
 
   function removeAll(parent, selector) {
@@ -968,14 +1038,40 @@
   // ---------- The check ----------
 
   // The rewards page is a same-origin iframe, so its document can be reached from here; polled because the game
-  // creates and drops that iframe whenever it likes.
+  // creates and drops that iframe whenever it likes. The frame found is kept while it still shows the same page, so a
+  // check with the page up searches nothing.
   function check() {
+    if (!isStillShown(rewardsFrame, rewardsDoc)) findRewards();
+
+    if (!rewardsDoc) return;
+
+    var slots = cardSlots(rewardsDoc);
+
+    arrange(rewardsDoc, slots);
+
+    if (setupData) decorate(rewardsDoc, slots);
+  }
+
+  // A document kept from inside an iframe still answers after the game removes the iframe or loads another page into
+  // it, so it is checked through its frame.
+  function isStillShown(frame, doc) {
+    if (!frame || !frame.isConnected || (frame.src || '').indexOf(REWARDS_PAGE) < 0) return false;
+
+    try {
+      return frame.contentDocument === doc && !!doc.documentElement;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function findRewards() {
     var frames = document.querySelectorAll('iframe');
 
+    rewardsFrame = null;
     rewardsDoc = null;
 
     for (var i = 0; i < frames.length; i++) {
-      if (!/RogueSelect\.html/.test(frames[i].src || '')) continue;
+      if ((frames[i].src || '').indexOf(REWARDS_PAGE) < 0) continue;
 
       var doc = null;
 
@@ -991,10 +1087,8 @@
         continue;
       }
 
+      rewardsFrame = frames[i];
       rewardsDoc = doc;
-      arrange(doc);
-
-      if (setupData) decorate(doc);
     }
   }
 

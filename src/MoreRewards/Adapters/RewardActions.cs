@@ -18,49 +18,69 @@ internal readonly record struct InterestTerms(float Rate, int Cap);
 /// and tells the page what it needs to draw the mod's buttons whenever the screen's card list is rebuilt or the page
 /// asks for it. Every action checks the screen still shows what the page saw, so a click that arrives late does nothing.
 /// The game's own lock is still the game's: the mod moves it with the game's own pin call, and keeps only the extras.
+/// A frame with no message and nothing owed to the page reads nothing from the game (<see cref="SetupWatch"/>), and the
+/// shop's list is built a slice a frame, then sent in one call.
 /// </summary>
 internal sealed class RewardActions
 {
+    /// <summary>The rewards screen's Unity type, looked up once.</summary>
+    private static Il2CppSystem.Type? _screenType;
+
     private readonly RewardPage _page;
     private readonly RewardCatalog _catalog;
     private readonly Func<InterestTerms> _interest;
     private readonly SettingsBoard _settings;
+    private readonly FrameBudget _budget;
     private readonly Action<string> _log;
-    private int _sentVersion = -1;
-    private int _sentSettings = -1;
-    private bool _isSetupAsked;
+    private readonly SetupWatch _watch = new();
+    private ShopOrder? _shop;
 
-    public RewardActions(RewardPage page, RewardCatalog catalog, Func<InterestTerms> interest, SettingsBoard settings, Action<string> log)
+    public RewardActions(RewardPage page, RewardCatalog catalog, Func<InterestTerms> interest, SettingsBoard settings, FrameBudget budget, Action<string> log)
     {
         _page = page;
         _catalog = catalog;
         _interest = interest;
         _settings = settings;
+        _budget = budget;
         _log = log;
     }
 
     /// <summary>The page lost what it was told (it reloaded); send it again on the next frame.</summary>
-    public void AskSetup() => _isSetupAsked = true;
+    public void AskSetup() => _watch.Ask();
 
     public void Tick(float now)
     {
         while (PageMessages.TryTake(out var command)) Do(command);
 
-        // Outside a run the screen's state is left over from the last one; the page is told nothing until a new screen opens.
-        if (RunGame.Results() == null)
+        if (_shop != null) AdvanceShop(now);
+
+        switch (_watch.Step(now, ListPatch.State is not null, ListPatch.Version, LiveScreen.Version))
         {
-            ListPatch.Forget();
-
-            return;
+            case SetupStep.CheckRun:
+                ForgetOutsideRun();
+                break;
+            case SetupStep.TrySend:
+                TrySendSetup();
+                break;
         }
+    }
 
-        if (!IsScreenOpen()) return;
+    /// <summary>Outside a run the screen's state is left over from the last one; the page is told nothing until a new screen opens.</summary>
+    /// <returns>Whether a run is going.</returns>
+    private static bool ForgetOutsideRun()
+    {
+        if (RunGame.Results() != null) return true;
 
-        if (ListPatch.State is not { } state || (!_isSetupAsked && _sentVersion == ListPatch.Version && _sentSettings == LiveScreen.Version)) return;
+        ListPatch.Forget();
 
-        _isSetupAsked = false;
-        _sentVersion = ListPatch.Version;
-        _sentSettings = LiveScreen.Version;
+        return false;
+    }
+
+    private void TrySendSetup()
+    {
+        if (!ForgetOutsideRun() || !IsScreenOpen() || ListPatch.State is not { } state) return;
+
+        _watch.Sent(ListPatch.Version, LiveScreen.Version);
         SendSetup(state);
     }
 
@@ -168,7 +188,7 @@ internal sealed class RewardActions
 
         var settings = LiveScreen.Settings;
 
-        if (LiveScreen.Book.Unban(head, _catalog.Plans().Select(talent => talent.ID)) is { } ban)
+        if (LiveScreen.Book.Unban(head, _catalog.PlanIds()) is { } ban)
         {
             var refund = BanRefund.Of(ban, settings.BanCost, settings.UnbanRefund);
 
@@ -181,7 +201,7 @@ internal sealed class RewardActions
         SendBans();
     }
 
-    private IReadOnlyList<BanGroup> Bans() => LiveScreen.Book.Bans(_catalog.Plans().Select(talent => talent.ID));
+    private IReadOnlyList<BanGroup> Bans() => LiveScreen.Book.Bans(_catalog.PlanIds());
 
     private void SendSettings() => _page.Send(PageData.SettingsCall(_settings.Rows(GameLanguage.Current()), GameLanguage.Current()));
 
@@ -239,18 +259,51 @@ internal sealed class RewardActions
         Ac_RogueSelect_WebRefreshSuccess.SendAction(OfferPatch.ToGame(offer));
     }
 
+    /// <summary>Starts the shop's list; it is built a slice a frame from this frame on (<see cref="AdvanceShop"/>). A newer ask replaces one still building.</summary>
     private void SendShop()
     {
-        if (!LiveScreen.Settings.ShopEnabled || RunGame.Results() is not { } results || RunGame.Planning() is not { } planning) return;
+        _shop = null;
+
+        if (!LiveScreen.Settings.ShopEnabled || RunGame.Results() is null || RunGame.Planning() is not { } planning) return;
 
         var settings = LiveScreen.Settings;
         var book = LiveScreen.Book;
         var day = RunGame.Day();
         var language = GameLanguage.Current();
         var tally = book.Shop(day, settings.ShopReset);
-        var rows = _catalog.ShopRows(planning, day, settings, book, language);
+        var json = new ShopJson();
 
-        _page.Send(PageData.ShopCall(rows, results.GetSurvivalPoint(), ShopPrice.LeftToday(settings, tally), ShopPrice.Rise(settings, tally.Buys), language));
+        _shop = new ShopOrder(new SlicedJob(_catalog.ShopSteps(planning, day, settings, book, language, json)), json, settings, tally, language);
+    }
+
+    /// <summary>One slice of the shop's list; once it is all built, the page gets it with the points held now.</summary>
+    private void AdvanceShop(float now)
+    {
+        var order = _shop!;
+
+        if (RunGame.Results() is not { } results)
+        {
+            _shop = null;
+
+            return;
+        }
+
+        _budget.Start(now);
+
+        try
+        {
+            if (!order.Job.Advance(_budget.IsSpent)) return;
+        }
+        catch (Exception ex)
+        {
+            _shop = null;
+            _log($"the rewards screen's {PageVerb.Shop} failed, nothing more was done: " + ex);
+
+            return;
+        }
+
+        _shop = null;
+        _page.Send(order.Json.Call(results.GetSurvivalPoint(), ShopPrice.LeftToday(order.Settings, order.Tally), ShopPrice.Rise(order.Settings, order.Tally.Buys), order.Language));
     }
 
     /// <summary>
@@ -327,7 +380,7 @@ internal sealed class RewardActions
     }
 
     /// <summary>The rewards screen is on show; its page can only be told anything then.</summary>
-    private static bool IsScreenOpen() => GameSingleton.Existing<ReduxUISystem>() is { } ui && ui.IsUIActive(Il2CppType.Of<WebUI_RogueSelect>());
+    private static bool IsScreenOpen() => GameSingleton.Existing<ReduxUISystem>() is { } ui && ui.IsUIActive(_screenType ??= Il2CppType.Of<WebUI_RogueSelect>());
 
     /// <summary>Whether the screen still shows <paramref name="id"/> in <paramref name="slot"/>, as the page saw it.</summary>
     private static bool IsShown(int id, int slot)
@@ -340,4 +393,7 @@ internal sealed class RewardActions
     private void Toast(string text) => _page.Send(PageData.ToastCall(text));
 
     private static string Say(string english, string chinese) => Blocker.Say(GameLanguage.Current(), english, chinese);
+
+    /// <summary>A shop list being built, and what it was asked with; the points held are read when it is sent.</summary>
+    private sealed record ShopOrder(SlicedJob Job, ShopJson Json, ScreenSettings Settings, ShopTally Tally, Language Language);
 }

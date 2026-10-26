@@ -46,9 +46,33 @@ public sealed class RunBook
     private const string ShopTodayKey = "slmr.shop.today";
     private const string ShopDayKey = "slmr.shop.day";
 
+    /// <summary>The lock counters' names, made once: the screen's every rebuild reads them.</summary>
+    private static readonly string[] LockKeys = Keys(LockKey, MostLocks);
+
+    private static readonly string[] LockSlotKeys = Keys(LockSlotKey, MostLocks);
+
     private readonly ICounters _counters;
 
+    /// <summary>The ban counters' names by reward, made once each: the shop asks for every reward's.</summary>
+    private readonly Dictionary<int, string> _banKeys = new();
+
     public RunBook(ICounters counters) => _counters = counters;
+
+    private static string[] Keys(string prefix, int count)
+    {
+        var keys = new string[count];
+
+        for (var k = 0; k < count; k++) keys[k] = prefix + k;
+
+        return keys;
+    }
+
+    private string BanKeyOf(int id)
+    {
+        if (!_banKeys.TryGetValue(id, out var key)) _banKeys[id] = key = BanKey + id;
+
+        return key;
+    }
 
     /// <summary>The extra locks, in the order they were made.</summary>
     public IReadOnlyList<RewardLock> Locks()
@@ -57,11 +81,11 @@ public sealed class RunBook
 
         for (var k = 0; k < MostLocks; k++)
         {
-            var id = _counters.Get(LockKey + k);
+            var id = _counters.Get(LockKeys[k]);
 
             if (id <= 0) break;
 
-            locks.Add(new RewardLock(id, _counters.Get(LockSlotKey + k)));
+            locks.Add(new RewardLock(id, _counters.Get(LockSlotKeys[k])));
         }
 
         return locks;
@@ -75,18 +99,18 @@ public sealed class RunBook
 
         for (var k = 0; k < count; k++)
         {
-            _counters.Set(LockKey + k, locks[k].Id);
-            _counters.Set(LockSlotKey + k, locks[k].Slot);
+            _counters.Set(LockKeys[k], locks[k].Id);
+            _counters.Set(LockSlotKeys[k], locks[k].Slot);
         }
 
         for (var k = count; k < had; k++)
         {
-            _counters.Set(LockKey + k, 0);
-            _counters.Set(LockSlotKey + k, 0);
+            _counters.Set(LockKeys[k], 0);
+            _counters.Set(LockSlotKeys[k], 0);
         }
     }
 
-    public bool IsBanned(int id) => _counters.Get(BanKey + id) > 0;
+    public bool IsBanned(int id) => _counters.Get(BanKeyOf(id)) > 0;
 
     /// <summary>
     /// Bans <paramref name="ids"/> as one ban made on <paramref name="head"/> for <paramref name="paid"/> points. A reward
@@ -101,7 +125,7 @@ public sealed class RunBook
         {
             if (IsBanned(id)) continue;
 
-            _counters.Set(BanKey + id, 1);
+            _counters.Set(BanKeyOf(id), 1);
             _counters.Set(BanByKey + id, head);
             added.Add(id);
         }
@@ -143,7 +167,7 @@ public sealed class RunBook
 
         foreach (var id in ban.Members)
         {
-            _counters.Set(BanKey + id, 0);
+            _counters.Set(BanKeyOf(id), 0);
             _counters.Set(BanByKey + id, 0);
         }
 

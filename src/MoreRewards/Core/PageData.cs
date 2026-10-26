@@ -45,7 +45,7 @@ public static class PageData
     public static string SetupCall(PageSetup setup) => "window.__slmorerewards && window.__slmorerewards.setup(" + Setup(setup) + ")";
 
     public static string ShopCall(IReadOnlyList<ShopRow> rows, int points, int? leftToday, int rise, Language language) =>
-        "window.__slmorerewards && window.__slmorerewards.shop(" + Shop(rows, points, leftToday, rise, language) + ")";
+        ShopOf(rows).Call(points, leftToday, rise, language);
 
     public static string BansCall(IReadOnlyList<BanRow> rows, int refundPercent, Language language) =>
         "window.__slmorerewards && window.__slmorerewards.bans(" + Bans(rows, refundPercent, language) + ")";
@@ -80,16 +80,16 @@ public static class PageData
 
     /// <param name="leftToday">Shop buys left today, null for no limit.</param>
     /// <param name="rise">How far the shop's prices are above the card prices now, in percent.</param>
-    public static string Shop(IReadOnlyList<ShopRow> rows, int points, int? leftToday, int rise, Language language)
+    public static string Shop(IReadOnlyList<ShopRow> rows, int points, int? leftToday, int rise, Language language) =>
+        ShopOf(rows).Body(points, leftToday, rise, language);
+
+    private static ShopJson ShopOf(IReadOnlyList<ShopRow> rows)
     {
-        var json = new StringBuilder("{\"lang\":").Append(Text(LanguageCode(language)));
+        var json = new ShopJson();
 
-        json.Append(",\"points\":").Append(points);
-        json.Append(",\"rise\":").Append(rise);
-        json.Append(",\"left\":").Append(leftToday?.ToString(CultureInfo.InvariantCulture) ?? "null");
-        json.Append(",\"rows\":[").Append(string.Join(",", rows.Select(Row))).Append("]}");
+        foreach (var row in rows) json.Add(row);
 
-        return json.ToString();
+        return json;
     }
 
     /// <param name="refundPercent">The share of a ban's cost that removing it pays back, in percent.</param>
@@ -102,9 +102,12 @@ public static class PageData
         "{\"lang\":" + Text(LanguageCode(language)) + ",\"rows\":[" + string.Join(",", rows.Select(Setting)) + "]}";
 
     /// <summary>A JSON string; the separators U+2028 and U+2029 are escaped too, as older JavaScript reads them as line ends.</summary>
-    public static string Text(string? text)
+    public static string Text(string? text) => AppendText(new StringBuilder(), text).ToString();
+
+    /// <summary><see cref="Text"/> written straight onto <paramref name="json"/>.</summary>
+    internal static StringBuilder AppendText(StringBuilder json, string? text)
     {
-        var json = new StringBuilder("\"");
+        json.Append('"');
 
         foreach (var c in text ?? "")
         {
@@ -124,20 +127,25 @@ public static class PageData
             }
         }
 
-        return json.Append('"').ToString();
+        return json.Append('"');
     }
 
-    private static string Row(ShopRow row) =>
-        "{\"id\":" + row.Id +
-        ",\"name\":" + Text(row.Name) +
-        ",\"desc\":" + Text(row.Desc) +
-        ",\"icon\":" + Text(row.Icon) +
-        ",\"cost\":" + row.Cost +
-        ",\"price\":" + row.Price +
-        ",\"why\":" + (row.Why == null ? "null" : Text(row.Why)) +
-        ",\"life\":" + row.Life.Seconds +
-        ",\"cat\":" + Text(row.Category) +
-        ",\"early\":" + Flag(row.IsEarly) + "}";
+    internal static void AppendRow(StringBuilder json, ShopRow row)
+    {
+        json.Append("{\"id\":").Append(row.Id.ToString(CultureInfo.InvariantCulture));
+        AppendText(json.Append(",\"name\":"), row.Name);
+        AppendText(json.Append(",\"desc\":"), row.Desc);
+        AppendText(json.Append(",\"icon\":"), row.Icon);
+        json.Append(",\"cost\":").Append(row.Cost.ToString(CultureInfo.InvariantCulture));
+        json.Append(",\"price\":").Append(row.Price.ToString(CultureInfo.InvariantCulture));
+
+        if (row.Why == null) json.Append(",\"why\":null");
+        else AppendText(json.Append(",\"why\":"), row.Why);
+
+        json.Append(",\"life\":").Append(row.Life.Seconds.ToString(CultureInfo.InvariantCulture));
+        AppendText(json.Append(",\"cat\":"), row.Category);
+        json.Append(",\"early\":").Append(Flag(row.IsEarly)).Append('}');
+    }
 
     private static string Setting(SettingRow row) =>
         "{\"key\":" + Text(row.Key) +
@@ -154,5 +162,5 @@ public static class PageData
 
     private static string Flag(bool value) => value ? "true" : "false";
 
-    private static string LanguageCode(Language language) => language == Language.Chinese ? "zh" : "en";
+    internal static string LanguageCode(Language language) => language == Language.Chinese ? "zh" : "en";
 }

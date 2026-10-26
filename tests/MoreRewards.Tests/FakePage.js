@@ -7,6 +7,9 @@ var location = { protocol: 'file:' };
 var timers = [];
 var timeouts = [];
 var posted = [];
+// How many times anything searched a document or element (querySelector, querySelectorAll, getElementById); a test
+// reads it before and after a check.
+var searches = 0;
 
 window.vuplex = { postMessage: function (message) { posted.push(message); } };
 
@@ -67,6 +70,16 @@ var FakeElement = class {
 
     get firstChild() { return this.children[0] || null; }
 
+    // Like the DOM: in its document's tree. An element inside an iframe's document stays connected after the iframe
+    // itself is removed, as in a browser.
+    get isConnected() {
+        var node = this;
+
+        while (node.parentElement) node = node.parentElement;
+
+        return !!this.ownerDocument && node === this.ownerDocument.documentElement;
+    }
+
     // Like the DOM: the element's own text followed by its children's.
     get textContent() { return this.text + this.children.map(function (child) { return child.textContent; }).join(''); }
 
@@ -124,6 +137,8 @@ var FakeElement = class {
     }
 
     querySelectorAll(selector) {
+        searches++;
+
         return descendantsOf(this).filter(function (element) { return element.matches(selector); });
     }
 
@@ -157,6 +172,8 @@ function makeDocument() {
     var doc = {
         documentElement: new FakeElement('html'),
         getElementById: function (id) {
+            searches++;
+
             return descendantsOf(doc.documentElement).filter(function (element) { return element.id === id; })[0] || null;
         },
         createElement: function (tagName) {
@@ -222,6 +239,16 @@ function addFrame(src) {
 
 function addRewardsFrame() {
     return addFrame('file:///C:/Game/SurvivalLog_Data/StreamingAssets/WebUI/UI/RogueSelect/RogueSelect.html');
+}
+
+// The game drops the page's iframe from Root.html.
+function removeFrame(frame) {
+    frame.remove();
+}
+
+// The page in the iframe reloads: the same iframe holds a new, empty document.
+function reloadFrame(frame) {
+    frame.contentDocument = makeDocument();
 }
 
 // A frame the browser will not let Root.html into.

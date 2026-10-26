@@ -26,8 +26,12 @@ internal sealed class RewardPage
     private readonly Action _onNeedsSetup;
     private readonly HashSet<string> _loggedNotes = new();
     private string? _script;
+    private string? _install;
     private string? _reply;
-    private float _nextCheckAt;
+    private Il2CppSystem.Action<string>? _onReply;
+
+    /// <summary>Off the whole and half seconds the once-a-second checks run on, so they do not share a frame.</summary>
+    private float _nextCheckAt = 0.75f;
     private int _sends;
     private bool _hasReportedRunFailure;
 
@@ -38,9 +42,21 @@ internal sealed class RewardPage
         _onNeedsSetup = onNeedsSetup;
     }
 
+    /// <summary>Most frames there is no answer and no check due, and this reads two fields.</summary>
     public void Tick(float now)
     {
-        var turn = PageReply.Read(Interlocked.Exchange(ref _reply, null));
+        if (Interlocked.Exchange(ref _reply, null) is { } reply && Answer(reply, now)) return;
+
+        if (now < _nextCheckAt) return;
+
+        _nextCheckAt = now + CheckSeconds;
+        Run(Check, keepsReply: true);
+    }
+
+    /// <returns>Whether the script was sent again, which stands in for this frame's check.</returns>
+    private bool Answer(string reply, float now)
+    {
+        var turn = PageReply.Read(reply);
 
         foreach (var note in turn.Notes)
         {
@@ -49,23 +65,17 @@ internal sealed class RewardPage
 
         if (turn.NeedsSetup) _onNeedsSetup();
 
-        if (turn.NeedsScript)
-        {
-            _nextCheckAt = now + CheckSeconds;
-            Install();
-
-            return;
-        }
-
-        if (now < _nextCheckAt) return;
+        if (!turn.NeedsScript) return false;
 
         _nextCheckAt = now + CheckSeconds;
-        Run(Check, keepsReply: true);
+        Install();
+
+        return true;
     }
 
     private void Install()
     {
-        if (!Run(Script() + TakeAfterInstall, keepsReply: true)) return;
+        if (!Run(_install ??= Script() + TakeAfterInstall, keepsReply: true)) return;
 
         _sends++;
 
@@ -85,10 +95,8 @@ internal sealed class RewardPage
 
         try
         {
-            webView.ExecuteJavaScript(javaScript, (Action<string>)(result =>
-            {
-                if (keepsReply) Interlocked.Exchange(ref _reply, result ?? "");
-            }));
+            // One callback, made once, for every check; a call whose answer is not read passes none.
+            webView.ExecuteJavaScript(javaScript, keepsReply ? (_onReply ??= (Action<string>)TakeReply) : null);
 
             return true;
         }
@@ -101,6 +109,9 @@ internal sealed class RewardPage
             return false;
         }
     }
+
+    /// <summary>The web view's callback; it only stores the answer for the next frame.</summary>
+    private void TakeReply(string? result) => Interlocked.Exchange(ref _reply, result ?? "");
 
     private string Script()
     {

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using UnityEngine;
 
 namespace MoreRewards.Adapters;
@@ -15,7 +16,14 @@ public sealed class RewardsTicker : MonoBehaviour
 
     internal static readonly List<Action<float>> Checks = new();
     internal static Action<string> Log = _ => { };
+
+    /// <summary>Run as the game closes: lets the log file's last lines reach the disk.</summary>
+    internal static Action OnQuit = () => { };
+
     private static readonly HashSet<string> ReportedFailures = new();
+
+    /// <summary>Seconds since the mod loaded; the checks only compare it with itself.</summary>
+    private static readonly Stopwatch Clock = Stopwatch.StartNew();
 
     public RewardsTicker(IntPtr pointer) : base(pointer)
     {
@@ -23,7 +31,8 @@ public sealed class RewardsTicker : MonoBehaviour
 
     private void Update()
     {
-        var now = Time.realtimeSinceStartup;
+        // The game's clock comes back boxed through interop on every read; this one costs nothing.
+        var now = (float)Clock.Elapsed.TotalSeconds;
 
         foreach (var check in Checks)
         {
@@ -35,6 +44,18 @@ public sealed class RewardsTicker : MonoBehaviour
             {
                 ReportFailure(ex);
             }
+        }
+    }
+
+    private void OnApplicationQuit()
+    {
+        try
+        {
+            OnQuit();
+        }
+        catch (Exception)
+        {
+            // The game is closing; there is nothing left to tell.
         }
     }
 
