@@ -7,7 +7,7 @@ namespace MoreRewards.Adapters;
 
 /// <summary>
 /// Sets the interest rate (<see cref="RateKeeper"/>) on the character's PointsInterest attribute, which
-/// SettleDailySurvivalPoints (rva 0x27fb1f0) reads from the world's leading role. It is checked every second, so a
+/// SettleDailySurvivalPoints (rva 0x2834c30) reads from the world's leading role. It is checked every second, so a
 /// character that was just made or loaded has the rate long before its first day ends. The value goes in through the
 /// game's own setter, AttributeComponent.SetStrengtheningValue_Float (rva 0x2de1e00), which also tells the game's
 /// screens.

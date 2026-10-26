@@ -13,7 +13,7 @@ namespace MoreRewards.Core;
 public sealed record OfferAsk(int Count, int GamePin, int GamePinSlot, IReadOnlyList<RewardLock> Extras, Func<int, bool> IsUnwanted, bool NoRepeat = false);
 
 /// <summary>
-/// Builds the end-of-day offer from the game's: banned and skipped cards come out, the day's groups fill the gaps,
+/// Builds the end-of-day offer from the game's: banned cards come out, the day's groups fill the gaps,
 /// and every locked card (the game's one and the mod's extras) sits in its own slot. The game's own pick is kept
 /// where it can be, so with nothing locked or passed on this is <see cref="OfferFill"/> alone.
 /// </summary>
@@ -58,7 +58,7 @@ public static class OfferPlan
     }
 
     /// <summary>
-    /// Swaps out the card at <paramref name="slot"/> (the player skipped or banned it) for one wanted card from the
+    /// Swaps out the card at <paramref name="slot"/> (the player banned it) for one wanted card from the
     /// day's groups, in the same slot. Nothing on screen or locked comes back. When the groups have nothing left, or the
     /// day has a fixed list, the card is only taken away.
     /// </summary>

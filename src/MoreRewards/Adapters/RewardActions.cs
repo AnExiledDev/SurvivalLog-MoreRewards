@@ -123,6 +123,9 @@ internal sealed class RewardActions
 
         if (RunGame.Results() is not { } results || RunGame.Planning() is not { } planning || ListPatch.State is not { } state) return;
 
+        // A card already banned (a double click, or a line banned from its other card) costs nothing again.
+        if (LiveScreen.Book.IsBanned(id)) return;
+
         if (settings.BanCost > 0 && !results.TrySpendSurvivalPoint(settings.BanCost))
         {
             Toast(Say($"Banning costs {settings.BanCost} survival points", $"禁用需要 {settings.BanCost} 生存点"));

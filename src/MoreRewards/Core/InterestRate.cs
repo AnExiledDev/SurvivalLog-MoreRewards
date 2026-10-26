@@ -4,7 +4,7 @@ namespace MoreRewards.Core;
 
 /// <summary>
 /// The interest rate the game pays on survival points when a day ends. SurvivalResultsManager.SettleDailySurvivalPoints
-/// (rva 0x27fb1f0) takes it from the character's PointsInterest attribute (AttrName 403), plus a share from
+/// (rva 0x2834c30) takes it from the character's PointsInterest attribute (AttrName 403), plus a share from
 /// BTEffectManager.TriggerSurvivalAccumulation that nothing in the game's tables raises. Every playable character
 /// starts the attribute at 5%: Config_PlayAttribute rows 1, 4 and 1002, copied in by LeadingRole.Initialize (rva
 /// 0x2e69a20). The Savings Plan reward (Config_Talent 30251) never touches the rate; it pays its own 5% of the day's earnings, at most 10,

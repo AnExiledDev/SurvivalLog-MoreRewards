@@ -12,8 +12,8 @@ namespace MoreRewards.Adapters;
 
 /// <summary>
 /// Shapes the end-of-day choice. The game picks the rewards in SurvivalPlanningComponent's GetRandomSurvivalPlanIds:
-/// GetRandomSurvivalPlanIds(int, ICollection, int, int) (rva 0x2fd6b40) when a day ends, from
-/// CountUpTimer.TriggerDaySettlement, and GetRandomSurvivalPlanIds(int, List, List, ICollection, int, int) (rva 0x2fd6eb0)
+/// GetRandomSurvivalPlanIds(int, ICollection, int, int) (rva 0x301c420) when a day ends, from
+/// CountUpTimer.TriggerDaySettlement, and GetRandomSurvivalPlanIds(int, List, List, ICollection, int, int) (rva 0x301c790)
 /// on a refresh, from SurvivalResultsManager.OnRefreshSurvivalPlans. Both read the day's Config_DailyRandom, draw
 /// RandomAmount[i] rewards from each group RandomPlanID[i] with GetRandomIdsFromGroup, and cut the list to 3. A day with
 /// no groups gets its fixed SpecifiedPlanID list instead, which only gains the extra locks. The hooks run after the

@@ -4,7 +4,7 @@
 
 - A 「Bans」 button in the footer lists this run's bans. Removing one lets its rewards be offered again and gives back part of what the ban cost (`UnbanRefund`, 50% by default). A ban made with `BanWholeLine` comes off as one.
 - A 「Settings」 button in the footer changes every More Rewards setting right on the rewards screen. Every setting except `Enabled` takes effect at once, with or without Exiled's Toolkit.
-- `MaxInterest` now takes effect at once instead of at the next game start.
+- `MaxInterest` works again on Survival Log 1.1.19611; since that update the game's cap of 10 applied whatever it was set to. It now also takes effect at once instead of at the next game start.
 - The 「Not interested」 button and its `NotInterested` setting are gone. Use 「Ban」 instead, and remove the ban from the list when you want the reward back.
 - Card labels now read how long each reward lasts from the game's data: 「PERMANENT」, 「ONE-TIME」, or how long it lasts, such as 「3 DAYS」. Some labels were wrong before.
 - The shop can be filtered by how long a reward lasts: 「Permanent」, 「One-time」 or 「Temporary」, next to the categories.
