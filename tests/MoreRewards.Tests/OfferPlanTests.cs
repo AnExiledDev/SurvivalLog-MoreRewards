@@ -133,6 +133,25 @@ public class OfferPlanTests
     }
 
     [Fact]
+    public void A_refresh_with_nothing_new_and_only_extra_locks_keeps_the_screen_so_the_locks_stay_visible()
+    {
+        RewardDraw nothing = (_, _) => null;
+        var ask = Ask(5, extras: new[] { new RewardLock(555, 0) });
+
+        Assert.True(OfferPlan.KeepsScreen(OfferPlan.Refresh(Array.Empty<int>(), ask, OneGroup, nothing, Pool()), ask));
+    }
+
+    [Fact]
+    public void The_screen_is_left_to_the_game_when_its_own_lock_is_held_nothing_is_locked_or_something_new_turned_up()
+    {
+        var extras = new[] { new RewardLock(555, 0) };
+
+        Assert.False(OfferPlan.KeepsScreen(Array.Empty<int>(), Ask(5, gamePin: 333, extras: extras)));
+        Assert.False(OfferPlan.KeepsScreen(Array.Empty<int>(), Ask(5)));
+        Assert.False(OfferPlan.KeepsScreen(new[] { 555, 120 }, Ask(5, extras: extras)));
+    }
+
+    [Fact]
     public void A_refresh_of_only_unwanted_cards_counts_as_nothing_new()
     {
         RewardDraw nothing = (_, _) => null;

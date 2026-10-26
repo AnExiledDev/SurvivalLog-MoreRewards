@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using GameCore.HotUpdate;
 using GameCore.HotUpdate.Battle.Logic;
+using GameCore.HotUpdate.ReduxUI;
 using HarmonyLib;
 using MoreRewards.Core;
 using Il2CppInts = Il2CppSystem.Collections.Generic.List<int>;
@@ -115,7 +116,8 @@ internal static class OfferPatch
     /// <summary>
     /// The game's refresh keeps out rewards already bought and draws only ones not shown before (displayedIds), so the
     /// extras do too, and fall back to ones shown before only when the unseen ones run out and at least one new reward
-    /// turned up (<see cref="OfferFill.TopUpRefresh"/>).
+    /// turned up (<see cref="OfferFill.TopUpRefresh"/>). When nothing new turns up and only extra locks are held, the
+    /// screen stays as it was (<see cref="OfferPlan.KeepsScreen"/>): the game empties it, and the list hook puts it back.
     /// </summary>
     private static void ShapeRefresh(SurvivalPlanningComponent __instance, int day, Il2CppInts displayedIds, Il2CppInts buyedIds, Il2CppIntSet cooldownIds, int pinnedId, int pinnedSlot, Il2CppInts __result)
     {
@@ -126,8 +128,15 @@ internal static class OfferPatch
             RewardDraw unseen = (group, offered) => First(__instance.GetRandomIdsFromGroup(group, 1, day, displayedIds, buyedIds, ToGame(offered), cooldownIds));
             RewardDraw seenBefore = (group, offered) => First(__instance.GetRandomIdsFromGroup(group, 1, day, null, buyedIds, ToGame(offered), cooldownIds));
             var gameOffer = FromGame(__result);
+            var ask = Ask(__instance, day, pinnedId, pinnedSlot);
+            var offer = OfferPlan.Refresh(gameOffer, ask, DayGroups(day), unseen, seenBefore);
+            var keep = OfferPlan.KeepsScreen(offer, ask);
 
-            Replace(__result, gameOffer, OfferPlan.Refresh(gameOffer, Ask(__instance, day, pinnedId, pinnedSlot), DayGroups(day), unseen, seenBefore), $"day {day} refresh");
+            ListPatch.KeepScreen(keep);
+            Replace(__result, gameOffer, offer, $"day {day} refresh");
+
+            // The game's own message when a refresh with its lock held finds nothing new.
+            if (keep) Ac_PopText_AddPopText.SendAction(GameKey.Text_LogicAdapter_1);
         }
         catch (Exception ex)
         {

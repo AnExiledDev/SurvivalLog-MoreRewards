@@ -13,11 +13,12 @@ internal static class PatchKit
 
     /// <param name="parameters">The hooked method's parameter types, so a new overload of it cannot take the hook's place.</param>
     /// <returns>Whether the hook was placed.</returns>
-    public static bool Patch(Harmony harmony, Type hooks, Type type, string method, Type[] parameters, string postfix, string done, string consequence)
+    /// <param name="prefix">An optional hook that runs before the method, from the same <paramref name="hooks"/>.</param>
+    public static bool Patch(Harmony harmony, Type hooks, Type type, string method, Type[] parameters, string postfix, string done, string consequence, string? prefix = null)
     {
         try
         {
-            harmony.Patch(AccessTools.Method(type, method, parameters), postfix: new HarmonyMethod(hooks, postfix));
+            harmony.Patch(AccessTools.Method(type, method, parameters), prefix: prefix == null ? null : new HarmonyMethod(hooks, prefix), postfix: new HarmonyMethod(hooks, postfix));
             Log(done);
 
             return true;

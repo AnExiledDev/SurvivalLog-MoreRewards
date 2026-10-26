@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using GameCore.HotUpdate;
 using GameCore.HotUpdate.Battle.Logic;
 using GameCore.HotUpdate.ReduxUI;
+using Il2CppInterop.Runtime;
 using MoreRewards.Core;
 using Il2CppIntSet = Il2CppSystem.Collections.Generic.ICollection<int>;
 
@@ -43,6 +45,16 @@ internal sealed class RewardActions
     public void Tick(float now)
     {
         while (PageMessages.TryTake(out var command)) Do(command);
+
+        // Outside a run the screen's state is left over from the last one; the page is told nothing until a new screen opens.
+        if (RunGame.Results() == null)
+        {
+            ListPatch.Forget();
+
+            return;
+        }
+
+        if (!IsScreenOpen()) return;
 
         if (ListPatch.State is not { } state || (!_isSetupAsked && _sentVersion == ListPatch.Version && _sentSettings == LiveScreen.Version)) return;
 
@@ -160,7 +172,7 @@ internal sealed class RewardActions
         {
             var refund = BanRefund.Of(ban, settings.BanCost, settings.UnbanRefund);
 
-            if (refund > 0) results.AddSurvivalPoint(refund);
+            Refund(results, refund);
 
             _log($"unbanned {string.Join(", ", ban.Members)}, refunded {refund} survival points");
             Toast(Say("Ban removed: ", "已解除禁用：") + Names(ban.Members) + (refund > 0 ? Say($" (+{refund} survival points)", $"（+{refund} 生存点）") : ""));
@@ -182,6 +194,22 @@ internal sealed class RewardActions
     }
 
     private string Names(IEnumerable<int> ids) => string.Join(Say(", ", "、"), ids.Select(_catalog.NameOf));
+
+    /// <summary>Pays points back as an undone spend, so the run's points gained and spent (and the achievements on them) do not grow.</summary>
+    private static void Refund(SurvivalResultsManager results, int points)
+    {
+        if (points <= 0) return;
+
+        var stats = GameSingleton.Existing<BattleLogicWorld>()?._DataCollectionManager;
+
+        var undone = PointRefund.Undo(new RunPoints(results.TotalPoints + points, stats?.totalCostSurvivalPoint ?? 0), points);
+
+        // The add-points call adds to the total too, and tells the screen the total it ends on.
+        results.TotalPoints = undone.Total - points;
+        results.AddSurvivalPoint(points);
+
+        if (stats != null) stats.totalCostSurvivalPoint = undone.Spent;
+    }
 
     /// <summary>A banned card loses its lock, so it does not come back tomorrow.</summary>
     private static void Release(SurvivalResultsManager results, IReadOnlyCollection<int> gone)
@@ -276,9 +304,9 @@ internal sealed class RewardActions
             book.RecordShopBuy(day, settings.ShopReset);
             _log($"shop: bought reward {id} for {price} survival points");
         }
-        else if (extra > 0)
+        else
         {
-            results.AddSurvivalPoint(extra);
+            Refund(results, extra);
         }
 
         SendShop();
@@ -297,6 +325,9 @@ internal sealed class RewardActions
         role.AddGold(points * rate);
         _log($"cashed out {points} survival points for {points * rate} cash");
     }
+
+    /// <summary>The rewards screen is on show; its page can only be told anything then.</summary>
+    private static bool IsScreenOpen() => GameSingleton.Existing<ReduxUISystem>() is { } ui && ui.IsUIActive(Il2CppType.Of<WebUI_RogueSelect>());
 
     /// <summary>Whether the screen still shows <paramref name="id"/> in <paramref name="slot"/>, as the page saw it.</summary>
     private static bool IsShown(int id, int slot)

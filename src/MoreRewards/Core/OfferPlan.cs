@@ -58,6 +58,14 @@ public static class OfferPlan
     }
 
     /// <summary>
+    /// Whether a refresh that turned up nothing new leaves the screen as it was. The game does that itself while its own
+    /// lock is held (it calls the refresh failed, at no cost); with no lock of its own it shows an empty screen, which
+    /// would hide the mod's extra locks until the next day.
+    /// </summary>
+    /// <param name="refreshed">What <see cref="Refresh"/> handed back to the game.</param>
+    public static bool KeepsScreen(IReadOnlyList<int> refreshed, OfferAsk ask) => refreshed.Count == 0 && ask.GamePin <= 0 && ask.Extras.Count > 0;
+
+    /// <summary>
     /// Swaps out the card at <paramref name="slot"/> (the player banned it) for one wanted card from the
     /// day's groups, in the same slot. Nothing on screen or locked comes back. When the groups have nothing left, or the
     /// day has a fixed list, the card is only taken away.
