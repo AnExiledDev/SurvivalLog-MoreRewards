@@ -19,6 +19,7 @@ At the end of each day, Survival Log offers 3 rewards you can buy with survival 
 - **Tomorrow's interest**: the footer shows the interest you will get when the day ends.
 - **Cash out** (off by default): survival points left when you leave the rewards screen turn into cash.
 - **The shop** (off by default): a 「Shop」 button opens a searchable list of every reward you can get, by category and by permanent, one-time or temporary. Shop prices are 25% above card prices and go up 15% with each purchase until the next day, all of it configurable. Rewards you cannot buy now are greyed out with the reason, or hidden. Purchases are limited to 2 a day, and a reward can be bought before the one it needs at double the price; both are configurable.
+- **UI size**: with Exiled's Toolkit 0.10.0 or newer, its UI size setting (`UiScale`) draws the shop, the ban list and the settings bigger or smaller, as far as each still fits on the screen. The buttons on the cards and in the footer keep the game's size.
 - **Room for every card**: up to 5 rewards sit in one row. More are spread over even rows with smaller cards, and the area scrolls if they still do not fit.
 - **Rewards stay as they are until you ask**: with the default settings you get the game's 3 rewards and its own refresh cost.
 - **A log file**: what the mod did is written to `BepInEx\more-rewards.log`.
@@ -44,7 +45,7 @@ More Rewards does not edit game files. Extra locks, bans and shop purchases are 
 
 - Survival Log 1.1.19611. Built for this version; a game update can break it until the mod is updated.
 - The [BepInEx Pack for Survival Log](https://www.nexusmods.com/survivallog/mods/12), the BepInEx 6 (IL2CPP) build for the game, version `6.0.0-be.788`.
-- Optional: [Exiled's Toolkit](https://github.com/AnExiledDev/SurvivalLog-ExiledToolkit) 0.4.0 or newer. With it, settings changed on the Mod Manager's Mods screen take effect without restarting the game. Without it, those take effect at the next game start; settings changed on the rewards screen take effect at once either way.
+- Optional: [Exiled's Toolkit](https://github.com/AnExiledDev/SurvivalLog-ExiledToolkit) 0.4.0 or newer. With it, settings changed on the Mod Manager's Mods screen take effect without restarting the game. Without it, those take effect at the next game start; settings changed on the rewards screen take effect at once either way. With 0.10.0 or newer, its UI size setting also sizes the shop, the ban list and the settings.
 
 ## Install
 

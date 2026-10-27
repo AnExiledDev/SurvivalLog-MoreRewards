@@ -474,6 +474,76 @@ public class PageButtonsTests
         Assert.False(page.Is("frame.contentDocument.body.querySelector('.toast2')"));
     }
 
+    // ===== UI size (Exiled's Toolkit) =====
+
+    // Stands in for Exiled's Toolkit's window.ExiledUi and keeps what each call handed it.
+    private const string FakeUi = "var handed = []; window.ExiledUi = { size: function (el, options) { handed.push({ el: el, options: options }); } }";
+
+    private const string AskForShop = "fire(frame.contentDocument.querySelector('.mr-shop-btn'), 'click'); window.__slmorerewards.shop({lang: 'en', points: 20, rise: 25, left: null, rows: [shopRow(5, 'Axe', 6)]});";
+
+    [Fact]
+    public void The_shop_the_ban_list_and_the_settings_are_handed_to_the_toolkit_once_each_with_their_window_to_fit()
+    {
+        var page = Rewards("[{id: 11, state: 'affordable', pinned: false}]");
+        page.Run(FakeUi);
+
+        page.Run(AskForShop);
+        page.Run("frame.contentDocument.body.querySelector('.shop').hidden = true;");
+        page.Run(AskForShop);
+        page.Run("fire(frame.contentDocument.querySelector('.mr-bans-btn'), 'click'); window.__slmorerewards.bans({lang: 'en', refund: 50, rows: []});");
+        page.Run($"fire(frame.contentDocument.querySelector('.mr-set-btn'), 'click'); window.__slmorerewards.settings({SettingsData});");
+
+        // A shop opened again is the one already built, so it is not handed twice.
+        Assert.Equal("3", page.Text("handed.length"));
+        Assert.True(page.Is("handed[0].el === frame.contentDocument.body.querySelector('.shop')"));
+        // The mask always fills the screen; the window on it is what must fit.
+        Assert.True(page.Is("handed[0].options.fit === frame.contentDocument.body.querySelector('.shop-card')"));
+        Assert.True(page.Is("handed[1].el === frame.contentDocument.body.querySelector('.mr-pane-bans')"));
+        Assert.True(page.Is("handed[1].options.fit === frame.contentDocument.body.querySelector('.mr-pane-bans').querySelector('.mr-pane-card')"));
+        Assert.True(page.Is("handed[2].el === frame.contentDocument.body.querySelector('.mr-pane-settings')"));
+        Assert.True(page.Is("handed[2].options.fit === frame.contentDocument.body.querySelector('.mr-pane-settings').querySelector('.mr-pane-card')"));
+    }
+
+    [Fact]
+    public void A_notice_is_handed_to_the_toolkit_and_never_shrunk()
+    {
+        var page = Rewards("[{id: 11, state: 'affordable', pinned: false}]");
+        page.Run(FakeUi);
+
+        page.Run("window.__slmorerewards.toast('All 3 locks are in use');");
+
+        Assert.Equal("1", page.Text("handed.length"));
+        Assert.True(page.Is("handed[0].el === frame.contentDocument.body.querySelector('.toast2')"));
+        Assert.True(page.Is("handed[0].options.fit === false"));
+    }
+
+    [Fact]
+    public void A_shop_the_page_lost_is_handed_again_when_it_is_built_anew()
+    {
+        var page = Rewards("[{id: 11, state: 'affordable', pinned: false}]");
+        page.Run(FakeUi);
+        page.Run(AskForShop);
+
+        page.Run("frame.contentDocument.body.querySelector('.shop').remove();");
+        page.Run(AskForShop);
+
+        Assert.Equal("2", page.Text("handed.length"));
+        Assert.True(page.Is("handed[1].el === frame.contentDocument.body.querySelector('.shop')"));
+        Assert.True(page.Is("handed[1].options.fit === frame.contentDocument.body.querySelector('.shop-card')"));
+    }
+
+    [Fact]
+    public void Before_the_toolkit_has_loaded_the_shop_waits_in_the_list_it_reads()
+    {
+        var page = Rewards("[{id: 11, state: 'affordable', pinned: false}]");
+
+        page.Run(AskForShop);
+
+        Assert.Equal("1", page.Text("window.__exiledUiWait.length"));
+        Assert.True(page.Is("window.__exiledUiWait[0][0] === frame.contentDocument.body.querySelector('.shop')"));
+        Assert.True(page.Is("window.__exiledUiWait[0][1].fit === frame.contentDocument.body.querySelector('.shop-card')"));
+    }
+
     private static PageScript OpenShop(string rows)
     {
         var page = Rewards("[{id: 11, state: 'affordable', pinned: false}]");

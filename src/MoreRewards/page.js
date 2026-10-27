@@ -354,6 +354,7 @@
     var note = el(doc, 'div', 'toast2', text);
 
     doc.body.appendChild(note);
+    uiSize(note, { fit: false });
     setTimeout(function () { note.remove(); }, TOAST_MS);
   }
 
@@ -727,6 +728,9 @@
       if (e.target === panel) panel.hidden = true;
     });
     doc.body.appendChild(panel);
+    // Drawn at the player's UI size (Exiled's Toolkit). The full-screen mask always fills the screen, so the window on
+    // it is what must fit.
+    uiSize(panel, { fit: card });
 
     return panel;
   }
@@ -854,6 +858,7 @@
       if (e.target === panel) panel.hidden = true;
     });
     doc.body.appendChild(panel);
+    uiSize(panel, { fit: card });
 
     return panel;
   }
@@ -981,6 +986,22 @@
     if (text !== undefined) node.textContent = text;
 
     return node;
+  }
+
+  // Hands a panel to Exiled's Toolkit to be drawn at the player's UI size. Before the Toolkit's script has loaded it
+  // waits in a list the Toolkit reads; without the Toolkit nothing happens. The mod's buttons on the game's cards and
+  // footer are not handed: they keep the game's size, like the game's own buttons around them.
+  function uiSize(node, options) {
+    var toolkit = window.ExiledUi;
+
+    if (toolkit) {
+      toolkit.size(node, options);
+      return;
+    }
+
+    var waiting = window.__exiledUiWait = window.__exiledUiWait || [];
+    waiting.push([node, options]);
+    if (waiting.length > 32) waiting.shift();
   }
 
   // The mod's buttons keep their clicks to themselves, so a click never reaches the card's own handlers.

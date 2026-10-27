@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.3
+
+- The shop, the ban list, the settings and the pop-up messages can be drawn bigger or smaller with the UI size setting of Exiled's Toolkit 0.10.0 or newer. A change shows at once, and each window only grows as far as it still fits on the screen.
+- The buttons and labels on the cards and in the footer keep the game's size, like the game's own buttons around them.
+- Made for Survival Log 1.1.19611.
+
 ## 0.5.2
 
 - Fixed: a short stutter when the rewards screen or the shop opened.

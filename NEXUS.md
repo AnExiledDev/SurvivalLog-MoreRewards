@@ -20,6 +20,7 @@ At the end of each day, Survival Log offers 3 rewards you can buy with survival 
 [*][b]Tomorrow's interest[/b]: the footer shows the interest you will get when the day ends.[/*]
 [*][b]No repeats on refresh and cash out[/b] (both off by default): a refresh shows rewards you have not seen that day, and survival points left when you leave the screen turn into cash.[/*]
 [*][b]The shop[/b] (off by default): a Shop button opens a searchable list of every reward you can get, by category and by permanent, one-time or temporary. Prices are 25% above card prices and go up 15% with each purchase until the next day, with 2 purchases a day, all configurable. Rewards you cannot buy now are greyed out with the reason, or hidden.[/*]
+[*][b]UI size[/b]: with Exiled's Toolkit 0.10.0 or newer, its UI size setting draws the shop, the ban list and the settings bigger or smaller, as far as each still fits on the screen.[/*]
 [*][b]Room for every card[/b]: up to 5 rewards sit in one row. More are spread over even rows with smaller cards, and the area scrolls if they still do not fit.[/*]
 [*][b]Rewards stay as they are until you ask[/b]: with the default settings you get the game's 3 rewards and its own refresh cost.[/*]
 [/list]
@@ -45,7 +46,7 @@ Works in English and Chinese.
 [list]
 [*]Survival Log 1.1.19611. A game update can break it until the mod is updated.[/*]
 [*][url=https://www.nexusmods.com/survivallog/mods/12]BepInEx for Survival Log[/url] (BepInEx 6.0.0-be.788, IL2CPP). Install it first.[/*]
-[*]Optional: [url=https://www.nexusmods.com/survivallog/mods/61]Exiled's Toolkit[/url] 0.4.0 or newer. With it, settings changed on the Mod Manager's Mods screen take effect without restarting the game. Without it, those take effect at the next game start; settings changed on the rewards screen take effect at once either way.[/*]
+[*]Optional: [url=https://www.nexusmods.com/survivallog/mods/61]Exiled's Toolkit[/url] 0.4.0 or newer. With it, settings changed on the Mod Manager's Mods screen take effect without restarting the game. Without it, those take effect at the next game start; settings changed on the rewards screen take effect at once either way. With 0.10.0 or newer, its UI size setting also sizes the shop, the ban list and the settings.[/*]
 [/list]
 
 [size=5]Installation[/size]
@@ -101,6 +102,7 @@ Open source under MIT: [url=https://github.com/AnExiledDev/SurvivalLog-MoreRewar
 [*][b]明天的回息[/b]：底栏显示当天结束时能得到的回息。[/*]
 [*][b]刷新不重复和兑现[/b]（默认关闭）：刷新只给当天没出现过的卡；离开界面时剩下的生存点换成现金。[/*]
 [*][b]商店[/b]（默认关闭）：「商店」按钮打开可搜索、按分类排列的列表，包含所有能获得的规划卡，还能按永久、一次性或限时筛选。价格比卡片高 25%，每买一次再涨 15%，第二天恢复，每天可买 2 次，均可设置。现在买不了的卡会显示为灰色并写明原因，也可以隐藏。[/*]
+[*][b]界面大小[/b]：安装 Exiled's Toolkit 0.10.0 或更新版本后，可以用它的界面大小设置放大或缩小商店、禁用列表和设置窗口，最大放到窗口仍能完整显示在屏幕上为止。[/*]
 [*][b]每张卡都放得下[/b]：5 张以内排成一行。超过 5 张时平均分成几行，卡片会缩小；如果还是放不下，卡片区域可以滚动。[/*]
 [*][b]不改设置就保持原样[/b]：默认设置下，仍是游戏原本的 3 张规划卡和原本的刷新花费。[/*]
 [/list]
@@ -125,7 +127,7 @@ Open source under MIT: [url=https://github.com/AnExiledDev/SurvivalLog-MoreRewar
 [list]
 [*]Survival Log 1.1.19611。游戏更新后模组可能暂时失效，直到模组更新为止。[/*]
 [*][url=https://www.nexusmods.com/survivallog/mods/12]BepInEx for Survival Log[/url]（BepInEx 6.0.0-be.788，IL2CPP），请先安装。[/*]
-[*]可选：[url=https://www.nexusmods.com/survivallog/mods/61]Exiled's Toolkit[/url] 0.4.0 或更新版本。装了它，在 Mod Manager 的「模组」界面改动的设置无需重启游戏即可生效；没装的话，那里的改动在下次启动游戏时生效。在奖励界面改动的设置无论如何都立即生效。[/*]
+[*]可选：[url=https://www.nexusmods.com/survivallog/mods/61]Exiled's Toolkit[/url] 0.4.0 或更新版本。装了它，在 Mod Manager 的「模组」界面改动的设置无需重启游戏即可生效；没装的话，那里的改动在下次启动游戏时生效。在奖励界面改动的设置无论如何都立即生效。0.10.0 或更新版本还能用它的界面大小设置调整商店、禁用列表和设置窗口的大小。[/*]
 [/list]
 
 [size=5]安装[/size]
