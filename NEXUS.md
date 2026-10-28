@@ -2,6 +2,8 @@ Name: More Rewards
 Summary: Choose from up to 20 rewards at the end of each day instead of 3, lock several, and ban the cards you do not want, with a list to undo bans. Earn 10% daily interest on survival points instead of 5%, change every setting on the rewards screen, and turn on an optional shop to search and buy any reward you can get. Cards shrink into rows so all fit.
 
 Description (BBCode):
+[center][img]https://sldb.core-directive.com/media/save/3-remove-with-care.png[/img][/center]
+
 At the end of each day, Survival Log offers 3 rewards you can buy with survival points, and a refresh for 2 points draws 3 new ones. More Rewards lets you raise that to any number up to 20, from the same reward pool the game draws from, lock several, ban the ones you do not want, and open an optional shop. The refresh cost goes up with the number of rewards on its own, or you can make it free or set any cost you like. The interest your survival points earn each day goes from 5% to 10%, and can go up to 20 instead of 10.
 
 [size=5]Main features[/size]
