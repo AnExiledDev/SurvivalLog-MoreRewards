@@ -10,7 +10,7 @@ public enum Language
 
 /// <summary>
 /// What the game knows about a reward that decides whether the player can get it now, as the game checks it in
-/// SurvivalPlanningComponent.IsValidTalentId (rva 0x2fd7670).
+/// SurvivalPlanningComponent.IsValidTalentId (rva 0x307b6a0 in game 1.1.20151).
 /// </summary>
 /// <param name="IsAvailable">Config_Talent.Available: the game has the reward switched on.</param>
 /// <param name="IsModeBlocked">The reward's DemoTwoMode or EndlessMode keeps it out of this kind of run.</param>

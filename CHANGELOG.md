@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.6.1
+
+- Fixed: on Survival Log 1.1.20151 the shop could not list or sell rewards.
+- Made for Survival Log 1.1.20151.
+
 ## 0.6.0
 
 - New: `UiScale` under Interface sets the size of More Rewards's own windows on their own, from 75% to 200%, whatever Exiled's Toolkit's UI size is. At 0, the default, they follow the Toolkit's. Needs Exiled's Toolkit 0.11.0 or newer.

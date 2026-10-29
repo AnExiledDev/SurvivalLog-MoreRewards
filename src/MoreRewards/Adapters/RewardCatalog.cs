@@ -182,7 +182,7 @@ internal sealed class RewardCatalog
         var isModeBlocked = GameKey.IsRowBlockedInDemoTwo(row.DemoTwoMode) || GameKey.IsRowBlockedInEndless(row.EndlessMode);
 
         return new RewardFacts(row.IsAvailable, book.IsBanned(row.Id), planning.HasActivated(row.Id), row.IsReget, isModeBlocked,
-            onlyFor, Missing(row, planning), row.FromDay, planning.IsValidTalentId(row.Id));
+            onlyFor, Missing(row, planning), row.FromDay, planning.IsValidTalentId(row.Id, false));
     }
 
     /// <returns>The names of the rewards <paramref name="row"/> needs first that the player does not have; a list is made only when one is missing.</returns>
