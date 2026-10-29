@@ -31,6 +31,9 @@ public enum PageVerb
 
     /// <summary>Set the setting <see cref="PageCommand.Key"/> ("Section.Key") to <see cref="PageCommand.Value"/>.</summary>
     Set,
+
+    /// <summary>A text box on the page took the keyboard (<see cref="PageCommand.Id"/> 1) or let it go (0).</summary>
+    Focus,
 }
 
 /// <param name="Key">The setting a <see cref="PageVerb.Set"/> changes, as "Section.Key".</param>
@@ -62,6 +65,7 @@ public static class PageCommands
             "unban" => parts.Length == 2 && Id(parts[1]) is int head ? new PageCommand(PageVerb.Unban, head, 0) : null,
             "settings" => new PageCommand(PageVerb.Settings, 0, 0),
             "set" => parts.Length == 3 && parts[1].IndexOf('.') > 0 && parts[2].Length > 0 ? new PageCommand(PageVerb.Set, 0, 0, parts[1], parts[2]) : null,
+            "focus" => parts.Length == 2 && parts[1] is "0" or "1" ? new PageCommand(PageVerb.Focus, parts[1] == "1" ? 1 : 0, 0) : null,
             _ => null,
         };
     }

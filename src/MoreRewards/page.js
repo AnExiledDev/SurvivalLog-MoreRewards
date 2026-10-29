@@ -79,7 +79,7 @@
     '.shop-hd .rate{color:var(--text-dim);font-size:15px;line-height:1.5}',
     '.shop-hd .rate b{color:var(--highlight);font-family:var(--font-num)}',
     '.shop-hd .sp{flex:1}',
-    '.shop-hd .x{font-size:28px;color:var(--text-dim);cursor:pointer}',
+    '.shop-hd .x{font-size:28px;color:var(--text-dim);cursor:pointer;background:none;border:0}',
     '.shop-hd .x:hover{color:#fff}',
     '.shop-tools{display:flex;gap:14px;align-items:center;padding:0 28px 14px;border-bottom:1px solid var(--border-divider)}',
     '.shop-tools input{flex:1;background:rgba(0,0,0,0.45);border:1px solid var(--border-light);color:#fff;padding:10px 14px;font:17px var(--font-main);outline:none;user-select:text}',
@@ -202,6 +202,8 @@
   var asked = { bans: false, settings: false };
   var rewardsDoc = null;
   var rewardsFrame = null;
+  // Whether the plugin was last told a text box here has the keyboard.
+  var isTyping = false;
   var shopView = { query: '', cat: 'all', life: 'all', onlyBuyable: false };
 
   // ---------- Pure helpers (also used by the tests) ----------
@@ -305,6 +307,28 @@
 
   function post(message) {
     if (window.vuplex) window.vuplex.postMessage(PREFIX + message);
+  }
+
+  // The game sends typed keys to the web UI only while it is told a text box has focus, as its own search boxes tell
+  // it; without that a box takes focus and nothing typed reaches it. Checked when focus moves and with every check,
+  // since closing a panel or the game dropping the page takes the box away without a blur.
+  function syncTyping(doc) {
+    var field = doc && doc.activeElement;
+    var panel = field && (field.closest('.shop') || field.closest('.mr-pane'));
+    var typing = !!panel && !panel.hidden && String(field.tagName).toUpperCase() === 'INPUT' && field.isConnected;
+
+    if (typing === isTyping) return;
+
+    isTyping = typing;
+    post('focus|' + (typing ? '1' : '0'));
+  }
+
+  function watchTyping(panel) {
+    var doc = panel.ownerDocument;
+    var later = function () { setTimeout(function () { syncTyping(doc); }, 0); };
+
+    panel.addEventListener('focusin', later);
+    panel.addEventListener('focusout', later);
   }
 
   function setup(data) {
@@ -727,6 +751,7 @@
     panel.addEventListener('click', function (e) {
       if (e.target === panel) panel.hidden = true;
     });
+    watchTyping(panel);
     doc.body.appendChild(panel);
     // Drawn at the player's UI size (Exiled's Toolkit). The full-screen mask always fills the screen, so the window on
     // it is what must fit.
@@ -857,6 +882,7 @@
     panel.addEventListener('click', function (e) {
       if (e.target === panel) panel.hidden = true;
     });
+    watchTyping(panel);
     doc.body.appendChild(panel);
     uiSize(panel, { fit: card });
 
@@ -1064,6 +1090,8 @@
   // check with the page up searches nothing.
   function check() {
     if (!isStillShown(rewardsFrame, rewardsDoc)) findRewards();
+
+    syncTyping(rewardsDoc);
 
     if (!rewardsDoc) return;
 

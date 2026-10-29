@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.6.2
+
+- Fixed: typing into the shop search box and the number boxes in the settings did nothing.
+- Fixed: the shop's close button was drawn as a plain box.
+- Made for Survival Log 1.1.20151.
+
 ## 0.6.1
 
 - Fixed: on Survival Log 1.1.20151 the shop could not list or sell rewards.

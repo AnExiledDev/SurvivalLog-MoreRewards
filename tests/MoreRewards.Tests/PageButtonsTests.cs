@@ -351,6 +351,64 @@ public class PageButtonsTests
         Assert.Contains("+25%", page.Text("frame.contentDocument.body.querySelector('.rate').textContent"));
     }
 
+    private static PageScript OpenShop()
+    {
+        var page = Rewards("[{id: 11, state: 'affordable', pinned: false}]");
+
+        page.Run("fire(frame.contentDocument.querySelector('.mr-shop-btn'), 'click');");
+        page.Run("window.__slmorerewards.shop({lang: 'en', points: 20, rise: 25, left: null, rows: [shopRow(5, 'Axe', 6)]});");
+        page.Run("var search = frame.contentDocument.body.querySelector('.shop-tools').querySelector('input'); posted = [];");
+
+        return page;
+    }
+
+    [Fact]
+    public void Clicking_into_the_shop_search_asks_the_game_for_the_keyboard_and_clicking_out_gives_it_back()
+    {
+        var page = OpenShop();
+
+        page.Run("focusOn(search); runTimeouts();");
+
+        Assert.Equal(Prefix + "focus|1", page.Text("posted.join(',')"));
+
+        page.Run("blurFrom(search); runTimeouts();");
+
+        Assert.Equal(Prefix + "focus|1," + Prefix + "focus|0", page.Text("posted.join(',')"));
+    }
+
+    [Fact]
+    public void Closing_the_shop_while_typing_gives_the_keyboard_back()
+    {
+        var page = OpenShop();
+
+        page.Run("focusOn(search); runTimeouts(); posted = [];");
+        page.Run("fire(frame.contentDocument.body.querySelector('.shop-hd').querySelector('.x'), 'click');");
+        page.Tick();
+
+        Assert.Equal(Prefix + "focus|0", page.Text("posted.join(',')"));
+    }
+
+    [Fact]
+    public void Leaving_the_screen_while_typing_gives_the_keyboard_back()
+    {
+        var page = OpenShop();
+
+        page.Run("focusOn(search); runTimeouts(); posted = []; removeFrame(frame);");
+        page.Tick();
+
+        Assert.Equal(Prefix + "focus|0", page.Text("posted.join(',')"));
+    }
+
+    [Fact]
+    public void A_settings_number_box_asks_for_the_keyboard_too()
+    {
+        var page = OpenSettings();
+
+        page.Run("focusOn(frame.contentDocument.querySelector('.mr-pane-settings').querySelector('input')); runTimeouts();");
+
+        Assert.Equal(Prefix + "focus|1", page.Text("posted.join(',')"));
+    }
+
     [Fact]
     public void No_shop_button_when_the_shop_is_off()
     {

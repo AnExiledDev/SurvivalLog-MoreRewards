@@ -33,6 +33,7 @@ internal sealed class RewardActions
     private readonly FrameBudget _budget;
     private readonly Action<string> _log;
     private readonly SetupWatch _watch = new();
+    private readonly WebKeyboard _keyboard = new();
     private ShopOrder? _shop;
 
     public RewardActions(RewardPage page, RewardCatalog catalog, Func<InterestTerms> interest, SettingsBoard settings, FrameBudget budget, Action<string> log)
@@ -51,6 +52,9 @@ internal sealed class RewardActions
     public void Tick(float now)
     {
         while (PageMessages.TryTake(out var command)) Do(command);
+
+        // The page says when its box lets go, but a page the game drops says nothing.
+        if (_keyboard.IsClaimed && !IsScreenOpen()) _keyboard.Release();
 
         if (_shop != null) AdvanceShop(now);
 
@@ -99,6 +103,8 @@ internal sealed class RewardActions
                 case PageVerb.Unban: Unban(command.Id); break;
                 case PageVerb.Settings: SendSettings(); break;
                 case PageVerb.Set: Set(command.Key ?? "", command.Value ?? ""); break;
+                case PageVerb.Focus when command.Id == 1: _keyboard.Claim(); break;
+                case PageVerb.Focus: _keyboard.Release(); break;
                 default: throw new ArgumentOutOfRangeException(nameof(command), command.Verb, null);
             }
         }

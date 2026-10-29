@@ -192,6 +192,7 @@ function makeDocument() {
     doc.documentElement.ownerDocument = doc;
     doc.head = doc.documentElement.appendChild(new FakeElement('head'));
     doc.body = doc.documentElement.appendChild(new FakeElement('body'));
+    doc.activeElement = doc.body;
 
     return doc;
 }
@@ -223,6 +224,18 @@ function fire(target, type, key) {
     }
 
     return hasReachedTarget;
+}
+
+// The player clicks into a text box, or out of it, as the browser reports it: focus moves, then focusin or focusout
+// bubbles from the box. Like a browser, hiding a box leaves it the active element until something else takes focus.
+function focusOn(target) {
+    target.ownerDocument.activeElement = target;
+    fire(target, 'focusin');
+}
+
+function blurFrom(target) {
+    target.ownerDocument.activeElement = target.ownerDocument.body;
+    fire(target, 'focusout');
 }
 
 var document = makeDocument();

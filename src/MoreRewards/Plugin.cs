@@ -16,7 +16,7 @@ namespace MoreRewards;
 public sealed class Plugin : BasePlugin
 {
     private const string Guid = "com.dev.survivallog.morerewards";
-    private const string Version = "0.6.1";
+    private const string Version = "0.6.2";
 
     public override void Load()
     {

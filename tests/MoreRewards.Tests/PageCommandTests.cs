@@ -38,6 +38,15 @@ public class PageCommandTests
         Assert.Null(PageCommands.Read("slmod|morerewards|skip|30012|0"));
     }
 
+    [Fact]
+    public void A_text_box_taking_or_leaving_the_keyboard_reads_as_focus_on_or_off()
+    {
+        Assert.Equal(new PageCommand(PageVerb.Focus, 1, 0), PageCommands.Read("slmod|morerewards|focus|1"));
+        Assert.Equal(new PageCommand(PageVerb.Focus, 0, 0), PageCommands.Read("slmod|morerewards|focus|0"));
+        Assert.Null(PageCommands.Read("slmod|morerewards|focus|2"));
+        Assert.Null(PageCommands.Read("slmod|morerewards|focus"));
+    }
+
     [Theory]
     [InlineData(null)]
     [InlineData("slmod|newloopplus|pin|30012|4")]
