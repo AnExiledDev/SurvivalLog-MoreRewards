@@ -16,11 +16,13 @@ namespace MoreRewards;
 public sealed class Plugin : BasePlugin
 {
     private const string Guid = "com.dev.survivallog.morerewards";
-    private const string Version = "0.5.3";
+    private const string Version = "0.6.0";
 
     public override void Load()
     {
         if (!OptionalLive.IsToolkitInstalled) Log.LogInfo(OptionalLive.MissingNote);
+
+        OptionalUiSize.Bind(Config);
 
         var enabled = Config.Bind("General", "Enabled", true, new ConfigDescription(
             "Turn the mod on or off. false leaves the end-of-day rewards, the refresh cost and the interest on survival points as the game has them. Takes effect at the next game start.\n" +

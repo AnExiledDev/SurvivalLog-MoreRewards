@@ -992,6 +992,7 @@
   // waits in a list the Toolkit reads; without the Toolkit nothing happens. The mod's buttons on the game's cards and
   // footer are not handed: they keep the game's size, like the game's own buttons around them.
   function uiSize(node, options) {
+    options = Object.assign({ mod: 'MoreRewards' }, options);
     var toolkit = window.ExiledUi;
 
     if (toolkit) {

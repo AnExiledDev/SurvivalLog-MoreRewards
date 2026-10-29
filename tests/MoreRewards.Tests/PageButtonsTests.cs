@@ -495,6 +495,7 @@ public class PageButtonsTests
 
         // A shop opened again is the one already built, so it is not handed twice.
         Assert.Equal("3", page.Text("handed.length"));
+        Assert.Equal("3", page.Text("handed.filter(function (h) { return h.options.mod === 'MoreRewards'; }).length"));
         Assert.True(page.Is("handed[0].el === frame.contentDocument.body.querySelector('.shop')"));
         // The mask always fills the screen; the window on it is what must fit.
         Assert.True(page.Is("handed[0].options.fit === frame.contentDocument.body.querySelector('.shop-card')"));
