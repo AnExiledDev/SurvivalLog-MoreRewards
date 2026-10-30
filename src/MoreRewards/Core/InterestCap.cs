@@ -7,9 +7,9 @@ namespace MoreRewards.Core;
 
 /// <summary>
 /// The most interest the game pays on survival points when a day ends. SurvivalResultsManager.SettleDailySurvivalPoints
-/// (rva 0x2834c30 in game 1.1.19611) pays the points held times the interest rate, rounded down, at most 10, and at least 1 while any
+/// (rva 0x28885b0 in game 1.1.20151) pays the points held times the interest rate, rounded down, at most 10, and at least 1 while any
 /// points are held. The 10 is in
-/// no table: it is two numbers in the game's code, <c>cmp eax,0Ah / jl +5 / mov eax,0Ah</c> at rva 0x2835244, which keep
+/// no table: it is two numbers in the game's code, <c>cmp eax,0Ah / jl +5 / mov eax,0Ah</c> at rva 0x2888bc4, which keep
 /// the smaller of the interest and 10. The mod writes its own cap over both numbers and leaves the rest of the rule,
 /// the rate (<see cref="InterestRate"/>) and the minimum of 1, as it is.
 /// </summary>
@@ -24,7 +24,7 @@ public static class InterestCap
     public const int MostCap = 100;
 
     /// <summary>Where <see cref="GameCode"/> starts in GameAssembly.dll.</summary>
-    public const int GameCodeRva = 0x2835231;
+    public const int GameCodeRva = 0x2888bb1;
 
     /// <summary>
     /// The game's code from <see cref="GameCodeRva"/>: the rounded-down interest into eax, the minimum of 1 for interest that rounds

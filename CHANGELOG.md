@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.6.3
+
+- Fixed: MaxInterest did nothing on Survival Log 1.1.20151, so interest stopped at the game's 10 survival points a day whatever the setting.
+- Made for Survival Log 1.1.20151.
+
 ## 0.6.2
 
 - Fixed: typing into the shop search box and the number boxes in the settings did nothing.
