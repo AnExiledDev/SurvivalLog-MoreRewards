@@ -63,7 +63,7 @@ Works in English and Chinese.
 Delete [font=Courier New]MoreRewards.dll[/font] from the [font=Courier New]BepInEx\plugins[/font] folder.
 
 [size=5]Configuration[/size]
-Edit [font=Courier New]BepInEx\config\com.dev.survivallog.morerewards.cfg[/font] while the game is closed, or do it in game with the Settings button on the rewards screen or on the Mod Manager's Mods screen (see [url=https://github.com/AnExiledDev/SurvivalLog-MoreRewards/blob/main/CONFIG.md]CONFIG.md[/url] for every setting and the full cost table). Changed in game, every setting except Enabled takes effect at once; Enabled takes effect at the next game start. Without Exiled's Toolkit installed, changes made on the Mods screen take effect at the next game start instead; changes made on the rewards screen still take effect at once.
+Edit [font=Courier New]BepInEx\config\com.dev.survivallog.morerewards.cfg[/font] while the game is closed, or do it in game with the Settings button on the rewards screen or on the Mod Manager's Mods screen (see [url=https://github.com/AnExiledDev/SurvivalLog-MoreRewards/blob/main/CONFIG.md]CONFIG.md[/url] for every setting and the full cost table). Changed in game, every setting takes effect at once. With Exiled's Toolkit 0.17.0 or newer, each world can keep its own reward count, refresh cost, interest, locks, bans, cash out and shop rules: pick them for a new world in Customizable Difficulty, or, while you play, change them for that world alone on the Mods screen. Enabled, Labels, ShopUnavailable and UiScale stay the same for every world. Without Exiled's Toolkit installed, changes made on the Mods screen take effect at the next game start instead; changes made on the rewards screen still take effect at once.
 [list]
 [*][b]OptionCount[/b] (default 3): how many rewards to choose from, 3 to 20.[/*]
 [*][b]RefreshCost[/b] (default -1): -1 scales the cost with OptionCount, 0 makes every refresh free, and 1 to 99 is the cost of every refresh.[/*]
@@ -73,7 +73,7 @@ Edit [font=Courier New]BepInEx\config\com.dev.survivallog.morerewards.cfg[/font]
 [*][b]BanButton[/b], [b]Labels[/b] (default true): the Ban button and the label. [b]BanCost[/b] (default 2) is what a ban costs; [b]BanWholeLine[/b] (default false) bans every level of a reward; [b]UnbanRefund[/b] (default 50) is the percent of the cost given back when a ban is removed.[/*]
 [*][b]NoRepeatOnRefresh[/b] (default false) and [b]CashOut[/b] (default 0, cash per point left).[/*]
 [*][b]ShopEnabled[/b] (default false) turns the shop on. [b]ShopMarkup[/b] (25), [b]ShopIncrease[/b] (15), [b]ShopReset[/b] (Day), [b]ShopPerDay[/b] (2), [b]ShopUnavailable[/b] (Grey) and [b]ShopLocked[/b] (true) set its prices and rules.[/*]
-[*][b]Enabled[/b] (default true): false turns the whole mod off.[/*]
+[*][b]Enabled[/b] (default true): false turns the whole mod off at once, and takes its buttons off the rewards screen.[/*]
 [/list]
 
 [size=5]Feedback[/size]
@@ -144,7 +144,7 @@ Open source under MIT: [url=https://github.com/AnExiledDev/SurvivalLog-MoreRewar
 从 [font=Courier New]BepInEx\plugins[/font] 文件夹中删除 [font=Courier New]MoreRewards.dll[/font]。
 
 [size=5]配置[/size]
-可以在游戏内奖励界面的「设置」按钮或 Mod Manager 的「模组」界面修改，也可以在游戏关闭时编辑 [font=Courier New]BepInEx\config\com.dev.survivallog.morerewards.cfg[/font]。配置文件中每项设置都有中文说明，所有设置和完整的刷新花费表见 [url=https://github.com/AnExiledDev/SurvivalLog-MoreRewards/blob/main/CONFIG.md]CONFIG.md[/url]（英文）。在游戏内修改时，除 Enabled 外的设置都立即生效；Enabled 在下次启动游戏时生效。没装 Exiled's Toolkit 的话，在「模组」界面的改动改为在下次启动游戏时生效；在奖励界面的改动仍然立即生效。
+可以在游戏内奖励界面的「设置」按钮或 Mod Manager 的「模组」界面修改，也可以在游戏关闭时编辑 [font=Courier New]BepInEx\config\com.dev.survivallog.morerewards.cfg[/font]。配置文件中每项设置都有中文说明，所有设置和完整的刷新花费表见 [url=https://github.com/AnExiledDev/SurvivalLog-MoreRewards/blob/main/CONFIG.md]CONFIG.md[/url]（英文）。在游戏内修改时，所有设置都立即生效。装了 Exiled's Toolkit 0.17.0 或更新版本时，每个存档都可以有自己的奖励数量、刷新花费、利息、锁定、禁用、兑现和商店规则：新存档可以在「自定义难度」里选，游戏中也可以在「模组」界面只为当前存档修改。Enabled、Labels、ShopUnavailable 和 UiScale 对所有存档都一样。没装 Exiled's Toolkit 的话，在「模组」界面的改动改为在下次启动游戏时生效；在奖励界面的改动仍然立即生效。
 [list]
 [*][b]OptionCount[/b]（默认 3）：可供选择的规划卡数量，3 到 20。[/*]
 [*][b]RefreshCost[/b]（默认 -1）：-1 表示刷新花费随 OptionCount 自动调整，0 表示每次刷新免费，1 到 99 则是每次刷新的固定花费。[/*]
@@ -154,7 +154,7 @@ Open source under MIT: [url=https://github.com/AnExiledDev/SurvivalLog-MoreRewar
 [*][b]BanButton[/b]、[b]Labels[/b]（默认 true）：「禁用」按钮和卡上的标签。[b]BanCost[/b]（默认 2）是禁用的花费；[b]BanWholeLine[/b]（默认 false）会禁用同一系列的所有等级；[b]UnbanRefund[/b]（默认 50）是解除禁用时退还花费的百分比。[/*]
 [*][b]NoRepeatOnRefresh[/b]（默认 false）和 [b]CashOut[/b]（默认 0，每个剩余生存点换得的现金）。[/*]
 [*][b]ShopEnabled[/b]（默认 false）开启商店。[b]ShopMarkup[/b]（25）、[b]ShopIncrease[/b]（15）、[b]ShopReset[/b]（Day）、[b]ShopPerDay[/b]（2）、[b]ShopUnavailable[/b]（Grey）和 [b]ShopLocked[/b]（true）设置价格和规则。[/*]
-[*][b]Enabled[/b]（默认 true）：设为 false 则关闭整个模组。[/*]
+[*][b]Enabled[/b]（默认 true）：设为 false 则立即关闭整个模组，奖励界面上也不再显示它的按钮。[/*]
 [/list]
 
 [size=5]反馈[/size]

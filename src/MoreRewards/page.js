@@ -6,7 +6,8 @@
 //   lock count, tomorrow's interest, the cash-out note, the shop, the ban list and the settings), and draws the shop,
 //   the ban list, the settings and short notices;
 // - takes over the lock button when the player may lock more than one card.
-// The plugin tells the page what to draw through window.__slmorerewards.setup/shop/bans/settings/toast, collects notes for its log
+// The plugin tells the page what to draw through window.__slmorerewards.setup/shop/bans/settings/toast, and to take it
+// all away again through off() when the mod is turned off. It collects notes for its log
 // through take(), and hears the buttons through vuplex.postMessage("slmod|morerewards|<verb>|<args>"). The page draws
 // only what the plugin said; every click is checked again by the plugin, which owns the points and the cards.
 (function () {
@@ -335,6 +336,42 @@
     setupData = data;
   }
 
+  // The mod was turned off. The page forgets what it was told and takes what it added off the rewards page: the card
+  // buttons and labels, the lock count and lock tips, the footer lines and buttons, and the shop, ban list and settings.
+  // Extra cards already on screen keep their layout while they are there, so none is cut off.
+  function off() {
+    setupData = null;
+    shopData = null;
+    bansData = null;
+    settingsData = null;
+    isShopAsked = false;
+    asked.bans = false;
+    asked.settings = false;
+
+    if (rewardsDoc && rewardsDoc.documentElement) strip(rewardsDoc);
+  }
+
+  function strip(doc) {
+    var root = doc.documentElement;
+
+    root.classList.remove(LOCKS_LEFT);
+    root.classList.remove(LOCKS_FULL);
+    ['.mr-life', '.mr-acts', '.mr-foot', '.mr-foot-btns', '.pin-count', '.shop', '.mr-pane'].forEach(function (selector) { removeAll(doc, selector); });
+
+    // A card keeps the key of what it last showed; cleared, a later setup draws its buttons again.
+    var cards = doc.querySelectorAll('.card');
+
+    for (var c = 0; c < cards.length; c++) cards[c].__slmrKey = null;
+
+    var tips = doc.querySelectorAll('.pin-tip');
+
+    for (var i = 0; i < tips.length; i++) {
+      if (tips[i].__slmrText !== undefined && tips[i].textContent === tips[i].__slmrText) tips[i].textContent = tips[i].__slmrGameText;
+
+      tips[i].__slmrText = undefined;
+    }
+  }
+
   function shop(data) {
     shopData = data;
 
@@ -569,7 +606,13 @@
 
     var text = card.pinned ? t(TEXT.unlock) : locked < setupData.maxLocked ? t(TEXT.lock) + ' (' + locked + '/' + setupData.maxLocked + ')' : t(TEXT.full);
 
-    if (tip && tip.textContent !== text) tip.textContent = text;
+    if (!tip || tip.textContent === text) return;
+
+    // The game's own text is kept, so turning the mod off can put it back.
+    if (tip.textContent !== tip.__slmrText) tip.__slmrGameText = tip.textContent;
+
+    tip.textContent = text;
+    tip.__slmrText = text;
   }
 
   function showLocks(doc, locked) {
@@ -1165,5 +1208,5 @@
     }
   }, CHECK_MS);
 
-  window.__slmorerewards = { take: take, check: check, layout: layout, setup: setup, shop: shop, bans: bans, settings: settings, toast: toast, interest: interest, shopList: shopList, lifeLabel: lifeLabel };
+  window.__slmorerewards = { take: take, check: check, layout: layout, setup: setup, off: off, shop: shop, bans: bans, settings: settings, toast: toast, interest: interest, shopList: shopList, lifeLabel: lifeLabel };
 })();

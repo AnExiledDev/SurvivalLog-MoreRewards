@@ -34,11 +34,12 @@ public sealed class RewardsTicker : MonoBehaviour
         // The game's clock comes back boxed through interop on every read; this one costs nothing.
         var now = (float)Clock.Elapsed.TotalSeconds;
 
-        foreach (var check in Checks)
+        // By index: turning the mod on for the first time adds the rewards screen's checks, which can happen in a check.
+        for (var i = 0; i < Checks.Count; i++)
         {
             try
             {
-                check(now);
+                Checks[i](now);
             }
             catch (Exception ex)
             {

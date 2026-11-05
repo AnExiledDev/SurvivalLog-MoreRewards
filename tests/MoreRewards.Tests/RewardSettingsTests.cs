@@ -15,6 +15,15 @@ public class RewardSettingsTests
     }
 
     [Fact]
+    public void The_mod_turned_off_offers_the_game_three_rewards_at_the_game_cost()
+    {
+        Assert.Equal(RewardSettings.GameOptionCount, RewardSettings.Game.OptionCount);
+        Assert.Null(RewardSettings.Game.FixedRefreshCost);
+        Assert.False(RewardSettings.Game.AddsOptions);
+        Assert.False(RewardSettings.Game.ChangesCost);
+    }
+
+    [Fact]
     public void Extra_rewards_also_change_the_cost()
     {
         var settings = RewardSettings.From(6, -1);

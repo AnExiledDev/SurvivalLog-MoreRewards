@@ -85,6 +85,9 @@ internal sealed class RewardPage
     /// <summary>Hands the page a call from the plugin; what it returns is not read.</summary>
     public void Send(string javaScript) => Run(javaScript, keepsReply: false);
 
+    /// <summary>The mod was turned off. A page that reloads later starts without the mod's buttons anyway.</summary>
+    public void Off() => Send(PageData.OffCall);
+
     /// <param name="keepsReply">The result is the page's answer to a check, read on the next frame.</param>
     /// <returns>Whether the web UI was there to run it.</returns>
     private bool Run(string javaScript, bool keepsReply)

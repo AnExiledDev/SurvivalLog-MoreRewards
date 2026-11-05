@@ -42,6 +42,9 @@ public sealed record PageSetup(Language Language, ScreenSettings Settings, int G
 /// </summary>
 public static class PageData
 {
+    /// <summary>The mod was turned off: the page takes its buttons off the rewards screen.</summary>
+    public const string OffCall = "window.__slmorerewards && window.__slmorerewards.off()";
+
     public static string SetupCall(PageSetup setup) => "window.__slmorerewards && window.__slmorerewards.setup(" + Setup(setup) + ")";
 
     public static string ShopCall(IReadOnlyList<ShopRow> rows, int points, int? leftToday, int rise, Language language) =>

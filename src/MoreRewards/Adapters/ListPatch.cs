@@ -54,7 +54,7 @@ internal static class ListPatch
 
             _kept = null;
 
-            if (kept == null || __0?.CachedSurvivalPlanIds is not { } list || list.Count != 0) return;
+            if (kept == null || !LiveScreen.IsOn || __0?.CachedSurvivalPlanIds is not { } list || list.Count != 0) return;
 
             foreach (var id in kept) list.Add(id);
 
@@ -74,6 +74,9 @@ internal static class ListPatch
 
             State = __0;
             Version++;
+
+            // Off, the game's own lock is the only one shown; the extras stay in the run's book for when it is back on.
+            if (!LiveScreen.IsOn) return;
 
             var book = LiveScreen.Book;
             var extras = book.Locks();

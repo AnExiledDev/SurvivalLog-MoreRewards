@@ -100,7 +100,7 @@ internal static class OfferPatch
     {
         try
         {
-            if (__instance == null || __result == null) return;
+            if (!LiveScreen.IsOn || __instance == null || __result == null) return;
 
             RewardDraw draw = (group, offered) => First(__instance.GetRandomIdsFromGroup(group, 1, day, ToGame(offered), cooldownIds));
             var gameOffer = FromGame(__result);
@@ -123,7 +123,7 @@ internal static class OfferPatch
     {
         try
         {
-            if (__instance == null || __result == null) return;
+            if (!LiveScreen.IsOn || __instance == null || __result == null) return;
 
             RewardDraw unseen = (group, offered) => First(__instance.GetRandomIdsFromGroup(group, 1, day, displayedIds, buyedIds, ToGame(offered), cooldownIds));
             RewardDraw seenBefore = (group, offered) => First(__instance.GetRandomIdsFromGroup(group, 1, day, null, buyedIds, ToGame(offered), cooldownIds));

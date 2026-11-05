@@ -1,6 +1,6 @@
 # More Rewards settings
 
-Settings live in `BepInEx\config\com.dev.survivallog.morerewards.cfg`, created the first time the game starts with the mod. Change them in game with the 「Settings」 button on the rewards screen or on the Mod Manager's Mods screen, or edit the file while the game is closed. Changed in game, every setting except Enabled takes effect at once; Enabled takes effect at the next game start. Delete the file to get the defaults back. The file describes each setting in English and Simplified Chinese. Without Exiled's Toolkit installed, changes made on the Mods screen take effect at the next game start instead; changes made on the rewards screen still take effect at once.
+Settings live in `BepInEx\config\com.dev.survivallog.morerewards.cfg`, created the first time the game starts with the mod. Change them in game with the 「Settings」 button on the rewards screen or on the Mod Manager's Mods screen, or edit the file while the game is closed. Changed in game, every setting takes effect at once. With Exiled's Toolkit 0.17.0 or newer, each world can keep its own reward settings: every setting in Rewards, Interest, Locks, Cards and Shop except `Labels` and `ShopUnavailable`. Pick them for a new world in Customizable Difficulty, or, while you play, change them for that world alone on the Mods screen. The rewards screen's 「Settings」 changes a setting the world has its own value for in that world alone, and any other for every world. `Enabled`, `Labels`, `ShopUnavailable` and `UiScale` stay the same for every world. Delete the file to get the defaults back. The file describes each setting in English and Simplified Chinese. Without Exiled's Toolkit installed, changes made on the Mods screen take effect at the next game start instead; changes made on the rewards screen still take effect at once.
 
 With the defaults you get the game's 3 rewards and its own refresh cost, the interest rate on your survival points goes from 5% to 10%, and the most interest they earn in a day goes from 10 to 20. Raise `OptionCount` to get more rewards to choose from. Set `InterestRate` and `MaxInterest` to `0` to keep the game's interest as it is. The 「Ban」 button and the labels are on by default; the shop is off until you turn it on.
 
@@ -8,7 +8,7 @@ With the defaults you get the game's 3 rewards and its own refresh cost, the int
 
 | Setting | Default | What it does |
 | --- | --- | --- |
-| `Enabled` | `true` | Turn the mod on or off. `false` leaves the end-of-day rewards, the refresh cost and the interest on survival points as the game has them. |
+| `Enabled` | `true` | Turn the mod on or off. `false` leaves the end-of-day rewards, the refresh cost and the interest on survival points as the game has them, and takes the mod's buttons off the rewards screen. |
 
 ## Rewards
 

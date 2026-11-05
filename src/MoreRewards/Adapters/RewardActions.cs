@@ -51,6 +51,13 @@ internal sealed class RewardActions
 
     public void Tick(float now)
     {
+        if (!LiveScreen.IsOn)
+        {
+            Idle();
+
+            return;
+        }
+
         while (PageMessages.TryTake(out var command)) Do(command);
 
         // The page says when its box lets go, but a page the game drops says nothing.
@@ -67,6 +74,21 @@ internal sealed class RewardActions
                 TrySendSetup();
                 break;
         }
+    }
+
+    /// <summary>
+    /// The mod is off: a click the page sent before it heard is dropped, a text box's hold on the keyboard is let go,
+    /// and a shop list being built is dropped. Nothing is sent to the page; turning the mod on again tells it afresh.
+    /// </summary>
+    private void Idle()
+    {
+        while (PageMessages.TryTake(out _))
+        {
+        }
+
+        if (_keyboard.IsClaimed) _keyboard.Release();
+
+        _shop = null;
     }
 
     /// <summary>Outside a run the screen's state is left over from the last one; the page is told nothing until a new screen opens.</summary>

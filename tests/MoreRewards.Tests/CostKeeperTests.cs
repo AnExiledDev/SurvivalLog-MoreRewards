@@ -125,4 +125,16 @@ public class CostKeeperTests
 
         Assert.Equal(new CostWrite(2, 2, IsPutBack: false), keeper.Next(4));
     }
+
+    [Fact]
+    public void Turning_the_mod_off_puts_the_game_cost_back_from_a_fixed_cost()
+    {
+        var keeper = new CostKeeper(RewardSettings.From(10, 9));
+
+        keeper.Next(2);
+        keeper.Use(RewardSettings.Game);
+
+        Assert.Equal(new CostWrite(2, 2, IsPutBack: false), keeper.Next(9));
+        Assert.Null(keeper.Next(2));
+    }
 }
