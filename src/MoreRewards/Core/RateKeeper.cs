@@ -8,10 +8,9 @@ public readonly record struct RateWrite(int Strengthening, int BaseUnits, bool I
 
 /// <summary>
 /// Keeps the character's interest attribute at the mod's rate. The attribute is a base plus a strengthening value, and
-/// the game totals the two. Saves keep only the base (AttributeComponent.SaveGame, rva 0x2de1950), so the mod sets the
+/// the game totals the two. Saves keep only the base (AttributeComponent.SaveGame), so the mod sets the
 /// strengthening to whatever brings the total to its rate: a save never holds the mod's rate, and without the mod the
-/// game's rate is back. A character that is made or loaded starts with no strengthening (AttributeComponent.OnCreate,
-/// rva 0x2de1540), so the rate is written again.
+/// game's rate is back. A character that is made or loaded starts with no strengthening (AttributeComponent.OnCreate), so the rate is written again.
 /// </summary>
 public sealed class RateKeeper
 {

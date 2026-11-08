@@ -22,7 +22,6 @@ namespace MoreRewards.Adapters;
 internal static class InterestCode
 {
     private const string GameModule = "GameAssembly.dll";
-    private const string MethodInfoField = "NativeMethodInfoPtr_SettleDailySurvivalPoints_";
     private const uint ExecuteReadWrite = 0x40;
 
     /// <summary>Where the cap code is, once found; the game's code does not move while it runs.</summary>
@@ -101,7 +100,7 @@ internal static class InterestCode
     private static IntPtr MethodStart()
     {
         var fields = typeof(SurvivalResultsManager).GetFields(BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public)
-            .Where(field => field.FieldType == typeof(IntPtr) && field.Name.StartsWith(MethodInfoField, StringComparison.Ordinal))
+            .Where(field => field.FieldType == typeof(IntPtr) && field.Name.StartsWith(InterestCap.MethodInfoField, StringComparison.Ordinal))
             .ToList();
 
         if (fields.Count != 1 || fields[0].GetValue(null) is not IntPtr methodInfo || methodInfo == IntPtr.Zero) return IntPtr.Zero;

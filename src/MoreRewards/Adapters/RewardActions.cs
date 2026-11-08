@@ -58,14 +58,25 @@ internal sealed class RewardActions
             return;
         }
 
-        while (PageMessages.TryTake(out var command)) Do(command);
+        // Without Exiled's Toolkit a setting applies the moment it is set, so a command from the page's settings can
+        // turn the mod off partway through this loop; the rest of the frame is then the off frame.
+        while (PageMessages.TryTake(out var command))
+        {
+            Do(command);
+
+            if (LiveScreen.IsOn) continue;
+
+            Idle();
+
+            return;
+        }
 
         // The page says when its box lets go, but a page the game drops says nothing.
         if (_keyboard.IsClaimed && !IsScreenOpen()) _keyboard.Release();
 
         if (_shop != null) AdvanceShop(now);
 
-        switch (_watch.Step(now, ListPatch.State is not null, ListPatch.Version, LiveScreen.Version))
+        switch (_watch.Step(now, LiveScreen.IsOn, ListPatch.State is not null, ListPatch.Version, LiveScreen.Version))
         {
             case SetupStep.CheckRun:
                 ForgetOutsideRun();

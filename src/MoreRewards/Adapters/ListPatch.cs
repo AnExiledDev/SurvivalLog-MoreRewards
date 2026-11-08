@@ -8,7 +8,7 @@ using MoreRewards.Core;
 namespace MoreRewards.Adapters;
 
 /// <summary>
-/// Watches the rewards screen's card list. The game rebuilds it in Reducer_Web_RogueSelect.BuildList (rva 0x2c3c1d0)
+/// Watches the rewards screen's card list. The game rebuilds it in Reducer_Web_RogueSelect.BuildList
 /// whenever the screen opens, a card is bought, the cards refresh or the lock moves, and the web page draws from it.
 /// The hook marks the mod's extra locks as locked, as the game marks its own, lets go of an extra lock whose card was
 /// just bought, and keeps the state so the plugin knows which cards are on screen. Before the rebuild it puts back a

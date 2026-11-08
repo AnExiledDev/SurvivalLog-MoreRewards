@@ -18,7 +18,9 @@ public enum SetupStep
 /// nothing. The page is owed a setup when the screen's card list was rebuilt, a setting it draws from changed, or the
 /// page asked (it reloaded). Right after that it is tried every frame for <see cref="EagerSeconds"/>, so the buttons
 /// show at once, then every <see cref="RetrySeconds"/> until it goes out (the screen may be closed until tomorrow).
-/// With nothing owed, the run is checked every <see cref="RunCheckSeconds"/>. Nothing owed is ever dropped.
+/// With nothing owed, the run is checked every <see cref="RunCheckSeconds"/>. Nothing owed is ever dropped. While the
+/// mod is off nothing is read or sent, even when a setup is owed: turning the mod off can owe one (it is a setting
+/// change), and sending it would draw the mod's footer back onto a page that was just cleared.
 /// </summary>
 public sealed class SetupWatch
 {
@@ -42,12 +44,13 @@ public sealed class SetupWatch
         _asks++;
     }
 
+    /// <param name="isOn">Whether the mod is on; off, the step is always <see cref="SetupStep.Skip"/>.</param>
     /// <param name="hasState">The screen's state is kept (it has opened this run); without it there is nothing to send or let go.</param>
     /// <param name="listVersion">Goes up with each rebuild of the screen's card list.</param>
     /// <param name="settingsVersion">Goes up with each change to a setting the page draws from.</param>
-    public SetupStep Step(float now, bool hasState, int listVersion, int settingsVersion)
+    public SetupStep Step(float now, bool isOn, bool hasState, int listVersion, int settingsVersion)
     {
-        if (!hasState) return SetupStep.Skip;
+        if (!isOn || !hasState) return SetupStep.Skip;
 
         if (_isAsked || listVersion != _sentList || settingsVersion != _sentSettings)
         {

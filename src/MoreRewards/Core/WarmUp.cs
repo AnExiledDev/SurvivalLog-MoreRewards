@@ -53,7 +53,7 @@ public static class WarmUp
         var watch = new SetupWatch();
 
         watch.Ask();
-        watch.Step(0f, true, 1, 1);
+        watch.Step(0f, true, true, 1, 1);
         watch.Sent(1, 1);
         new SlicedJob(new[] { true, true }).Advance(() => false);
 

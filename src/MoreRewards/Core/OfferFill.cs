@@ -32,8 +32,7 @@ public static class OfferFill
 
     /// <summary>
     /// A refresh first draws rewards the player has not been shown yet, then fills the rest with ones shown before. The
-    /// game charges for a refresh only when it draws something (SurvivalResultsManager.OnRefreshSurvivalPlans, rva
-    /// 0x2699b60), and its own draw is all new rewards. So when neither the game nor the first pass found a new one,
+    /// game charges for a refresh only when it draws something (SurvivalResultsManager.OnRefreshSurvivalPlans), and its own draw is all new rewards. So when neither the game nor the first pass found a new one,
     /// the refresh is left empty and free, as in the game, instead of charging again for the rewards on screen.
     /// </summary>
     /// <param name="offered">The game's refresh, every one of them new.</param>

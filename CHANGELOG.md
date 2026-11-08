@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.7.3
+
+- Fixed: without Exiled's Toolkit, turning `Enabled` off from the rewards screen's Settings left the interest line and a Settings button that did nothing on that screen and the next ones.
+- Made for Survival Log 1.1.20719.
+
 ## 0.7.2
 
 - MaxInterest keeps working after a game update that only moves the game's code around, so most updates no longer break it.

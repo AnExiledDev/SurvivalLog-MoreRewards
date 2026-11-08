@@ -14,12 +14,12 @@ public class SetupWatchTests
     {
         var watch = SentFor(list: 1, settings: 1);
 
-        Assert.Equal(SetupStep.CheckRun, watch.Step(0f, true, 1, 1));
+        Assert.Equal(SetupStep.CheckRun, watch.Step(0f, true, true, 1, 1));
 
-        for (var now = 0.016f; now < 0.99f; now += 0.016f) Assert.Equal(SetupStep.Skip, watch.Step(now, true, 1, 1));
+        for (var now = 0.016f; now < 0.99f; now += 0.016f) Assert.Equal(SetupStep.Skip, watch.Step(now, true, true, 1, 1));
 
-        Assert.Equal(SetupStep.CheckRun, watch.Step(1f, true, 1, 1));
-        Assert.Equal(SetupStep.Skip, watch.Step(1.5f, true, 1, 1));
+        Assert.Equal(SetupStep.CheckRun, watch.Step(1f, true, true, 1, 1));
+        Assert.Equal(SetupStep.Skip, watch.Step(1.5f, true, true, 1, 1));
     }
 
     [Fact]
@@ -29,8 +29,8 @@ public class SetupWatchTests
 
         watch.Ask();
 
-        Assert.Equal(SetupStep.Skip, watch.Step(0f, false, 3, 2));
-        Assert.Equal(SetupStep.Skip, watch.Step(5f, false, 4, 2));
+        Assert.Equal(SetupStep.Skip, watch.Step(0f, true, false, 3, 2));
+        Assert.Equal(SetupStep.Skip, watch.Step(5f, true, false, 4, 2));
     }
 
     [Fact]
@@ -38,13 +38,23 @@ public class SetupWatchTests
     {
         var watch = SentFor(list: 1, settings: 1);
 
-        Assert.Equal(SetupStep.TrySend, watch.Step(10f, true, 2, 1));
-        Assert.Equal(SetupStep.TrySend, watch.Step(10.5f, true, 2, 1));
-        Assert.Equal(SetupStep.TrySend, watch.Step(10.98f, true, 2, 1));
-        Assert.Equal(SetupStep.TrySend, watch.Step(11f, true, 2, 1));
-        Assert.Equal(SetupStep.Skip, watch.Step(11.2f, true, 2, 1));
-        Assert.Equal(SetupStep.TrySend, watch.Step(11.5f, true, 2, 1));
-        Assert.Equal(SetupStep.TrySend, watch.Step(60f, true, 2, 1));
+        Assert.Equal(SetupStep.TrySend, watch.Step(10f, true, true, 2, 1));
+        Assert.Equal(SetupStep.TrySend, watch.Step(10.5f, true, true, 2, 1));
+        Assert.Equal(SetupStep.TrySend, watch.Step(10.98f, true, true, 2, 1));
+        Assert.Equal(SetupStep.TrySend, watch.Step(11f, true, true, 2, 1));
+        Assert.Equal(SetupStep.Skip, watch.Step(11.2f, true, true, 2, 1));
+        Assert.Equal(SetupStep.TrySend, watch.Step(11.5f, true, true, 2, 1));
+        Assert.Equal(SetupStep.TrySend, watch.Step(60f, true, true, 2, 1));
+    }
+
+    [Fact]
+    public void While_the_mod_is_off_nothing_is_sent_even_when_turning_it_off_owes_a_setup()
+    {
+        var watch = SentFor(list: 1, settings: 1);
+
+        Assert.Equal(SetupStep.Skip, watch.Step(0f, false, true, 1, 2));
+        Assert.Equal(SetupStep.Skip, watch.Step(5f, false, true, 2, 2));
+        Assert.Equal(SetupStep.TrySend, watch.Step(6f, true, true, 2, 3));
     }
 
     [Fact]
@@ -52,7 +62,7 @@ public class SetupWatchTests
     {
         var watch = SentFor(list: 1, settings: 1);
 
-        Assert.Equal(SetupStep.TrySend, watch.Step(0f, true, 1, 2));
+        Assert.Equal(SetupStep.TrySend, watch.Step(0f, true, true, 1, 2));
     }
 
     [Fact]
@@ -60,10 +70,10 @@ public class SetupWatchTests
     {
         var watch = SentFor(list: 1, settings: 1);
 
-        watch.Step(0f, true, 1, 1);
+        watch.Step(0f, true, true, 1, 1);
         watch.Ask();
 
-        Assert.Equal(SetupStep.TrySend, watch.Step(0.1f, true, 1, 1));
+        Assert.Equal(SetupStep.TrySend, watch.Step(0.1f, true, true, 1, 1));
     }
 
     [Fact]
@@ -71,13 +81,13 @@ public class SetupWatchTests
     {
         var watch = SentFor(list: 1, settings: 1);
 
-        Assert.Equal(SetupStep.TrySend, watch.Step(0f, true, 2, 1));
+        Assert.Equal(SetupStep.TrySend, watch.Step(0f, true, true, 2, 1));
 
         watch.Sent(2, 1);
 
-        Assert.Equal(SetupStep.CheckRun, watch.Step(0.016f, true, 2, 1));
+        Assert.Equal(SetupStep.CheckRun, watch.Step(0.016f, true, true, 2, 1));
 
-        for (var now = 0.032f; now < 0.99f; now += 0.016f) Assert.Equal(SetupStep.Skip, watch.Step(now, true, 2, 1));
+        for (var now = 0.032f; now < 0.99f; now += 0.016f) Assert.Equal(SetupStep.Skip, watch.Step(now, true, true, 2, 1));
     }
 
     [Fact]
@@ -85,11 +95,11 @@ public class SetupWatchTests
     {
         var watch = SentFor(list: 1, settings: 1);
 
-        watch.Step(0f, true, 2, 1);
-        watch.Step(1.2f, true, 2, 1);
+        watch.Step(0f, true, true, 2, 1);
+        watch.Step(1.2f, true, true, 2, 1);
 
-        Assert.Equal(SetupStep.TrySend, watch.Step(1.3f, true, 3, 1));
-        Assert.Equal(SetupStep.TrySend, watch.Step(1.32f, true, 3, 1));
+        Assert.Equal(SetupStep.TrySend, watch.Step(1.3f, true, true, 3, 1));
+        Assert.Equal(SetupStep.TrySend, watch.Step(1.32f, true, true, 3, 1));
     }
 
     private static SetupWatch SentFor(int list, int settings)

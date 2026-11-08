@@ -5,15 +5,13 @@ using MoreRewards.Core;
 namespace MoreRewards.Adapters;
 
 /// <summary>
-/// Sets the price of a rewards refresh. It cannot be hooked: GameKey.get_GlobalSetting_RefreshSurvivalCost (rva
-/// 0x2f12a80) and SurvivalResultsManager.GetRefreshCost (rva 0x26992d0) both open with the method-init check,
+/// Sets the price of a rewards refresh. It cannot be hooked: GameKey.get_GlobalSetting_RefreshSurvivalCost and SurvivalResultsManager.GetRefreshCost both open with the method-init check,
 /// `sub rsp,28h / cmp byte [rip+x],0 / jnz short` (bytes 48 83 ec 28 80 3d .. .. .. .. 00 75 xx, checked in
 /// GameAssembly.dll), so the first 14 bytes the hook library rewrites hold a RIP-relative operand at byte 4 and a short
 /// jump at byte 11. But the getter fills its static field _GlobalSetting_RefreshSurvivalCost (offset 0x558 of the
 /// static fields) from the GlobalSetting table only while it is 0, and returns the field from then on, and nothing
 /// else in the game writes it. So
-/// the cost is written into that field, and every reader sees it: the charge in OnRefreshSurvivalPlans (rva
-/// 0x2699b60) and the cost the page shows, which CountUpTimer.TriggerDaySettlement (rva 0x254b250) sends when a day
+/// the cost is written into that field, and every reader sees it: the charge in OnRefreshSurvivalPlans and the cost the page shows, which CountUpTimer.TriggerDaySettlement sends when a day
 /// ends. The field is checked every second and put back if something changed it. A field of 0 sends the getter back
 /// to the table, so the cost is written into the table's entry (Config_GlobalSetting.Params1, which the getter copies)
 /// as well: that is what keeps a free refresh at 0.
@@ -58,7 +56,7 @@ internal sealed class CostField
 
     /// <summary>
     /// Has the game's getter fill the field, as it would the first time a day ends. The getter looks the cost up in
-    /// ConfigManager's GlobalSetting table (Get_Config_GlobalSetting, rva 0x2caba00), which throws while the table is
+    /// ConfigManager's GlobalSetting table (Get_Config_GlobalSetting), which throws while the table is
     /// not loaded and logs an error for a missing key, so it is only asked once the table holds the key.
     /// </summary>
     private static int LoadGameCost() => TableEntry() == null ? 0 : GameKey.GlobalSetting_RefreshSurvivalCost;

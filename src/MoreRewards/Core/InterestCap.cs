@@ -30,6 +30,9 @@ public static class InterestCap
     /// </summary>
     public const int SearchBytes = 0x2000;
 
+    /// <summary>The start of the name of the interop field holding SettleDailySurvivalPoints's il2cpp method info, on SurvivalResultsManager.</summary>
+    public const string MethodInfoField = "NativeMethodInfoPtr_SettleDailySurvivalPoints_";
+
     /// <summary>
     /// The game's code with the cap: the rounded-down interest into eax, the minimum of 1 for interest that rounds
     /// to 0, then the cap. Checking all of it, not just the cap, tells this cap apart from the game's other caps of 10.

@@ -3,6 +3,8 @@ using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection.Metadata;
+using System.Reflection.PortableExecutable;
 using MoreRewards.Core;
 using Xunit;
 
@@ -29,16 +31,31 @@ public class GameBuildTests
         Assert.Equal(new int?[] { InterestCap.GameCap }, hits);
     }
 
-    private static byte[] GameAssembly()
+    [Fact]
+    public void The_interop_has_exactly_one_method_info_for_settling_the_day_so_the_mod_can_find_the_method()
+    {
+        using var pe = new PEReader(File.OpenRead(GameRef("BepInEx", "interop", "HotUpdate.dll")));
+        var metadata = pe.GetMetadataReader();
+        var type = metadata.TypeDefinitions.Select(metadata.GetTypeDefinition)
+            .Single(t => metadata.GetString(t.Namespace) == "GameCore.HotUpdate.Battle.Logic" && metadata.GetString(t.Name) == "SurvivalResultsManager");
+        var fields = type.GetFields().Select(f => metadata.GetString(metadata.GetFieldDefinition(f).Name))
+            .Where(name => name.StartsWith(InterestCap.MethodInfoField, StringComparison.Ordinal));
+
+        Assert.Single(fields);
+    }
+
+    private static byte[] GameAssembly() => File.ReadAllBytes(GameRef("GameAssembly.dll"));
+
+    private static string GameRef(params string[] parts)
     {
         for (var dir = new DirectoryInfo(AppContext.BaseDirectory); dir != null; dir = dir.Parent)
         {
-            var file = Path.Combine(dir.FullName, "game-ref", "GameAssembly.dll");
+            var file = Path.Combine([dir.FullName, "game-ref", .. parts]);
 
-            if (File.Exists(file)) return File.ReadAllBytes(file);
+            if (File.Exists(file)) return file;
         }
 
-        throw new FileNotFoundException("no game-ref/GameAssembly.dll above the tests; run tools/refresh-game-ref.sh");
+        throw new FileNotFoundException($"no game-ref/{string.Join('/', parts)} above the tests; run tools/refresh-game-ref.sh");
     }
 
     /// <summary>The file's sections that hold code, from the PE section table.</summary>
