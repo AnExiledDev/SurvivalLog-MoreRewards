@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.7.1
+
+- Fixed: MaxInterest did nothing on Survival Log 1.1.20719, so interest stopped at the game's 10 survival points a day whatever the setting.
+- Made for Survival Log 1.1.20719.
+
 ## 0.7.0
 
 - Each world can keep its own reward settings: `OptionCount`, `RefreshCost`, `InterestRate`, `MaxInterest`, `MaxLocked`, `NoRepeatOnRefresh`, `BanButton`, `BanCost`, `BanWholeLine`, `UnbanRefund`, `CashOut`, `ShopEnabled`, `ShopMarkup`, `ShopIncrease`, `ShopReset`, `ShopPerDay` and `ShopLocked`. With Exiled's Toolkit 0.17.0 or newer, pick them for a new world in Customizable Difficulty, or change them for the world you are playing on the Mod Manager's Mods screen. `Enabled`, `Labels`, `ShopUnavailable` and `UiScale` stay the same for every world.
