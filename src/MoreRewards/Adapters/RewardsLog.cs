@@ -42,6 +42,13 @@ internal sealed class RewardsLog
         WriteFileOnly(message);
     }
 
+    /// <summary>Writes a failure as an error, so Mod Manager shows the mod red, and to the mod's own file.</summary>
+    public void WriteError(string message)
+    {
+        _bepinex.LogError(message);
+        WriteFileOnly(message);
+    }
+
     /// <summary>Writes only to the mod's own file, never the BepInEx log; safe from a worker thread.</summary>
     public void WriteFileOnly(string message)
     {

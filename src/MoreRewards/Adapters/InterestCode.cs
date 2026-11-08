@@ -1,6 +1,9 @@
 using System;
 using System.ComponentModel;
+using System.Linq;
+using System.Reflection;
 using System.Runtime.InteropServices;
+using GameCore.HotUpdate.Battle.Logic;
 using MoreRewards.Core;
 
 namespace MoreRewards.Adapters;
@@ -9,73 +12,101 @@ namespace MoreRewards.Adapters;
 /// Writes the mod's interest cap into the game's code (<see cref="InterestCap"/>) while the plugin loads, and again on
 /// the main thread when MaxInterest changes; the code runs on the main thread when a day ends, so it is never running
 /// while it is written. There is no hook, so the 14-byte rule for hook targets does not apply;
-/// only two numbers inside the method change, and the bytes around them are checked first, so a game build with
-/// different code keeps its own cap. Before those bytes are read, the module's size from its PE header must reach past
-/// them, so a smaller module is never read beyond its end. The code is in GameAssembly.dll's executable il2cpp section, so it is made
-/// writable for the write and given its old protection back.
+/// only two numbers inside the method change. The code is found by name: SettleDailySurvivalPoints's start comes from
+/// its il2cpp method info, and the code is searched for in the method (<see cref="InterestCap.FindIn"/>), so a game
+/// update that only moves the method changes nothing. Before the method is read, the module's size from its PE header
+/// must reach past what is searched, so a module is never read beyond its end. When the code is not found the cap is
+/// left as the game's and the reason is logged as an error, so the mod shows red in Mod Manager. The code is in
+/// GameAssembly.dll's executable il2cpp section, so it is made writable for the write and given its old protection back.
 /// </summary>
 internal static class InterestCode
 {
     private const string GameModule = "GameAssembly.dll";
+    private const string MethodInfoField = "NativeMethodInfoPtr_SettleDailySurvivalPoints_";
     private const uint ExecuteReadWrite = 0x40;
+
+    /// <summary>Where the cap code is, once found; the game's code does not move while it runs.</summary>
+    private static IntPtr _code;
 
     /// <param name="cap">The cap to write; <see cref="InterestCap.GameCap"/> puts the game's own back.</param>
     /// <returns>Whether the code now holds <paramref name="cap"/>.</returns>
-    public static bool Apply(int cap, Action<string> log)
+    public static bool Apply(int cap, RewardsLog log)
     {
         var keepsGameCap = "the interest cap is left as it was";
 
         try
         {
-            var module = GetModuleHandleW(GameModule);
-
-            if (module == IntPtr.Zero)
+            if (_code == IntPtr.Zero && Find() is { } problem)
             {
-                log($"could not find {GameModule}, {keepsGameCap}");
+                log.WriteError($"{problem}, {keepsGameCap}");
 
                 return false;
             }
 
-            if (!HoldsGameCode(module))
-            {
-                log($"the interest code would lie outside {GameModule} (a game update?), so it is not read; {keepsGameCap}");
-
-                return false;
-            }
-
-            var address = module + InterestCap.GameCodeRva;
             var code = new byte[InterestCap.GameCode.Count];
 
-            Marshal.Copy(address, code, 0, code.Length);
+            Marshal.Copy(_code, code, 0, code.Length);
 
             if (InterestCap.Rewrite(code, cap) is not { } rewritten)
             {
-                log($"the game's interest code is not the one this mod knows (a game update?), {keepsGameCap}");
+                log.WriteError($"the game's interest code changed since it was found, {keepsGameCap}");
 
                 return false;
             }
 
-            Write(address, rewritten, log);
-            log(cap == InterestCap.GameCap ? $"interest is back to the game's cap of {cap}" : $"interest is now up to {cap} survival points a day (the game's own cap is {InterestCap.GameCap})");
+            Write(_code, rewritten, log.Write);
+            log.Write(cap == InterestCap.GameCap ? $"interest is back to the game's cap of {cap}" : $"interest is now up to {cap} survival points a day (the game's own cap is {InterestCap.GameCap})");
 
             return true;
         }
         catch (Exception ex)
         {
-            log($"could not change the interest cap, {keepsGameCap}: {ex}");
+            log.WriteError($"could not change the interest cap, {keepsGameCap}: {ex}");
 
             return false;
         }
     }
 
-    /// <summary>Whether the module's size, from its PE header, reaches past the interest code.</summary>
-    private static bool HoldsGameCode(IntPtr module)
+    /// <summary>Finds the cap code in SettleDailySurvivalPoints and keeps where it is.</summary>
+    /// <returns>Null once found; otherwise why it was not.</returns>
+    private static string? Find()
     {
+        var module = GetModuleHandleW(GameModule);
+
+        if (module == IntPtr.Zero) return $"could not find {GameModule}";
+
+        var method = MethodStart();
+
+        if (method == IntPtr.Zero) return "could not find SettleDailySurvivalPoints in the game (a game update?)";
+
         var firstPage = new byte[PeHeader.PageSize];
 
         Marshal.Copy(module, firstPage, 0, firstPage.Length);
 
-        return PeHeader.SizeOfImage(firstPage) is { } size && InterestCap.FitsIn(size);
+        if (PeHeader.SizeOfImage(firstPage) is not { } size || !InterestCap.FitsIn(method.ToInt64() - module.ToInt64(), size))
+            return $"SettleDailySurvivalPoints would lie outside {GameModule}, so it is not read";
+
+        var body = new byte[InterestCap.SearchBytes];
+
+        Marshal.Copy(method, body, 0, body.Length);
+
+        if (InterestCap.FindIn(body) is not { } at) return "the game's interest code is not the one this mod knows (a game update?)";
+
+        _code = method + at;
+
+        return null;
+    }
+
+    /// <returns>Where SettleDailySurvivalPoints's code starts: the first field of its il2cpp method info, or zero when the interop has no single method info for it.</returns>
+    private static IntPtr MethodStart()
+    {
+        var fields = typeof(SurvivalResultsManager).GetFields(BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public)
+            .Where(field => field.FieldType == typeof(IntPtr) && field.Name.StartsWith(MethodInfoField, StringComparison.Ordinal))
+            .ToList();
+
+        if (fields.Count != 1 || fields[0].GetValue(null) is not IntPtr methodInfo || methodInfo == IntPtr.Zero) return IntPtr.Zero;
+
+        return Marshal.ReadIntPtr(methodInfo);
     }
 
     private static void Write(IntPtr address, byte[] code, Action<string> log)

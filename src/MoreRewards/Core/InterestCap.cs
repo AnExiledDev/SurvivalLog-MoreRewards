@@ -7,11 +7,12 @@ namespace MoreRewards.Core;
 
 /// <summary>
 /// The most interest the game pays on survival points when a day ends. SurvivalResultsManager.SettleDailySurvivalPoints
-/// (rva 0x28b6a20 in game 1.1.20719) pays the points held times the interest rate, rounded down, at most 10, and at least 1 while any
-/// points are held. The 10 is in
-/// no table: it is two numbers in the game's code, <c>cmp eax,0Ah / jl +5 / mov eax,0Ah</c> at rva 0x28b7034, which keep
+/// pays the points held times the interest rate, rounded down, at most 10, and at least 1 while any points are held.
+/// The 10 is in no table: it is two numbers in the game's code, <c>cmp eax,0Ah / jl +5 / mov eax,0Ah</c>, which keep
 /// the smaller of the interest and 10. The mod writes its own cap over both numbers and leaves the rest of the rule,
 /// the rate (<see cref="InterestRate"/>) and the minimum of 1, as it is.
+/// The method moves with every game update while its code stays the same (0x601 bytes in, in 1.1.19611, 1.1.20151 and
+/// 1.1.20719), so the code is found by searching the method (<see cref="FindIn"/>), never at a fixed address.
 /// </summary>
 public static class InterestCap
 {
@@ -23,11 +24,14 @@ public static class InterestCap
     /// <summary>The compare holds a signed byte, so the cap must stay below 128.</summary>
     public const int MostCap = 100;
 
-    /// <summary>Where <see cref="GameCode"/> starts in GameAssembly.dll.</summary>
-    public const int GameCodeRva = 0x28b7021;
+    /// <summary>
+    /// How much of SettleDailySurvivalPoints is searched from its start: the method is 2992 bytes long in game 1.1.20719,
+    /// with <see cref="GameCode"/> 0x601 bytes in.
+    /// </summary>
+    public const int SearchBytes = 0x2000;
 
     /// <summary>
-    /// The game's code from <see cref="GameCodeRva"/>: the rounded-down interest into eax, the minimum of 1 for interest that rounds
+    /// The game's code with the cap: the rounded-down interest into eax, the minimum of 1 for interest that rounds
     /// to 0, then the cap. Checking all of it, not just the cap, tells this cap apart from the game's other caps of 10.
     /// </summary>
     public static readonly IReadOnlyList<byte> GameCode = new byte[]
@@ -50,8 +54,31 @@ public static class InterestCap
     private const int CompareCapAt = CapAt + 2;
     private const int MoveCapAt = CapAt + 6;
 
-    /// <returns>Whether a module of <paramref name="sizeOfImage"/> bytes holds all of <see cref="GameCode"/>, so reading it is safe.</returns>
-    public static bool FitsIn(int sizeOfImage) => GameCodeRva <= sizeOfImage - GameCode.Count;
+    /// <returns>
+    /// Whether a module of <paramref name="sizeOfImage"/> bytes holds the <see cref="SearchBytes"/> from a method at
+    /// <paramref name="methodRva"/>, so reading them is safe.
+    /// </returns>
+    public static bool FitsIn(long methodRva, int sizeOfImage) => methodRva >= 0 && methodRva <= sizeOfImage - SearchBytes;
+
+    /// <returns>
+    /// Where in <paramref name="body"/> the game's code starts, with the game's cap or one this mod wrote, or null when it
+    /// is there not exactly once: an update that changed the code, or put a second copy in reach, writes nothing.
+    /// </returns>
+    public static int? FindIn(ReadOnlySpan<byte> body)
+    {
+        int? found = null;
+
+        for (var at = 0; at <= body.Length - GameCode.Count; at++)
+        {
+            if (body[at] != GameCode[0] || CapIn(body.Slice(at, GameCode.Count).ToArray()) is null) continue;
+
+            if (found is not null) return null;
+
+            found = at;
+        }
+
+        return found;
+    }
 
     /// <returns>The cap to write, or null to keep the game's: 0 (or less) and the game's own 10 change nothing.</returns>
     public static int? From(int maxInterest) => maxInterest <= 0 || maxInterest == GameCap ? null : Math.Min(maxInterest, MostCap);

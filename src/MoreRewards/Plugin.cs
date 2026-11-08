@@ -16,7 +16,7 @@ namespace MoreRewards;
 public sealed class Plugin : BasePlugin
 {
     private const string Guid = "com.dev.survivallog.morerewards";
-    private const string Version = "0.7.1";
+    private const string Version = "0.7.2";
 
     public override void Load()
     {
@@ -191,7 +191,7 @@ public sealed class Plugin : BasePlugin
 
             if (cap == written) return;
 
-            if (!InterestCode.Apply(cap, log.Write)) return;
+            if (!InterestCode.Apply(cap, log)) return;
 
             written = cap;
             LiveScreen.Changed();

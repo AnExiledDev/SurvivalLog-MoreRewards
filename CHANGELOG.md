@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.7.2
+
+- MaxInterest keeps working after a game update that only moves the game's code around, so most updates no longer break it.
+- When a game update does break MaxInterest, Mod Manager now shows More Rewards in red, and the log says why.
+- Made for Survival Log 1.1.20719.
+
 ## 0.7.1
 
 - Fixed: MaxInterest did nothing on Survival Log 1.1.20719, so interest stopped at the game's 10 survival points a day whatever the setting.

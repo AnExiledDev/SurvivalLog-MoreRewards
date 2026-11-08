@@ -1,6 +1,7 @@
 using System;
 using System.Buffers.Binary;
 using System.Collections.Generic;
+using System.Linq;
 using MoreRewards.Core;
 using Xunit;
 
@@ -93,13 +94,59 @@ public class InterestCapTests
     }
 
     [Fact]
-    public void A_module_that_ends_before_the_interest_code_is_not_read()
+    public void A_method_is_searched_only_when_the_module_reaches_past_everything_searched()
     {
-        var end = InterestCap.GameCodeRva + InterestCap.GameCode.Count;
+        const int method = 0x28b6a20;
+        var end = method + InterestCap.SearchBytes;
 
-        Assert.True(InterestCap.FitsIn(end));
-        Assert.False(InterestCap.FitsIn(end - 1));
-        Assert.False(InterestCap.FitsIn(PeHeader.PageSize));
+        Assert.True(InterestCap.FitsIn(method, end));
+        Assert.False(InterestCap.FitsIn(method, end - 1));
+        Assert.False(InterestCap.FitsIn(-1, end));
+    }
+
+    [Fact]
+    public void The_code_is_found_wherever_the_method_holds_it()
+    {
+        Assert.Equal(0x601, InterestCap.FindIn(Method((0x601, InterestCap.GameCode))));
+        Assert.Equal(7, InterestCap.FindIn(Method((7, InterestCap.GameCode))));
+    }
+
+    [Fact]
+    public void A_cap_the_mod_wrote_is_found_again()
+    {
+        Assert.Equal(0x601, InterestCap.FindIn(Method((0x601, Rewritten(30)))));
+    }
+
+    [Fact]
+    public void A_method_without_the_code_or_with_it_twice_has_nothing_to_write()
+    {
+        var changed = Rewritten(20);
+
+        changed[3] ^= 0xff;
+
+        Assert.Null(InterestCap.FindIn(Method()));
+        Assert.Null(InterestCap.FindIn(Method((0x601, changed))));
+        Assert.Null(InterestCap.FindIn(Method((0x100, InterestCap.GameCode), (0x601, InterestCap.GameCode))));
+        Assert.Null(InterestCap.FindIn(Method((0x100, InterestCap.GameCode), (0x601, Rewritten(20)))));
+    }
+
+    [Fact]
+    public void Code_cut_off_at_the_end_of_what_is_searched_is_not_found()
+    {
+        var body = Method((InterestCap.SearchBytes - InterestCap.GameCode.Count, InterestCap.GameCode));
+
+        Assert.Equal(InterestCap.SearchBytes - InterestCap.GameCode.Count, InterestCap.FindIn(body));
+        Assert.Null(InterestCap.FindIn(body.AsSpan(0, body.Length - 1)));
+    }
+
+    /// <summary>A method body of int3 padding (the byte the game pads its code with) holding each code at its place.</summary>
+    private static byte[] Method(params (int At, IReadOnlyList<byte> Code)[] codes)
+    {
+        var body = Enumerable.Repeat((byte)0xCC, InterestCap.SearchBytes).ToArray();
+
+        foreach (var (at, code) in codes) code.ToArray().CopyTo(body, at);
+
+        return body;
     }
 
     [Theory]
