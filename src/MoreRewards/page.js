@@ -445,7 +445,7 @@
     return vueApp && vueApp._instance ? vueApp._instance.setupState : null;
   }
 
-  // One of the game page's own elements, found once and kept on its document so the next check does not search for
+  // One of the game page's elements, found once and kept on its document so the next check does not search for
   // it; searched again once the page has dropped it. (check() has already made sure the document is still shown.)
   function keptOnDoc(doc, key, selector) {
     var node = doc[key];
@@ -608,7 +608,7 @@
 
     if (!tip || tip.textContent === text) return;
 
-    // The game's own text is kept, so turning the mod off can put it back.
+    // The game's text is kept, so turning the mod off can put it back.
     if (tip.textContent !== tip.__slmrText) tip.__slmrGameText = tip.textContent;
 
     tip.textContent = text;
@@ -685,7 +685,7 @@
     }));
   }
 
-  // One capture listener per page document, so it hears a click before the game's own handlers. With more than one
+  // One capture listener per page document, so it hears a click before the game's handlers. With more than one
   // lock allowed the lock button is the mod's: the game would refuse a second lock. Leaving cashes out first when
   // cashing out is on; the game still gets the click.
   function listen(doc) {
@@ -1059,7 +1059,7 @@
 
   // Hands a panel to Exiled's Toolkit to be drawn at the player's UI size. Before the Toolkit's script has loaded it
   // waits in a list the Toolkit reads; without the Toolkit nothing happens. The mod's buttons on the game's cards and
-  // footer are not handed: they keep the game's size, like the game's own buttons around them.
+  // footer are not handed: they keep the game's size, like the game's buttons around them.
   function uiSize(node, options) {
     options = Object.assign({ mod: 'MoreRewards' }, options);
     var toolkit = window.ExiledUi;

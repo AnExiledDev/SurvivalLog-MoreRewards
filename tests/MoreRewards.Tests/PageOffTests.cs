@@ -3,7 +3,7 @@ using Xunit;
 namespace MoreRewards.Tests;
 
 /// <summary>
-/// The mod turned off while the game runs: the rewards page loses everything the mod drew on it, the game's own lock
+/// The mod turned off while the game runs: the rewards page loses everything the mod drew on it, the game's lock
 /// and tips are back, and turning it on again draws it all afresh.
 /// </summary>
 public class PageOffTests

@@ -20,7 +20,7 @@ public static class ShopPrice
     /// <summary>How far the shop's prices are above the card prices, in percent, after <paramref name="buys"/> buys.</summary>
     public static int Rise(ScreenSettings settings, int buys) => settings.ShopMarkup + settings.ShopIncrease * Math.Max(0, buys);
 
-    /// <summary>The game's own price for the card: the cost, less the discount the player has earned, rounded.</summary>
+    /// <summary>The game's price for the card: the cost, less the discount the player has earned, rounded.</summary>
     public static int CardCost(int cost, float discountRatio)
     {
         if (discountRatio <= 0f) return cost;

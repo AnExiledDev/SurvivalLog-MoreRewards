@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace MoreRewards.Core;
 
-/// <summary>What shapes an offer beyond the game's own draw.</summary>
+/// <summary>What shapes an offer beyond the game's draw.</summary>
 /// <param name="Count">How many cards the player asked for.</param>
 /// <param name="GamePin">The game's locked card, 0 for none, and <paramref name="GamePinSlot"/> its slot.</param>
 /// <param name="Extras">The mod's extra locks, all still worth keeping.</param>
@@ -14,7 +14,7 @@ public sealed record OfferAsk(int Count, int GamePin, int GamePinSlot, IReadOnly
 
 /// <summary>
 /// Builds the end-of-day offer from the game's: banned cards come out, the day's groups fill the gaps,
-/// and every locked card (the game's one and the mod's extras) sits in its own slot. The game's own pick is kept
+/// and every locked card (the game's one and the mod's extras) sits in its own slot. The game's pick is kept
 /// where it can be, so with nothing locked or passed on this is <see cref="OfferFill"/> alone.
 /// </summary>
 public static class OfferPlan

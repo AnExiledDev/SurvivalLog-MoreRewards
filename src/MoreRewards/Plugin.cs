@@ -28,7 +28,7 @@ public sealed class Plugin : BasePlugin
             "Turn the mod on or off. false leaves the end-of-day rewards, the refresh cost and the interest on survival points as the game has them, and takes the mod's buttons off the rewards screen. Applies at once.\n" +
             "开启或关闭本模组。设为 false 时，每天结束时的生存规划、刷新花费和生存点回息都保持游戏原样，生存规划界面上也不再显示本模组的按钮。立即生效。"));
         var optionCount = Config.Bind("Rewards", "OptionCount", RewardSettings.GameOptionCount, new ConfigDescription(
-            "How many rewards you can choose from at the end of a day and after each refresh. 3 is the game's own number, and you can set any number from 3 to 20.\n" +
+            "How many rewards you can choose from at the end of a day and after each refresh. 3 is the game's number, and you can set any number from 3 to 20.\n" +
             "每天结束时和每次刷新后可供选择的生存规划数量。3 是游戏原本的数量，可设为 3 到 20 之间的任意数。",
             new AcceptableValueRange<int>(RewardSettings.GameOptionCount, RewardSettings.MostOptions), "ModManager.ShowWhen=General.Enabled", WorldRule.Tag));
         var refreshCost = Config.Bind("Rewards", "RefreshCost", RewardSettings.AutomaticRefreshCost, new ConfigDescription(
@@ -88,7 +88,7 @@ public sealed class Plugin : BasePlugin
 
             if (!on) page?.Off();
 
-            if (!isLoading) log.Write(on ? "turned on" : "turned off: the game's own rewards, refresh cost and interest, and none of the mod's buttons");
+            if (!isLoading) log.Write(on ? "turned on" : "turned off: the game's rewards, refresh cost and interest, and none of the mod's buttons");
         });
 
         isLoading = false;
@@ -109,7 +109,7 @@ public sealed class Plugin : BasePlugin
             }
         });
 
-    /// <summary>Off, the game's own three rewards and refresh cost, and the game's own screen.</summary>
+    /// <summary>Off, the game's three rewards and refresh cost, and the game's screen.</summary>
     private static void WatchRewards(ConfigEntry<bool> enabled, ConfigEntry<int> optionCount, ConfigEntry<int> refreshCost, ScreenConfig screen, RewardsLog log)
     {
         RewardSettings SettingsNow() => enabled.Value ? RewardSettings.From(optionCount.Value, refreshCost.Value) : RewardSettings.Game;
@@ -176,7 +176,7 @@ public sealed class Plugin : BasePlugin
     }
 
     /// <summary>
-    /// Writes MaxInterest into the game's code now and after each change, and puts the game's own cap back when it, or
+    /// Writes MaxInterest into the game's code now and after each change, and puts the game's cap back when it, or
     /// the mod, is turned off. The code is only written once the cap differs from the game's, so with MaxInterest or
     /// the mod off from the start the game's code is never touched.
     /// </summary>

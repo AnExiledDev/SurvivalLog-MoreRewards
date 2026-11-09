@@ -5,7 +5,7 @@ public readonly record struct CostWrite(int Cost, int GameCost, bool IsPutBack);
 
 /// <summary>
 /// Keeps the game's refresh cost at the mod's. The game reads its cost from a field it fills once from its settings
-/// and then trusts, so the mod writes its cost there. The first cost seen is the game's own and every target is worked
+/// and then trusts, so the mod writes its cost there. The first cost seen is the game's and every target is worked
 /// out from it; a value something else writes later is put back, never taken as the game's cost, so the cost cannot
 /// creep up with each check.
 /// </summary>
@@ -21,7 +21,7 @@ public sealed class CostKeeper
         _settings = settings;
     }
 
-    /// <summary>A change of the settings: the next check writes the cost they give, worked out from the game's own.</summary>
+    /// <summary>A change of the settings: the next check writes the cost they give, worked out from the game's.</summary>
     public void Use(RewardSettings settings)
     {
         _settings = settings;

@@ -6,13 +6,13 @@ namespace MoreRewards.Core;
 /// <summary>What a click on a card's lock does.</summary>
 public enum LockMove
 {
-    /// <summary>Unlock the game's own locked card.</summary>
+    /// <summary>Unlock the game's locked card.</summary>
     UnpinGame,
 
     /// <summary>Unlock one of the mod's extra locks.</summary>
     RemoveExtra,
 
-    /// <summary>Lock the card with the game's own lock, which is free.</summary>
+    /// <summary>Lock the card with the game's lock, which is free.</summary>
     PinGame,
 
     /// <summary>Lock the card with one of the mod's extra locks.</summary>

@@ -18,7 +18,7 @@ public static class InterestCap
 {
     public const int GameCap = 10;
 
-    /// <summary>The game's own cap: the mod changes no balance until a cap is set.</summary>
+    /// <summary>The game's cap: the mod changes no balance until a cap is set.</summary>
     public const int DefaultCap = 0;
 
     /// <summary>The compare holds a signed byte, so the cap must stay below 128.</summary>
@@ -83,13 +83,13 @@ public static class InterestCap
         return found;
     }
 
-    /// <returns>The cap to write, or null to keep the game's: 0 (or less) and the game's own 10 change nothing.</returns>
+    /// <returns>The cap to write, or null to keep the game's: 0 (or less) and the game's 10 change nothing.</returns>
     public static int? From(int maxInterest) => maxInterest <= 0 || maxInterest == GameCap ? null : Math.Min(maxInterest, MostCap);
 
     /// <returns>
     /// <paramref name="code"/> with <paramref name="cap"/> in place of the cap it holds (the game's 10, or a cap this
     /// mod wrote before), or null when the code is not the game's (an update moved or changed it), so nothing is
-    /// written. A cap of <see cref="GameCap"/> puts the game's own code back.
+    /// written. A cap of <see cref="GameCap"/> puts the game's code back.
     /// </returns>
     public static byte[]? Rewrite(IReadOnlyList<byte> code, int cap)
     {

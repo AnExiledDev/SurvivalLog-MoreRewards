@@ -17,7 +17,7 @@ public enum Language
 /// <param name="OnlyFor">The characters it is for, by name, when it is not for the one being played; empty otherwise.</param>
 /// <param name="MissingNeeds">The rewards it needs first that the player does not have, by name.</param>
 /// <param name="FromDay">The first day it can be offered, 0 for any day.</param>
-/// <param name="IsValid">The game's own answer, which also covers conditions the mod does not spell out.</param>
+/// <param name="IsValid">The game's answer, which also covers conditions the mod does not spell out.</param>
 public sealed record RewardFacts(
     bool IsAvailable,
     bool IsBanned,

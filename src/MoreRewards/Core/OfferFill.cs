@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace MoreRewards.Core;
 
-/// <summary>One of the day's reward groups and how many of the game's own rewards it gives.</summary>
+/// <summary>One of the day's reward groups and how many of the game's rewards it gives.</summary>
 public readonly record struct RewardGroup(int Id, int Amount);
 
 /// <summary>

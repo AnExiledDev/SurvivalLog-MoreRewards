@@ -11,7 +11,7 @@ Out of the box the mod changes nothing about the game's balance: you get the gam
 [size=5]Main features[/size]
 [list]
 [*][b]More rewards to choose from[/b]: set how many rewards the end of the day offers, from the game's 3 up to 20. A refresh draws that many too.[/*]
-[*][b]The game's own rewards[/b]: the extra rewards come from the same groups the game picks that day's rewards from, never repeat a reward already on offer, skip the rewards the game has on cooldown just as its own picks do, and are bought like any other.[/*]
+[*][b]The game's rewards[/b]: the extra rewards come from the same groups the game picks that day's rewards from, never repeat a reward already on offer, skip the rewards the game has on cooldown just as its own picks do, and are bought like any other.[/*]
 [*][b]A fair refresh cost[/b]: by default the cost goes up by 1 survival point at 4, 6, 8 rewards and so on (3 rewards cost 2, 4 or 5 cost 3, 6 or 7 cost 4, 10 cost 6). Or make every refresh free, or set a fixed cost of your own.[/*]
 [*][b]More interest[/b]: when a day ends, the game pays interest on the survival points you hold, 5% of them, at most 10. Set your own rate and limit up to 100 (a rate of 10% and a limit of 20 make saving up to 200 points pay off), or keep the game's, which is the default. The Savings Plan reward keeps paying its own bonus on top.[/*]
 [*][b]Lock more than one reward[/b]: set MaxLocked and lock up to 1 less than the number of rewards. Locked rewards stay through a refresh and are still there the next day.[/*]
@@ -26,7 +26,7 @@ Out of the box the mod changes nothing about the game's balance: you get the gam
 [*][b]Room for every card[/b]: up to 5 rewards sit in one row. More are spread over even rows with smaller cards, and the area scrolls if they still do not fit.[/*]
 [*][b]Rewards stay as they are until you ask[/b]: with the default settings you get the game's 3 rewards and its own refresh cost.[/*]
 [/list]
-No new keys. The new buttons are Ban on each card, and Shop, Bans and Settings in the footer. Settings is always there; the others are switched by their settings. More Rewards does not edit game files; extra locks, bans and shop purchases are saved with the run. Your save keeps the game's own interest rate. You can remove it at any time.
+No new keys. The new buttons are Ban on each card, and Shop, Bans and Settings in the footer. Settings is always there; the others are switched by their settings. More Rewards does not edit game files; extra locks, bans and shop purchases are saved with the run. Your save keeps the game's interest rate. You can remove it at any time.
 
 Works in English and Chinese.
 

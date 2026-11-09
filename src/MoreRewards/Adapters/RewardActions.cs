@@ -17,7 +17,7 @@ internal readonly record struct InterestTerms(float Rate, int Cap);
 /// Carries out what the rewards page asks for (locks, bans and the ban list, the shop, the settings, cashing out) on the next frame,
 /// and tells the page what it needs to draw the mod's buttons whenever the screen's card list is rebuilt or the page
 /// asks for it. Every action checks the screen still shows what the page saw, so a click that arrives late does nothing.
-/// The game's own lock is still the game's: the mod moves it with the game's own pin call, and keeps only the extras.
+/// The game's lock is still the game's: the mod moves it with the game's pin call, and keeps only the extras.
 /// A frame with no message and nothing owed to the page reads nothing from the game (<see cref="SetupWatch"/>), and the
 /// shop's list is built a slice a frame, then sent in one call.
 /// </summary>
@@ -346,7 +346,7 @@ internal sealed class RewardActions
     }
 
     /// <summary>
-    /// The shop takes its extra (markup, rise, early) first, then buys through the game's own buy, which takes the
+    /// The shop takes its extra (markup, rise, early) first, then buys through the game's buy, which takes the
     /// card's price and applies the reward. A buy the game turns down gets the extra back.
     /// </summary>
     private void ShopBuy(int id)

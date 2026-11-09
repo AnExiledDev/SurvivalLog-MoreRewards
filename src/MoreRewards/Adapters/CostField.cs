@@ -75,7 +75,7 @@ internal sealed class CostField
     {
         if (!write.IsPutBack)
         {
-            _log($"refresh cost is now {write.Cost} survival points (the game's own is {write.GameCost})");
+            _log($"refresh cost is now {write.Cost} survival points (the game's is {write.GameCost})");
 
             return;
         }

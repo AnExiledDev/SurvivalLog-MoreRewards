@@ -14,18 +14,18 @@ With the defaults you get the game's 3 rewards, its own refresh cost and its own
 
 | Setting | Default | What it does |
 | --- | --- | --- |
-| `OptionCount` | `3` | How many rewards you can choose from at the end of a day and after each refresh. `3` is the game's own number, and you can set any number from 3 to 20. |
+| `OptionCount` | `3` | How many rewards you can choose from at the end of a day and after each refresh. `3` is the game's number, and you can set any number from 3 to 20. |
 | `RefreshCost` | `-1` | How many survival points a refresh costs. `-1` is automatic: the cost goes up with `OptionCount` (see below). `0` makes every refresh free, and any number from 1 to 99 is the cost of every refresh, whatever `OptionCount` is. |
 
 ### The automatic refresh cost
 
-With `RefreshCost` at `-1`, a refresh costs the game's own cost with 3 rewards, going up by 1 at 4, 6, 8 rewards and so on. In numbers: the game's cost, minus 1, plus half of `OptionCount` rounded down.
+With `RefreshCost` at `-1`, a refresh costs the game's cost with 3 rewards, going up by 1 at 4, 6, 8 rewards and so on. In numbers: the game's cost, minus 1, plus half of `OptionCount` rounded down.
 
 With the game's usual cost of 2 survival points:
 
 | `OptionCount` | Refresh cost |
 | --- | --- |
-| 3 | 2 (the game's own) |
+| 3 | 2 (the game's) |
 | 4 | 3 |
 | 5 | 3 |
 | 6 | 4 |
@@ -65,13 +65,13 @@ The Savings Plan reward does not change the interest rate. It pays its own bonus
 
 The tip on the end-of-day page still says the rate is 5% and the limit is 10. The interest you are paid follows `InterestRate` and `MaxInterest`.
 
-The mod sets the rate a moment after a game is loaded, long before the day ends. Your save keeps the game's own rate, so without the mod the interest is back to 5%.
+The mod sets the rate a moment after a game is loaded, long before the day ends. Your save keeps the game's rate, so without the mod the interest is back to 5%.
 
 ## Locks
 
 | Setting | Default | What it does |
 | --- | --- | --- |
-| `MaxLocked` | `1` | How many rewards you can lock at once. Locked rewards stay on the screen after a refresh and are still there the next day. `1` is the game's own number; it can go up to 1 less than `OptionCount`, so a refresh always has a card to change. |
+| `MaxLocked` | `1` | How many rewards you can lock at once. Locked rewards stay on the screen after a refresh and are still there the next day. `1` is the game's number; it can go up to 1 less than `OptionCount`, so a refresh always has a card to change. |
 
 With `MaxLocked` above 1, the footer shows how many locks are in use (for example 2/3 next to a lock), and the lock button on a card adds or removes a lock. When every lock is in use, unlock a card first.
 

@@ -27,7 +27,7 @@ internal static class InterestCode
     /// <summary>Where the cap code is, once found; the game's code does not move while it runs.</summary>
     private static IntPtr _code;
 
-    /// <param name="cap">The cap to write; <see cref="InterestCap.GameCap"/> puts the game's own back.</param>
+    /// <param name="cap">The cap to write; <see cref="InterestCap.GameCap"/> puts the game's back.</param>
     /// <returns>Whether the code now holds <paramref name="cap"/>.</returns>
     public static bool Apply(int cap, RewardsLog log)
     {
@@ -54,7 +54,7 @@ internal static class InterestCode
             }
 
             Write(_code, rewritten, log.Write);
-            log.Write(cap == InterestCap.GameCap ? $"interest is back to the game's cap of {cap}" : $"interest is now up to {cap} survival points a day (the game's own cap is {InterestCap.GameCap})");
+            log.Write(cap == InterestCap.GameCap ? $"interest is back to the game's cap of {cap}" : $"interest is now up to {cap} survival points a day (the game's cap is {InterestCap.GameCap})");
 
             return true;
         }

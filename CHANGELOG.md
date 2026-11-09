@@ -2,7 +2,7 @@
 
 ## 0.7.4
 
-- `InterestRate` and `MaxInterest` now default to 0, the game's own 5% and limit of 10, so the mod changes no balance until you set them. A value you already saved is kept.
+- `InterestRate` and `MaxInterest` now default to 0, the game's 5% and limit of 10, so the mod changes no balance until you set them. A value you already saved is kept.
 - Made for Survival Log 1.1.20719.
 
 ## 0.7.3
@@ -24,7 +24,7 @@
 ## 0.7.0
 
 - Each world can keep its own reward settings: `OptionCount`, `RefreshCost`, `InterestRate`, `MaxInterest`, `MaxLocked`, `NoRepeatOnRefresh`, `BanButton`, `BanCost`, `BanWholeLine`, `UnbanRefund`, `CashOut`, `ShopEnabled`, `ShopMarkup`, `ShopIncrease`, `ShopReset`, `ShopPerDay` and `ShopLocked`. With Exiled's Toolkit 0.17.0 or newer, pick them for a new world in Customizable Difficulty, or change them for the world you are playing on the Mod Manager's Mods screen. `Enabled`, `Labels`, `ShopUnavailable` and `UiScale` stay the same for every world.
-- `Enabled` now takes effect at once. Turned off, the game's own rewards, refresh cost and interest come back, and the mod's buttons, labels and lock count leave the rewards screen; turned on again, they come back.
+- `Enabled` now takes effect at once. Turned off, the game's rewards, refresh cost and interest come back, and the mod's buttons, labels and lock count leave the rewards screen; turned on again, they come back.
 - Made for Survival Log 1.1.20151.
 
 ## 0.6.3
@@ -51,7 +51,7 @@
 ## 0.5.3
 
 - The shop, the ban list, the settings and the pop-up messages can be drawn bigger or smaller with the UI size setting of Exiled's Toolkit 0.10.0 or newer. A change shows at once, and each window only grows as far as it still fits on the screen.
-- The buttons and labels on the cards and in the footer keep the game's size, like the game's own buttons around them.
+- The buttons and labels on the cards and in the footer keep the game's size, like the game's buttons around them.
 - Made for Survival Log 1.1.19611.
 
 ## 0.5.2

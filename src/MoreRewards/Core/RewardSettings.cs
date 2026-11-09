@@ -29,12 +29,12 @@ public sealed record RewardSettings
     /// <summary>Null lets the cost follow the number of rewards; 0 makes every refresh free; anything above is the cost of every refresh.</summary>
     public int? FixedRefreshCost { get; }
 
-    /// <summary>The game's own three rewards and refresh cost, what the mod keeps while it is off.</summary>
+    /// <summary>The game's three rewards and refresh cost, what the mod keeps while it is off.</summary>
     public static readonly RewardSettings Game = From(GameOptionCount, AutomaticRefreshCost);
 
     public bool AddsOptions => OptionCount > GameOptionCount;
 
-    /// <summary>The automatic cost at three rewards is the game's own, so only a fixed cost or extra rewards change it.</summary>
+    /// <summary>The automatic cost at three rewards is the game's, so only a fixed cost or extra rewards change it.</summary>
     public bool ChangesCost => FixedRefreshCost != null || AddsOptions;
 
     /// <param name="refreshCost">Below 0 is automatic, as <see cref="AutomaticRefreshCost"/> is.</param>

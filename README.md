@@ -9,7 +9,7 @@ At the end of each day, Survival Log offers 3 rewards you can buy with survival 
 ## Features
 
 - **More rewards to choose from**: set how many rewards the end of the day offers, from the game's 3 up to 20. A refresh draws that many too.
-- **The game's own rewards**: the extra rewards come from the same groups the game picks that day's rewards from, never repeat a reward already on offer, skip the rewards the game has on cooldown just as its own picks do, and are bought like any other.
+- **The game's rewards**: the extra rewards come from the same groups the game picks that day's rewards from, never repeat a reward already on offer, skip the rewards the game has on cooldown just as its own picks do, and are bought like any other.
 - **A fair refresh cost**: by default the cost goes up by 1 survival point at 4, 6, 8 rewards and so on (3 rewards cost 2, 4 or 5 cost 3, 6 or 7 cost 4, 10 cost 6). Or make every refresh free, or set a fixed cost of your own.
 - **More interest**: when a day ends, the game pays interest on the survival points you hold, 5% of them, at most 10. Set your own rate and limit up to 100 (a rate of 10% and a limit of 20 make saving up to 200 points pay off), or keep the game's, which is the default. The Savings Plan reward keeps paying its own bonus on top.
 - **Lock more than one reward**: set `MaxLocked` and lock up to 1 less than the number of rewards. Locked rewards stay through a refresh and are still there the next day. The footer shows how many locks are in use.
@@ -30,7 +30,7 @@ There are no new keys. The new buttons are 「Ban」 on each card, and 「Shop�
 
 Works in English and Chinese. The buttons and labels the mod adds follow the game's language, and the settings file describes every setting in English and Simplified Chinese. The log is in English.
 
-More Rewards does not edit game files. Extra locks, bans and shop purchases are kept in the run's own counters, so they are saved with the run and start over with each loop; without the mod the game ignores them. Your save keeps the game's own interest rate. You can remove it at any time.
+More Rewards does not edit game files. Extra locks, bans and shop purchases are kept in the run's own counters, so they are saved with the run and start over with each loop; without the mod the game ignores them. Your save keeps the game's interest rate. You can remove it at any time.
 
 ## Known issues and limits
 

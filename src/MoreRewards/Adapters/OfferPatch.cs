@@ -20,15 +20,15 @@ namespace MoreRewards.Adapters;
 /// no groups gets its fixed SpecifiedPlanID list instead, which only gains the extra locks. The hooks run after the
 /// game's pick and hand it to <see cref="OfferPlan"/>, which takes out the rewards the player passed on, puts the extra
 /// locks back in their slots and draws the rest from the same groups the same way. Buying does not check the offer
-/// list (SurvivalResultsManager.OnBuySurvivalPlan), so an extra reward is bought like the game's own.
+/// list (SurvivalResultsManager.OnBuySurvivalPlan), so an extra reward is bought like the game's.
 /// Both overloads end in a cooldownIds collection (rewards shown recently, which the game keeps out); the extras pass it
 /// on to GetRandomIdsFromGroup so they skip the same rewards. The last two ints are the game's pinned reward and its
 /// slot. Static because Harmony hooks are.
 /// </summary>
 internal static class OfferPatch
 {
-    private const string DoingDay = "shaping the end-of-day rewards, the game's own rewards stay";
-    private const string DoingRefresh = "shaping the refresh rewards, the game's own rewards stay";
+    private const string DoingDay = "shaping the end-of-day rewards, the game's rewards stay";
+    private const string DoingRefresh = "shaping the refresh rewards, the game's rewards stay";
 
     private static readonly Type[] DayParameters = { typeof(int), typeof(Il2CppIntSet), typeof(int), typeof(int) };
     private static readonly Type[] RefreshParameters = { typeof(int), typeof(Il2CppInts), typeof(Il2CppInts), typeof(Il2CppIntSet), typeof(int), typeof(int) };
@@ -135,7 +135,7 @@ internal static class OfferPatch
             ListPatch.KeepScreen(keep);
             Replace(__result, gameOffer, offer, $"day {day} refresh");
 
-            // The game's own message when a refresh with its lock held finds nothing new.
+            // The game's message when a refresh with its lock held finds nothing new.
             if (keep) Ac_PopText_AddPopText.SendAction(GameKey.Text_LogicAdapter_1);
         }
         catch (Exception ex)

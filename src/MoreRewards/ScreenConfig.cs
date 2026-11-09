@@ -31,7 +31,7 @@ internal sealed class ScreenConfig
     {
         _optionCount = optionCount;
         _maxLocked = config.Bind("Locks", "MaxLocked", ScreenSettings.GameMaxLocked, new ConfigDescription(
-            "How many rewards you can lock at once, so they stay on the screen after a refresh and are still there the next day. 1 is the game's own number; it can go up to 1 less than OptionCount, so a refresh always has a card to change.\n" +
+            "How many rewards you can lock at once, so they stay on the screen after a refresh and are still there the next day. 1 is the game's number; it can go up to 1 less than OptionCount, so a refresh always has a card to change.\n" +
             "可同时锁定的生存规划数量，锁定的规划在刷新后和第二天仍会保留。1 是游戏原本的数量；最多可设为 OptionCount 减 1，保证每次刷新至少有一张卡会变。",
             new AcceptableValueRange<int>(ScreenSettings.GameMaxLocked, RewardSettings.MostOptions - 1), Shown, WorldRule.Tag));
         _noRepeatOnRefresh = config.Bind("Cards", "NoRepeatOnRefresh", false, new ConfigDescription(

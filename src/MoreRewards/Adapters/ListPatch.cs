@@ -75,7 +75,7 @@ internal static class ListPatch
             State = __0;
             Version++;
 
-            // Off, the game's own lock is the only one shown; the extras stay in the run's book for when it is back on.
+            // Off, the game's lock is the only one shown; the extras stay in the run's book for when it is back on.
             if (!LiveScreen.IsOn) return;
 
             var book = LiveScreen.Book;

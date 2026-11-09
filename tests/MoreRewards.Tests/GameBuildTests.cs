@@ -11,7 +11,7 @@ using Xunit;
 namespace MoreRewards.Tests;
 
 /// <summary>
-/// Checks the game build the mods are built against still holds the code the mod rewrites. It reads the game's own
+/// Checks the game build the mods are built against still holds the code the mod rewrites. It reads the game's
 /// GameAssembly.dll from game-ref (copied by tools/refresh-game-ref.sh), so a game update that changes the code fails
 /// here as soon as game-ref is refreshed, instead of in a player's game.
 /// </summary>
