@@ -13,8 +13,8 @@ public static class InterestRate
 {
     public const int GameRate = 5;
 
-    /// <summary>Double the game's.</summary>
-    public const int DefaultRate = 10;
+    /// <summary>The game's own rate: the mod changes no balance until a rate is set.</summary>
+    public const int DefaultRate = 0;
 
     /// <summary>Interest equal to all the points held; the attribute itself stops at 200% (Config_AttributeStandard row 403).</summary>
     public const int MostRate = 100;

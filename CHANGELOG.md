@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.7.4
+
+- `InterestRate` and `MaxInterest` now default to 0, the game's own 5% and limit of 10, so the mod changes no balance until you set them. A value you already saved is kept.
+- Made for Survival Log 1.1.20719.
+
 ## 0.7.3
 
 - Fixed: without Exiled's Toolkit, turning `Enabled` off from the rewards screen's Settings left the interest line and a Settings button that did nothing on that screen and the next ones.

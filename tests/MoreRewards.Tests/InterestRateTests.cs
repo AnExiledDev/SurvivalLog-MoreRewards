@@ -22,6 +22,14 @@ public class InterestRateTests
     }
 
     [Fact]
+    public void The_default_rate_and_cap_keep_the_game_balance()
+    {
+        // Installing the mod must change no balance until the player picks a rate and a cap.
+        Assert.Null(InterestRate.From(InterestRate.DefaultRate));
+        Assert.Null(InterestCap.From(InterestCap.DefaultCap));
+    }
+
+    [Fact]
     public void Ten_percent_is_a_hundred_of_the_game_units()
     {
         Assert.Equal(100, InterestRate.Units(10, GameScaling));

@@ -18,8 +18,8 @@ public static class InterestCap
 {
     public const int GameCap = 10;
 
-    /// <summary>Double the game's: at the default rate of 10% the cap is reached at 200 points held instead of 100.</summary>
-    public const int DefaultCap = 20;
+    /// <summary>The game's own cap: the mod changes no balance until a cap is set.</summary>
+    public const int DefaultCap = 0;
 
     /// <summary>The compare holds a signed byte, so the cap must stay below 128.</summary>
     public const int MostCap = 100;

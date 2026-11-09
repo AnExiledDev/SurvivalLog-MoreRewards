@@ -2,14 +2,16 @@
 
 Choose from more rewards at the end of the day, lock more than one, ban the ones you do not want, and earn more interest on your survival points. An optional shop lets you buy any reward you can get.
 
-At the end of each day, Survival Log offers 3 rewards you can buy with survival points, and a refresh for 2 points draws 3 new ones. More Rewards lets you raise that to any number up to 20, from the same reward pool the game draws from. The refresh cost goes up with the number of rewards on its own, or you can make it free or set any cost you like. The interest your survival points earn each day goes from 5% to 10%, and can go up to 20 instead of 10.
+Out of the box the mod changes nothing about the game's balance: you get the game's 3 rewards, its refresh cost and its interest. Set `OptionCount` for more rewards, and `InterestRate` and `MaxInterest` for more interest.
+
+At the end of each day, Survival Log offers 3 rewards you can buy with survival points, and a refresh for 2 points draws 3 new ones. More Rewards lets you raise that to any number up to 20, from the same reward pool the game draws from. The refresh cost goes up with the number of rewards on its own, or you can make it free or set any cost you like. You can also raise the interest your survival points earn each day, and the most it can pay, above the game's 5% and 10.
 
 ## Features
 
 - **More rewards to choose from**: set how many rewards the end of the day offers, from the game's 3 up to 20. A refresh draws that many too.
 - **The game's own rewards**: the extra rewards come from the same groups the game picks that day's rewards from, never repeat a reward already on offer, skip the rewards the game has on cooldown just as its own picks do, and are bought like any other.
 - **A fair refresh cost**: by default the cost goes up by 1 survival point at 4, 6, 8 rewards and so on (3 rewards cost 2, 4 or 5 cost 3, 6 or 7 cost 4, 10 cost 6). Or make every refresh free, or set a fixed cost of your own.
-- **More interest**: when a day ends, the game pays interest on the survival points you hold, 5% of them, at most 10. The mod raises the rate to 10% and the limit to 20, so saving up to 200 points pays off. Set your own rate and limit up to 100, or keep the game's. The Savings Plan reward keeps paying its own bonus on top.
+- **More interest**: when a day ends, the game pays interest on the survival points you hold, 5% of them, at most 10. Set your own rate and limit up to 100 (a rate of 10% and a limit of 20 make saving up to 200 points pay off), or keep the game's, which is the default. The Savings Plan reward keeps paying its own bonus on top.
 - **Lock more than one reward**: set `MaxLocked` and lock up to 1 less than the number of rewards. Locked rewards stay through a refresh and are still there the next day. The footer shows how many locks are in use.
 - **Ban**: a 「Ban」 button swaps a card for another and keeps it away for the rest of the run, for a few survival points (2 by default), and can ban every level of the same reward.
 - **The ban list**: a 「Bans」 button in the footer lists this run's bans. Removing one lets its rewards come back and gives back half of what the ban cost (configurable).
@@ -55,7 +57,7 @@ More Rewards does not edit game files. Extra locks, bans and shop purchases are 
 3. Download `MoreRewards-x.y.z.zip` from the [latest release](https://github.com/AnExiledDev/SurvivalLog-MoreRewards/releases/latest) or from [Nexus Mods](https://www.nexusmods.com/survivallog/mods/49).
 4. Extract the zip into the game folder (the folder with `SurvivalLog.exe`). It holds a `BepInEx` folder, so the DLL lands in the right place. When asked, merge the folders. The result should be:
    `C:\Program Files (x86)\Steam\steamapps\common\Survival Log\BepInEx\plugins\MoreRewards.dll`
-5. Start the game once, quit, and set `OptionCount` in the settings file (see [Configuration](#configuration)). Until you do, you get the game's 3 rewards; the higher interest rate and limit apply right away.
+5. Start the game once, quit, and set `OptionCount` in the settings file (see [Configuration](#configuration)). Until you do, you get the game's 3 rewards and its own interest.
 
 ## Uninstall
 
@@ -69,7 +71,7 @@ Settings live in `BepInEx\config\com.dev.survivallog.morerewards.cfg`, created t
 
 Built against BepInEx `6.0.0-be.788`.
 
-Check `BepInEx\LogOutput.log` for a line starting `===== More Rewards 0.7.3 started`. It says whether the mod is on and the interest limit; turning `Enabled` off or on in game writes `turned off` or `turned on`. The lines after it say what took effect: the interest limit (`interest is now up to 20 survival points a day`), how many rewards and the refresh cost (`10 rewards, refresh cost automatic`), the interest rate, and `hooked the end-of-day rewards`. Changing one of these on the Mods screen writes its line again. Once a game is loaded, a line says `interest rate is now 10%`.
+Check `BepInEx\LogOutput.log` for a line starting `===== More Rewards 0.7.4 started`. It says whether the mod is on and the interest limit; turning `Enabled` off or on in game writes `turned off` or `turned on`. The lines after it say what took effect: the interest limit (`interest is now up to 20 survival points a day`), how many rewards and the refresh cost (`10 rewards, refresh cost automatic`), the interest rate, and `hooked the end-of-day rewards`. Changing one of these on the Mods screen writes its line again. Once a game is loaded, a line says `interest rate is now 10%`.
 
 Each time a day ends or you refresh, the log gets a line saying how many rewards the game offered and how many the mod added. Shortly after the game starts, a line says what a refresh costs now. The reward lines are written when `OptionCount` is above 3 or a lock or ban changed the offer, and the cost line only when the mod changes the cost.
 

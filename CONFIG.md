@@ -2,7 +2,7 @@
 
 Settings live in `BepInEx\config\com.dev.survivallog.morerewards.cfg`, created the first time the game starts with the mod. Change them in game with the 「Settings」 button on the rewards screen or on the Mod Manager's Mods screen, or edit the file while the game is closed. Changed in game, every setting takes effect at once. With Exiled's Toolkit 0.17.0 or newer, each world can keep its own reward settings: every setting in Rewards, Interest, Locks, Cards and Shop except `Labels` and `ShopUnavailable`. Pick them for a new world in Customizable Difficulty, or, while you play, change them for that world alone on the Mods screen. The rewards screen's 「Settings」 changes a setting the world has its own value for in that world alone, and any other for every world. `Enabled`, `Labels`, `ShopUnavailable` and `UiScale` stay the same for every world. Delete the file to get the defaults back. The file describes each setting in English and Simplified Chinese. Without Exiled's Toolkit installed, changes made on the Mods screen take effect at the next game start instead; changes made on the rewards screen still take effect at once.
 
-With the defaults you get the game's 3 rewards and its own refresh cost, the interest rate on your survival points goes from 5% to 10%, and the most interest they earn in a day goes from 10 to 20. Raise `OptionCount` to get more rewards to choose from. Set `InterestRate` and `MaxInterest` to `0` to keep the game's interest as it is. The 「Ban」 button and the labels are on by default; the shop is off until you turn it on.
+With the defaults you get the game's 3 rewards, its own refresh cost and its own interest: the mod changes nothing about the game's balance until you change a setting. Raise `OptionCount` to get more rewards to choose from, and set `InterestRate` and `MaxInterest` to earn more interest. The 「Ban」 button and the labels are on by default; the shop is off until you turn it on.
 
 ## General
 
@@ -45,21 +45,21 @@ A refresh that finds no new rewards at all costs nothing, whatever `RefreshCost`
 
 | Setting | Default | What it does |
 | --- | --- | --- |
-| `InterestRate` | `10` | The interest rate, in percent, on the survival points you hold when a day ends. `0` keeps the game's rate of 5%, and any number from 1 to 100 sets a new rate. The interest still stops at `MaxInterest`. |
-| `MaxInterest` | `20` | The most interest your survival points can earn when a day ends. `0` keeps the game's limit of 10, and any number from 1 to 100 sets a new limit. |
+| `InterestRate` | `0` | The interest rate, in percent, on the survival points you hold when a day ends. `0` keeps the game's rate of 5%, and any number from 1 to 100 sets a new rate. The interest still stops at `MaxInterest`. |
+| `MaxInterest` | `0` | The most interest your survival points can earn when a day ends. `0` keeps the game's limit of 10, and any number from 1 to 100 sets a new limit. |
 
 ### How interest works
 
 When a day ends, the game pays interest on the survival points you hold: the points times the interest rate, rounded down, at least 1 while you hold any points, and at most the limit. The game's rate is 5% and its limit is 10; `InterestRate` and `MaxInterest` change them. `InterestRate` is the whole rate for every character: it replaces the game's 5% and is not added to it. The interest shows on the end-of-day page as its own card.
 
-| Points held | Game (5%, limit 10) | `InterestRate` 10, `MaxInterest` 0 | Defaults (10%, limit 20) |
+| Points held | Game and defaults (5%, limit 10) | `InterestRate` 10, `MaxInterest` 0 | `InterestRate` 10, `MaxInterest` 20 |
 | --- | --- | --- | --- |
 | 50 | 2 | 5 | 5 |
 | 100 | 5 | 10 | 10 |
 | 150 | 7 | 10 | 15 |
 | 200 or more | 10 | 10 | 20 |
 
-So with the defaults, holding more than 200 points earns no more interest. Raise `MaxInterest` to let it grow further.
+So at 10% and a limit of 20, holding more than 200 points earns no more interest. Raise `MaxInterest` to let it grow further.
 
 The Savings Plan reward does not change the interest rate. It pays its own bonus on the same card: on a day you earned survival points, 5% of them, rounded down, at least 1 and at most 10. Its limit of 10 is the reward's own, and `MaxInterest` does not change it.
 

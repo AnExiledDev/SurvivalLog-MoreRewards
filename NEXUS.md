@@ -1,17 +1,19 @@
 Name: More Rewards
-Summary: Choose from up to 20 rewards at the end of each day instead of 3, lock several, and ban the cards you do not want, with a list to undo bans. Earn 10% daily interest on survival points instead of 5%, change every setting on the rewards screen, and turn on an optional shop to search and buy any reward you can get. Cards shrink into rows so all fit.
+Summary: Choose from up to 20 rewards at the end of each day instead of 3, lock several, and ban the cards you do not want, with a list to undo bans. Raise the daily interest on survival points, change every setting on the rewards screen, and turn on an optional shop to search and buy any reward you can get. Cards shrink into rows so all fit.
 
 Description (BBCode):
 [center][img]https://sldb.core-directive.com/media/save/3-remove-with-care.png[/img][/center]
 
-At the end of each day, Survival Log offers 3 rewards you can buy with survival points, and a refresh for 2 points draws 3 new ones. More Rewards lets you raise that to any number up to 20, from the same reward pool the game draws from, lock several, ban the ones you do not want, and open an optional shop. The refresh cost goes up with the number of rewards on its own, or you can make it free or set any cost you like. The interest your survival points earn each day goes from 5% to 10%, and can go up to 20 instead of 10.
+At the end of each day, Survival Log offers 3 rewards you can buy with survival points, and a refresh for 2 points draws 3 new ones. More Rewards lets you raise that to any number up to 20, from the same reward pool the game draws from, lock several, ban the ones you do not want, and open an optional shop. The refresh cost goes up with the number of rewards on its own, or you can make it free or set any cost you like. You can also raise the interest your survival points earn each day, and the most it can pay, above the game's 5% and 10.
+
+Out of the box the mod changes nothing about the game's balance: you get the game's 3 rewards, its refresh cost and its interest. Set OptionCount for more rewards, and InterestRate and MaxInterest for more interest.
 
 [size=5]Main features[/size]
 [list]
 [*][b]More rewards to choose from[/b]: set how many rewards the end of the day offers, from the game's 3 up to 20. A refresh draws that many too.[/*]
 [*][b]The game's own rewards[/b]: the extra rewards come from the same groups the game picks that day's rewards from, never repeat a reward already on offer, skip the rewards the game has on cooldown just as its own picks do, and are bought like any other.[/*]
 [*][b]A fair refresh cost[/b]: by default the cost goes up by 1 survival point at 4, 6, 8 rewards and so on (3 rewards cost 2, 4 or 5 cost 3, 6 or 7 cost 4, 10 cost 6). Or make every refresh free, or set a fixed cost of your own.[/*]
-[*][b]More interest[/b]: when a day ends, the game pays interest on the survival points you hold, 5% of them, at most 10. The mod raises the rate to 10% and the limit to 20, so saving up to 200 points pays off. Set your own rate and limit up to 100, or keep the game's. The Savings Plan reward keeps paying its own bonus on top.[/*]
+[*][b]More interest[/b]: when a day ends, the game pays interest on the survival points you hold, 5% of them, at most 10. Set your own rate and limit up to 100 (a rate of 10% and a limit of 20 make saving up to 200 points pay off), or keep the game's, which is the default. The Savings Plan reward keeps paying its own bonus on top.[/*]
 [*][b]Lock more than one reward[/b]: set MaxLocked and lock up to 1 less than the number of rewards. Locked rewards stay through a refresh and are still there the next day.[/*]
 [*][b]Ban[/b]: a Ban button swaps a card for another and keeps it away for the rest of the run, for 2 survival points by default, and can ban every level of the same reward.[/*]
 [*][b]The ban list[/b]: a Bans button in the footer lists this run's bans. Removing one lets its rewards come back and gives back half of what the ban cost (configurable).[/*]
@@ -57,7 +59,7 @@ Works in English and Chinese.
 [*]Download the zip from the Files tab.[/*]
 [*]Extract it into the game folder (the folder with [font=Courier New]SurvivalLog.exe[/font]). The zip holds a BepInEx folder, so the DLL lands in the right place. When asked, merge the folders. The result should be:
 [code]C:\Program Files (x86)\Steam\steamapps\common\Survival Log\BepInEx\plugins\MoreRewards.dll[/code][/*]
-[*]Start the game once, quit, and set OptionCount in the settings file (see Configuration below). Until you do, you get the game's 3 rewards; the higher interest rate and limit apply right away.[/*]
+[*]Start the game once, quit, and set OptionCount in the settings file (see Configuration below). Until you do, you get the game's 3 rewards and its own interest.[/*]
 [/list]
 
 [size=5]Uninstall[/size]
@@ -68,8 +70,8 @@ Edit [font=Courier New]BepInEx\config\com.dev.survivallog.morerewards.cfg[/font]
 [list]
 [*][b]OptionCount[/b] (default 3): how many rewards to choose from, 3 to 20.[/*]
 [*][b]RefreshCost[/b] (default -1): -1 scales the cost with OptionCount, 0 makes every refresh free, and 1 to 99 is the cost of every refresh.[/*]
-[*][b]InterestRate[/b] (default 10): the daily interest rate on your survival points, in percent. 0 keeps the game's 5%; 1 to 100 sets a new rate.[/*]
-[*][b]MaxInterest[/b] (default 20): the most interest your survival points earn in a day. 0 keeps the game's limit of 10; 1 to 100 sets a new limit.[/*]
+[*][b]InterestRate[/b] (default 0): the daily interest rate on your survival points, in percent. 0 keeps the game's 5%; 1 to 100 sets a new rate.[/*]
+[*][b]MaxInterest[/b] (default 0): the most interest your survival points earn in a day. 0 keeps the game's limit of 10; 1 to 100 sets a new limit.[/*]
 [*][b]MaxLocked[/b] (default 1): how many rewards you can lock at once.[/*]
 [*][b]BanButton[/b], [b]Labels[/b] (default true): the Ban button and the label. [b]BanCost[/b] (default 2) is what a ban costs; [b]BanWholeLine[/b] (default false) bans every level of a reward; [b]UnbanRefund[/b] (default 50) is the percent of the cost given back when a ban is removed.[/*]
 [*][b]NoRepeatOnRefresh[/b] (default false) and [b]CashOut[/b] (default 0, cash per point left).[/*]
@@ -87,14 +89,16 @@ Open source under MIT: [url=https://github.com/AnExiledDev/SurvivalLog-MoreRewar
 [line]
 [size=5]简体中文[/size]
 
-每天结束时，Survival Log 会提供 3 张可以用生存点购买的规划卡，花 2 点刷新可以换 3 张新的。More Rewards 让你把数量提高到最多 20 张，全部来自游戏本身抽卡的卡池，还能锁定多张、禁用不想要的卡，并可开启商店。刷新花费会随规划卡数量自动上涨，你也可以让刷新免费，或者自定任意花费。生存点的每日回息从 5% 提高到 10%，上限从 10 提高到 20。
+每天结束时，Survival Log 会提供 3 张可以用生存点购买的规划卡，花 2 点刷新可以换 3 张新的。More Rewards 让你把数量提高到最多 20 张，全部来自游戏本身抽卡的卡池，还能锁定多张、禁用不想要的卡，并可开启商店。刷新花费会随规划卡数量自动上涨，你也可以让刷新免费，或者自定任意花费。你还可以把生存点的每日回息比例和上限提高到游戏原本的 5% 和 10 以上。
+
+默认设置下，本模组不改变游戏的任何平衡：仍是游戏原本的 3 张规划卡、刷新花费和回息。设置 OptionCount 可以获得更多规划卡，设置 InterestRate 和 MaxInterest 可以获得更多回息。
 
 [size=5]主要功能[/size]
 [list]
 [*][b]更多规划卡可选[/b]：设置每天结束时提供几张规划卡，从游戏原本的 3 张到最多 20 张。刷新时也会抽出同样多的卡。[/*]
 [*][b]都是游戏自己的规划卡[/b]：额外的规划卡来自游戏当天抽卡所用的同一批卡组，不会和已经在列的卡重复，也会像游戏自己抽卡一样跳过冷却中的卡，购买方式和其他卡完全相同。[/*]
 [*][b]合理的刷新花费[/b]：默认情况下，规划卡数量到 4、6、8 张等时，刷新花费各加 1 点生存点（3 张花 2 点，4 或 5 张花 3 点，6 或 7 张花 4 点，10 张花 6 点）。也可以让每次刷新都免费，或者设一个固定花费。[/*]
-[*][b]更多回息[/b]：每天结束时，游戏会按持有生存点的 5% 发放回息，最多 10 点。本模组把比例提高到 10%，上限提高到 20，生存点攒到 200 都有回报。比例和上限都可以自己设，最高 100，也可以保持游戏原样。「储蓄计划」照样会在此之外发放它自己的加成。[/*]
+[*][b]更多回息[/b]：每天结束时，游戏会按持有生存点的 5% 发放回息，最多 10 点。比例和上限都可以自己设，最高 100（比例 10%、上限 20 时，生存点攒到 200 都有回报），也可以保持游戏原样，这也是默认设置。「储蓄计划」照样会在此之外发放它自己的加成。[/*]
 [*][b]锁定多张[/b]：设置 MaxLocked，最多可锁定比卡数少 1 张。锁定的卡在刷新后和第二天仍会保留。[/*]
 [*][b]「禁用」[/b]：「禁用」按钮把卡换成另一张，并让它在本局剩余时间内不再出现，默认花 2 点生存点，也可以一并禁用同一系列的所有等级。[/*]
 [*][b]禁用列表[/b]：底栏的「禁用列表」按钮列出本局禁用的卡。解除禁用后，这些卡可以再次出现，并退还禁用花费的一半（可设置）。[/*]
@@ -139,7 +143,7 @@ Open source under MIT: [url=https://github.com/AnExiledDev/SurvivalLog-MoreRewar
 [*]在「文件」页下载压缩包。[/*]
 [*]把压缩包解压到游戏目录（[font=Courier New]SurvivalLog.exe[/font] 所在的文件夹）。压缩包里带有 BepInEx 文件夹，DLL 会自动放到正确位置。如果提示合并文件夹，选择合并。解压后应为：
 [code]C:\Program Files (x86)\Steam\steamapps\common\Survival Log\BepInEx\plugins\MoreRewards.dll[/code][/*]
-[*]启动一次游戏后退出，然后在设置文件里设置 OptionCount（见下方「配置」）。在此之前仍是游戏原本的 3 张规划卡；更高的回息比例和上限会立即生效。[/*]
+[*]启动一次游戏后退出，然后在设置文件里设置 OptionCount（见下方「配置」）。在此之前仍是游戏原本的 3 张规划卡和回息。[/*]
 [/list]
 
 [size=5]卸载[/size]
@@ -150,8 +154,8 @@ Open source under MIT: [url=https://github.com/AnExiledDev/SurvivalLog-MoreRewar
 [list]
 [*][b]OptionCount[/b]（默认 3）：可供选择的规划卡数量，3 到 20。[/*]
 [*][b]RefreshCost[/b]（默认 -1）：-1 表示刷新花费随 OptionCount 自动调整，0 表示每次刷新免费，1 到 99 则是每次刷新的固定花费。[/*]
-[*][b]InterestRate[/b]（默认 10）：生存点每日回息的比例（百分比）。0 保持游戏原本的 5%；1 到 100 设定新的比例。[/*]
-[*][b]MaxInterest[/b]（默认 20）：生存点每天最多能得到的回息。0 保持游戏原本的上限 10；1 到 100 设定新的上限。[/*]
+[*][b]InterestRate[/b]（默认 0）：生存点每日回息的比例（百分比）。0 保持游戏原本的 5%；1 到 100 设定新的比例。[/*]
+[*][b]MaxInterest[/b]（默认 0）：生存点每天最多能得到的回息。0 保持游戏原本的上限 10；1 到 100 设定新的上限。[/*]
 [*][b]MaxLocked[/b]（默认 1）：可同时锁定的卡数。[/*]
 [*][b]BanButton[/b]、[b]Labels[/b]（默认 true）：「禁用」按钮和卡上的标签。[b]BanCost[/b]（默认 2）是禁用的花费；[b]BanWholeLine[/b]（默认 false）会禁用同一系列的所有等级；[b]UnbanRefund[/b]（默认 50）是解除禁用时退还花费的百分比。[/*]
 [*][b]NoRepeatOnRefresh[/b]（默认 false）和 [b]CashOut[/b]（默认 0，每个剩余生存点换得的现金）。[/*]
