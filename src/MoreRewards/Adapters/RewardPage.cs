@@ -2,8 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
-using ExiledToolkit.Game;
-using GameCore.HotUpdate.ReduxUI;
+using ExiledToolkit.Web;
 using MoreRewards.Core;
 
 namespace MoreRewards.Adapters;
@@ -93,25 +92,20 @@ internal sealed class RewardPage
     /// <returns>Whether the web UI was there to run it.</returns>
     private bool Run(string javaScript, bool keepsReply)
     {
-        var webView = GameSingleton.Existing<ReduxUISystem>()?.GetWebUILayer()?.canvasWebViewPrefab?.WebView;
+        Exception? failure;
 
-        if (webView == null) return false;
+        // One callback, made once, for every check; a call whose answer is not read passes none.
+        var ran = keepsReply
+            ? WebUi.TryRun(javaScript, _onReply ??= (Action<string>)TakeReply, out failure)
+            : WebUi.TryRun(javaScript, out failure);
 
-        try
+        if (failure != null && !_hasReportedRunFailure)
         {
-            // One callback, made once, for every check; a call whose answer is not read passes none.
-            webView.ExecuteJavaScript(javaScript, keepsReply ? (_onReply ??= (Action<string>)TakeReply) : null);
-
-            return true;
-        }
-        catch (Exception ex)
-        {
-            if (!_hasReportedRunFailure) _log("could not run script in the web UI (reported once): " + ex.Message);
-
+            _log("could not run script in the web UI (reported once): " + failure.Message);
             _hasReportedRunFailure = true;
-
-            return false;
         }
+
+        return ran;
     }
 
     /// <summary>The web view's callback; it only stores the answer for the next frame.</summary>

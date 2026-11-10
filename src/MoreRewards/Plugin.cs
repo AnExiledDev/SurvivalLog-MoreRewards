@@ -14,11 +14,11 @@ using MoreRewards.Core;
 namespace MoreRewards;
 
 [BepInPlugin(Guid, "More Rewards", Version)]
-[BepInDependency(ExiledToolkit.Plugin.Guid, ">=0.19.0")]
+[BepInDependency(ExiledToolkit.Plugin.Guid, ">=0.20.0")]
 public sealed class Plugin : BasePlugin
 {
     private const string Guid = "com.dev.survivallog.morerewards";
-    private const string Version = "0.7.5";
+    private const string Version = "0.7.6";
     private const long MaxLogBytes = 1024 * 1024;
 
     public override void Load()
@@ -46,18 +46,11 @@ public sealed class Plugin : BasePlugin
             new AcceptableValueRange<int>(0, InterestCap.MostCap), "ModManager.ShowWhen=General.Enabled", WorldRule.Tag));
         var log = new ModLog(Log, "more-rewards.log") { MaxFileBytes = MaxLogBytes };
 
-        // Not a "could not hook" line, so it is marked as an error here, which Mod Manager shows red.
-        void LogError(string message)
-        {
-            Log.LogError(message);
-            log.WriteFileOnly(message);
-        }
-
         log.Write($"===== More Rewards {Version} started: {(enabled.Value ? "on" : "off")}, interest {InterestText(enabled.Value ? InterestCap.From(maxInterest.Value) : null)}");
 
         // Every setting is watched from the start, with the mod off too, so it can be turned on in game and each
         // world's own values reach it.
-        var capKeeper = WatchCap(enabled, maxInterest, log, LogError);
+        var capKeeper = WatchCap(enabled, maxInterest, log, log.WriteError);
         var rateKeeper = WatchRate(enabled, interestRate, log);
         var screen = new ScreenConfig(Config, optionCount);
         var board = new SettingsBoard(new ConfigEntryBase[] { enabled, optionCount, refreshCost, interestRate, maxInterest }.Concat(screen.Entries).Distinct().ToList());

@@ -48,7 +48,7 @@ Works in English and Chinese.
 [list]
 [*]Survival Log 1.1.20719. A game update can break it until the mod is updated.[/*]
 [*][url=https://www.nexusmods.com/survivallog/mods/12]BepInEx for Survival Log[/url] (BepInEx 6.0.0-be.788, IL2CPP). Install it first.[/*]
-[*][url=https://www.nexusmods.com/survivallog/mods/61]Exiled's Toolkit[/url] 0.19.0 or newer. More Rewards does not load without it. It applies settings changed on the Mod Manager's Mods screen without restarting the game, lets each world keep its own settings, and its UI size setting sizes the shop, the ban list and the settings.[/*]
+[*][url=https://www.nexusmods.com/survivallog/mods/61]Exiled's Toolkit[/url] 0.20.0 or newer. More Rewards does not load without it. It applies settings changed on the Mod Manager's Mods screen without restarting the game, lets each world keep its own settings, and its UI size setting sizes the shop, the ban list and the settings.[/*]
 [*]Optional: [url=https://www.nexusmods.com/survivallog/mods/73]Mod Manager[/url]. With it, you can change every setting in game on its Mods screen and see what each one does, without opening the config file.[/*]
 [/list]
 
@@ -132,7 +132,7 @@ Open source under MIT: [url=https://github.com/AnExiledDev/SurvivalLog-MoreRewar
 [list]
 [*]Survival Log 1.1.20719。游戏更新后模组可能暂时失效，直到模组更新为止。[/*]
 [*][url=https://www.nexusmods.com/survivallog/mods/12]BepInEx for Survival Log[/url]（BepInEx 6.0.0-be.788，IL2CPP），请先安装。[/*]
-[*][url=https://www.nexusmods.com/survivallog/mods/61]Exiled's Toolkit[/url] 0.19.0 或更新版本。没有它本模组不会加载。它让在 Mod Manager 的「模组」界面改动的设置无需重启游戏即可生效，让每个存档可以有自己的设置，它的界面大小设置还能调整商店、禁用列表和设置窗口的大小。[/*]
+[*][url=https://www.nexusmods.com/survivallog/mods/61]Exiled's Toolkit[/url] 0.20.0 或更新版本。没有它本模组不会加载。它让在 Mod Manager 的「模组」界面改动的设置无需重启游戏即可生效，让每个存档可以有自己的设置，它的界面大小设置还能调整商店、禁用列表和设置窗口的大小。[/*]
 [*]可选：[url=https://www.nexusmods.com/survivallog/mods/73]Mod Manager[/url]。装了它，可以在游戏里它的「模组」界面修改每项设置，并看到每项的说明，不用打开配置文件。[/*]
 [/list]
 

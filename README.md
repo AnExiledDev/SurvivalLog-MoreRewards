@@ -47,7 +47,7 @@ More Rewards does not edit game files. Extra locks, bans and shop purchases are 
 
 - Survival Log 1.1.20719. Built for this version; a game update can break it until the mod is updated.
 - The [BepInEx Pack for Survival Log](https://www.nexusmods.com/survivallog/mods/12), the BepInEx 6 (IL2CPP) build for the game, version `6.0.0-be.788`.
-- [Exiled's Toolkit](https://github.com/AnExiledDev/SurvivalLog-ExiledToolkit) 0.19.0 or newer. More Rewards does not load without it. It applies settings changed on the Mod Manager's Mods screen without restarting the game, lets each world keep its own settings, and its UI size setting sizes the shop, the ban list and the settings.
+- [Exiled's Toolkit](https://github.com/AnExiledDev/SurvivalLog-ExiledToolkit) 0.20.0 or newer. More Rewards does not load without it. It applies settings changed on the Mod Manager's Mods screen without restarting the game, lets each world keep its own settings, and its UI size setting sizes the shop, the ban list and the settings.
 - Optional: [Mod Manager](https://www.nexusmods.com/survivallog/mods/73). With it, you can change every setting in game on its Mods screen and see what each one does, without opening the config file.
 
 ## Install
@@ -71,7 +71,7 @@ Settings live in `BepInEx\config\com.dev.survivallog.morerewards.cfg`, created t
 
 Built against BepInEx `6.0.0-be.788`.
 
-Check `BepInEx\LogOutput.log` for a line starting `===== More Rewards 0.7.5 started`. It says whether the mod is on and the interest limit; turning `Enabled` off or on in game writes `turned off` or `turned on`. The lines after it say what took effect: the interest limit (`interest is now up to 20 survival points a day`), how many rewards and the refresh cost (`10 rewards, refresh cost automatic`), the interest rate, and `hooked the end-of-day rewards`. Changing one of these on the Mods screen writes its line again. Once a game is loaded, a line says `interest rate is now 10%`.
+Check `BepInEx\LogOutput.log` for a line starting `===== More Rewards 0.7.6 started`. It says whether the mod is on and the interest limit; turning `Enabled` off or on in game writes `turned off` or `turned on`. The lines after it say what took effect: the interest limit (`interest is now up to 20 survival points a day`), how many rewards and the refresh cost (`10 rewards, refresh cost automatic`), the interest rate, and `hooked the end-of-day rewards`. Changing one of these on the Mods screen writes its line again. Once a game is loaded, a line says `interest rate is now 10%`.
 
 Each time a day ends or you refresh, the log gets a line saying how many rewards the game offered and how many the mod added. Shortly after the game starts, a line says what a refresh costs now. The reward lines are written when `OptionCount` is above 3 or a lock or ban changed the offer, and the cost line only when the mod changes the cost.
 
@@ -95,7 +95,7 @@ This is a BepInEx 6 IL2CPP plugin. It compiles against BepInEx, the game's IL2CP
 dotnet build src/MoreRewards -c Release -p:GameDir="C:\path\to\Survival Log" -p:ToolkitDll="C:\path\to\ExiledToolkit.dll"
 ```
 
-`GameDir` is the game folder and `ToolkitDll` is a built `ExiledToolkit.dll` (0.19.0 or newer), in the `bin\Release` folder of a copy of Exiled's Toolkit's source; the tests read the Toolkit's page script and one helper from that copy. The defaults in the project file are local paths you will almost certainly need to override. The output DLL is at `src\MoreRewards\bin\Release\MoreRewards.dll`.
+`GameDir` is the game folder and `ToolkitDll` is a built `ExiledToolkit.dll` (0.20.0 or newer), in the `bin\Release` folder of a copy of Exiled's Toolkit's source; the tests read the Toolkit's page script and one helper from that copy. The defaults in the project file are local paths you will almost certainly need to override. The output DLL is at `src\MoreRewards\bin\Release\MoreRewards.dll`.
 
 The unit tests cover the pure rules (the settings, the refresh cost, how extra rewards are drawn, the interest rate and limit, locks, bans and shop prices) and the page script that lays out the cards and draws the buttons and the shop, and need nothing from the game:
 
