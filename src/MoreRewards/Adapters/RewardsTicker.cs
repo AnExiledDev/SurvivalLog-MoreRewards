@@ -17,9 +17,6 @@ public sealed class RewardsTicker : MonoBehaviour
     internal static readonly List<Action<float>> Checks = new();
     internal static Action<string> Log = _ => { };
 
-    /// <summary>Run as the game closes: lets the log file's last lines reach the disk.</summary>
-    internal static Action OnQuit = () => { };
-
     private static readonly HashSet<string> ReportedFailures = new();
 
     /// <summary>Seconds since the mod loaded; the checks only compare it with itself.</summary>
@@ -45,18 +42,6 @@ public sealed class RewardsTicker : MonoBehaviour
             {
                 ReportFailure(ex);
             }
-        }
-    }
-
-    private void OnApplicationQuit()
-    {
-        try
-        {
-            OnQuit();
-        }
-        catch (Exception)
-        {
-            // The game is closing; there is nothing left to tell.
         }
     }
 

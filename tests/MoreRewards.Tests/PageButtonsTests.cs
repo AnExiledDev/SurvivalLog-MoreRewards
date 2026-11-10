@@ -603,6 +603,63 @@ public class PageButtonsTests
         Assert.True(page.Is("window.__exiledUiWait[0][1].fit === frame.contentDocument.body.querySelector('.shop-card')"));
     }
 
+    // ===== Load order (Exiled's Toolkit's page API) =====
+
+    /// <summary>
+    /// The game can run More Rewards' script before the Toolkit's. The page still lays out and decorates the cards, and
+    /// its style, its clicks and its panels wait for the Toolkit; once its script loads they all go through, once each.
+    /// </summary>
+    [Fact]
+    public void With_the_page_loaded_before_the_toolkit_its_style_clicks_and_panels_go_through_once_the_toolkit_arrives()
+    {
+        var page = new PageScript(isToolkitFirst: false);
+
+        page.Run("var frame = addRewardsFrame(); showRewards(frame, [{id: 11, state: 'affordable', pinned: false}], 20); setupWith({});");
+        page.Tick();
+        page.Tick();
+        page.Run(FakeUi);
+        page.Run(AskForShop);
+
+        Assert.True(page.Is("frame.contentDocument.querySelector('.mr-shop-btn')"));
+        Assert.False(page.Is("frame.contentDocument.body.querySelector('.shop').hidden"));
+        Assert.Equal(0, page.Number("styleCount(frame)"));
+        Assert.Equal("", page.Text("posted.join(',')"));
+        Assert.Equal("0", page.Text("handed.length"));
+
+        page.LoadToolkit();
+
+        Assert.Equal(1, page.Number("styleCount(frame)"));
+        Assert.Equal(Prefix + "shop", page.Text("posted.join(',')"));
+        Assert.Equal("1", page.Text("handed.length"));
+        Assert.True(page.Is("handed[0].el === frame.contentDocument.body.querySelector('.shop')"));
+
+        page.Tick();
+        page.Tick();
+        page.Run("fire(frame.contentDocument.querySelector('.mr-bans-btn'), 'click');");
+
+        Assert.Equal(1, page.Number("styleCount(frame)"));
+        Assert.Equal(Prefix + "shop," + Prefix + "bans", page.Text("posted.join(',')"));
+    }
+
+    /// <summary>A rewards page that reloads before the Toolkit's script has loaded gets its style once the script arrives.</summary>
+    [Fact]
+    public void A_page_reloaded_before_the_toolkit_arrives_gets_its_style_when_it_does()
+    {
+        var page = new PageScript(isToolkitFirst: false);
+
+        page.Run("var first = addRewardsFrame(); showCards(first, 10);");
+        page.Tick();
+        page.Run("first.src = 'about:blank'; var second = addRewardsFrame(); showCards(second, 8);");
+        page.Tick();
+        page.Tick();
+
+        Assert.Equal(0, page.Number("styleCount(second)"));
+
+        page.LoadToolkit();
+
+        Assert.Equal(1, page.Number("styleCount(second)"));
+    }
+
     private static PageScript OpenShop(string rows)
     {
         var page = Rewards("[{id: 11, state: 'affordable', pinned: false}]");

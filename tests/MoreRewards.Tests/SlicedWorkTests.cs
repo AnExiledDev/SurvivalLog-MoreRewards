@@ -11,7 +11,6 @@ namespace MoreRewards.Tests;
 public class SlicedWorkTests
 {
     private static readonly Func<bool> AlwaysSpent = () => true;
-    private static readonly Func<bool> NeverSpent = () => false;
     private static readonly TableKey English = new(Table: 100, Text: 1);
     private static readonly TableKey Chinese = new(Table: 100, Text: 2);
     private static readonly TableKey Reloaded = new(Table: 200, Text: 1);
@@ -127,16 +126,6 @@ public class SlicedWorkTests
 
         Assert.Equal("100/1", builds.Get(English));
         Assert.Equal(2, builds.Builds);
-    }
-
-    [Fact]
-    public void A_job_waits_for_the_next_frame_when_a_step_asks_and_runs_on_while_time_allows()
-    {
-        var job = new SlicedJob(new[] { true, false, true, true });
-
-        Assert.False(job.Advance(NeverSpent));
-        Assert.True(job.Advance(NeverSpent));
-        Assert.True(job.IsDone);
     }
 
     [Fact]

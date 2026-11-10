@@ -29,7 +29,7 @@ internal static class InterestCode
 
     /// <param name="cap">The cap to write; <see cref="InterestCap.GameCap"/> puts the game's back.</param>
     /// <returns>Whether the code now holds <paramref name="cap"/>.</returns>
-    public static bool Apply(int cap, RewardsLog log)
+    public static bool Apply(int cap, Action<string> log, Action<string> logError)
     {
         var keepsGameCap = "the interest cap is left as it was";
 
@@ -37,7 +37,7 @@ internal static class InterestCode
         {
             if (_code == IntPtr.Zero && Find() is { } problem)
             {
-                log.WriteError($"{problem}, {keepsGameCap}");
+                logError($"{problem}, {keepsGameCap}");
 
                 return false;
             }
@@ -48,19 +48,19 @@ internal static class InterestCode
 
             if (InterestCap.Rewrite(code, cap) is not { } rewritten)
             {
-                log.WriteError($"the game's interest code changed since it was found, {keepsGameCap}");
+                logError($"the game's interest code changed since it was found, {keepsGameCap}");
 
                 return false;
             }
 
-            Write(_code, rewritten, log.Write);
-            log.Write(cap == InterestCap.GameCap ? $"interest is back to the game's cap of {cap}" : $"interest is now up to {cap} survival points a day (the game's cap is {InterestCap.GameCap})");
+            Write(_code, rewritten, log);
+            log(cap == InterestCap.GameCap ? $"interest is back to the game's cap of {cap}" : $"interest is now up to {cap} survival points a day (the game's cap is {InterestCap.GameCap})");
 
             return true;
         }
         catch (Exception ex)
         {
-            log.WriteError($"could not change the interest cap, {keepsGameCap}: {ex}");
+            logError($"could not change the interest cap, {keepsGameCap}: {ex}");
 
             return false;
         }

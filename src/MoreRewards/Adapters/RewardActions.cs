@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using ExiledToolkit.Game;
+using ExiledToolkit.Kit;
+using ExiledToolkit.Web;
 using GameCore.HotUpdate;
 using GameCore.HotUpdate.Battle.Logic;
 using GameCore.HotUpdate.ReduxUI;
@@ -34,6 +37,7 @@ internal sealed class RewardActions
     private readonly Action<string> _log;
     private readonly SetupWatch _watch = new();
     private readonly WebKeyboard _keyboard = new();
+    private readonly PageMailbox _inbox = PageInbox.Listen(PageCommands.Prefix);
     private ShopOrder? _shop;
 
     public RewardActions(RewardPage page, RewardCatalog catalog, Func<InterestTerms> interest, SettingsBoard settings, FrameBudget budget, Action<string> log)
@@ -58,10 +62,11 @@ internal sealed class RewardActions
             return;
         }
 
-        // Without Exiled's Toolkit a setting applies the moment it is set, so a command from the page's settings can
-        // turn the mod off partway through this loop; the rest of the frame is then the off frame.
-        while (PageMessages.TryTake(out var command))
+        // If a command turns the mod off partway through this loop, the rest of the frame is the off frame.
+        while (_inbox.TryTake(out var message))
         {
+            if (PageCommands.Read(message) is not { } command) continue;
+
             Do(command);
 
             if (LiveScreen.IsOn) continue;
@@ -93,7 +98,7 @@ internal sealed class RewardActions
     /// </summary>
     private void Idle()
     {
-        while (PageMessages.TryTake(out _))
+        while (_inbox.TryTake(out _))
         {
         }
 
@@ -152,7 +157,7 @@ internal sealed class RewardActions
         var interest = _interest();
         var shown = OfferPatch.FromGame(state.CachedSurvivalPlanIds);
 
-        _page.Send(PageData.SetupCall(new PageSetup(GameLanguage.Current(), LiveScreen.Settings, state.PinnedPlanId, LiveScreen.Book.Locks(), _catalog.Lives(shown), interest.Rate, interest.Cap)));
+        _page.Send(PageData.SetupCall(new PageSetup(CurrentLanguage(), LiveScreen.Settings, state.PinnedPlanId, LiveScreen.Book.Locks(), _catalog.Lives(shown), interest.Rate, interest.Cap)));
     }
 
     private void Pin(int id, int slot)
@@ -217,7 +222,7 @@ internal sealed class RewardActions
         var settings = LiveScreen.Settings;
         var rows = Bans().Select(ban => new BanRow(ban.Head, ban.Members.Select(_catalog.NameOf).ToList(), BanRefund.Of(ban, settings.BanCost, settings.UnbanRefund))).ToList();
 
-        _page.Send(PageData.BansCall(rows, settings.UnbanRefund, GameLanguage.Current()));
+        _page.Send(PageData.BansCall(rows, settings.UnbanRefund, CurrentLanguage()));
     }
 
     /// <summary>The ban's rewards can be offered again from the next draw, and part of what it cost comes back.</summary>
@@ -242,7 +247,7 @@ internal sealed class RewardActions
 
     private IReadOnlyList<BanGroup> Bans() => LiveScreen.Book.Bans(_catalog.PlanIds());
 
-    private void SendSettings() => _page.Send(PageData.SettingsCall(_settings.Rows(GameLanguage.Current()), GameLanguage.Current()));
+    private void SendSettings() => _page.Send(PageData.SettingsCall(_settings.Rows(CurrentLanguage()), CurrentLanguage()));
 
     private void Set(string key, string value)
     {
@@ -308,7 +313,7 @@ internal sealed class RewardActions
         var settings = LiveScreen.Settings;
         var book = LiveScreen.Book;
         var day = RunGame.Day();
-        var language = GameLanguage.Current();
+        var language = CurrentLanguage();
         var tally = book.Shop(day, settings.ShopReset);
         var json = new ShopJson();
 
@@ -357,7 +362,7 @@ internal sealed class RewardActions
 
         var book = LiveScreen.Book;
         var day = RunGame.Day();
-        var language = GameLanguage.Current();
+        var language = CurrentLanguage();
 
         if (_catalog.ShopCheck(id, planning, day, settings, book, language) is not { } check) return;
 
@@ -431,7 +436,9 @@ internal sealed class RewardActions
 
     private void Toast(string text) => _page.Send(PageData.ToastCall(text));
 
-    private static string Say(string english, string chinese) => Blocker.Say(GameLanguage.Current(), english, chinese);
+    private static Language CurrentLanguage() => GameLanguage.IsChinese() ? Language.Chinese : Language.English;
+
+    private static string Say(string english, string chinese) => Blocker.Say(CurrentLanguage(), english, chinese);
 
     /// <summary>A shop list being built, and what it was asked with; the points held are read when it is sent.</summary>
     private sealed record ShopOrder(SlicedJob Job, ShopJson Json, ScreenSettings Settings, ShopTally Tally, Language Language);

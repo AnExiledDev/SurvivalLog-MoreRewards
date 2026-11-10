@@ -7,9 +7,9 @@
 //   the ban list, the settings and short notices;
 // - takes over the lock button when the player may lock more than one card.
 // The plugin tells the page what to draw through window.__slmorerewards.setup/shop/bans/settings/toast, and to take it
-// all away again through off() when the mod is turned off. It collects notes for its log
-// through take(), and hears the buttons through vuplex.postMessage("slmod|morerewards|<verb>|<args>"). The page draws
-// only what the plugin said; every click is checked again by the plugin, which owns the points and the cards.
+// all away again through off() when the mod is turned off. It collects notes for its log through take(), and hears
+// the buttons through Exiled's Toolkit's send ("slmod|morerewards|<verb>|<args>"). The page draws only what the
+// plugin said; every click is checked again by the plugin, which owns the points and the cards.
 (function () {
   if (window.__slmorerewards) return;
 
@@ -203,6 +203,8 @@
   var asked = { bans: false, settings: false };
   var rewardsDoc = null;
   var rewardsFrame = null;
+  // The mod's style sheet, joined the first time it is added.
+  var styleText = null;
   // Whether the plugin was last told a text box here has the keyboard.
   var isTyping = false;
   var shopView = { query: '', cat: 'all', life: 'all', onlyBuyable: false };
@@ -306,8 +308,19 @@
 
   // ---------- Talking to the plugin ----------
 
+  // Exiled's Toolkit's page API, once its script has loaded. Until then, what the page hands the Toolkit waits in
+  // order in the Toolkit's ready list, and goes through as soon as the script loads.
+  var etk = null;
+
+  (window.ExiledToolkitReady = window.ExiledToolkitReady || []).push(function (api) { etk = api; });
+
+  function withToolkit(fn) {
+    if (etk) fn(etk);
+    else (window.ExiledToolkitReady = window.ExiledToolkitReady || []).push(fn);
+  }
+
   function post(message) {
-    if (window.vuplex) window.vuplex.postMessage(PREFIX + message);
+    withToolkit(function (api) { api.send(PREFIX, message); });
   }
 
   // The game sends typed keys to the web UI only while it is told a text box has focus, as its own search boxes tell
@@ -508,23 +521,20 @@
     notes.push('showing ' + cardCount + ' rewards in ' + shape.rows + (shape.rows === 1 ? ' row' : ' rows') + ' of up to ' + shape.columns);
   }
 
-  // The page may reload and lose the style, so it is checked on every check, through the one kept on the document; it
-  // is never added twice.
+  // The page may reload and lose the style, so it is checked on every check; the Toolkit keeps the one it added on the
+  // document and never adds it twice. Before the Toolkit's script has loaded, each document waits for it only once.
   function addStyle(doc) {
-    var style = doc.__slmrStyle;
+    if (!etk) {
+      if (doc.__slmrStyleWaits) return;
 
-    if (style && style.isConnected) return;
-
-    style = doc.getElementById(STYLE_ID);
-
-    if (!style) {
-      style = doc.createElement('style');
-      style.id = STYLE_ID;
-      style.textContent = LAYOUT_CSS.concat(MOD_CSS).join('\n');
-      doc.head.appendChild(style);
+      doc.__slmrStyleWaits = true;
     }
 
-    doc.__slmrStyle = style;
+    withToolkit(function (api) {
+      if (styleText === null) styleText = LAYOUT_CSS.concat(MOD_CSS).join('\n');
+
+      api.addStyle(doc, STYLE_ID, styleText);
+    });
   }
 
   // The mod's additions, once the plugin has said what to draw.
@@ -1057,21 +1067,11 @@
     return node;
   }
 
-  // Hands a panel to Exiled's Toolkit to be drawn at the player's UI size. Before the Toolkit's script has loaded it
-  // waits in a list the Toolkit reads; without the Toolkit nothing happens. The mod's buttons on the game's cards and
+  // Hands a panel to Exiled's Toolkit to be drawn at the player's UI size. The mod's buttons on the game's cards and
   // footer are not handed: they keep the game's size, like the game's buttons around them.
   function uiSize(node, options) {
     options = Object.assign({ mod: 'MoreRewards' }, options);
-    var toolkit = window.ExiledUi;
-
-    if (toolkit) {
-      toolkit.size(node, options);
-      return;
-    }
-
-    var waiting = window.__exiledUiWait = window.__exiledUiWait || [];
-    waiting.push([node, options]);
-    if (waiting.length > 32) waiting.shift();
+    withToolkit(function (api) { api.size(node, options); });
   }
 
   // The mod's buttons keep their clicks to themselves, so a click never reaches the card's own handlers.

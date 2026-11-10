@@ -22,7 +22,7 @@ Out of the box the mod changes nothing about the game's balance: you get the gam
 [*][b]Tomorrow's interest[/b]: the footer shows the interest you will get when the day ends.[/*]
 [*][b]No repeats on refresh and cash out[/b] (both off by default): a refresh shows rewards you have not seen that day, and survival points left when you leave the screen turn into cash.[/*]
 [*][b]The shop[/b] (off by default): a Shop button opens a searchable list of every reward you can get, by category and by permanent, one-time or temporary. Prices are 25% above card prices and go up 15% with each purchase until the next day, with 2 purchases a day, all configurable. Rewards you cannot buy now are greyed out with the reason, or hidden.[/*]
-[*][b]UI size[/b]: with Exiled's Toolkit 0.10.0 or newer, its UI size setting draws the shop, the ban list and the settings bigger or smaller, as far as each still fits on the screen. With 0.11.0 or newer, More Rewards's own UiScale setting can set a size for this mod alone.[/*]
+[*][b]UI size[/b]: Exiled's Toolkit's UI size setting draws the shop, the ban list and the settings bigger or smaller, as far as each still fits on the screen. More Rewards's own UiScale setting can set a size for this mod alone.[/*]
 [*][b]Room for every card[/b]: up to 5 rewards sit in one row. More are spread over even rows with smaller cards, and the area scrolls if they still do not fit.[/*]
 [*][b]Rewards stay as they are until you ask[/b]: with the default settings you get the game's 3 rewards and its own refresh cost.[/*]
 [/list]
@@ -48,14 +48,14 @@ Works in English and Chinese.
 [list]
 [*]Survival Log 1.1.20719. A game update can break it until the mod is updated.[/*]
 [*][url=https://www.nexusmods.com/survivallog/mods/12]BepInEx for Survival Log[/url] (BepInEx 6.0.0-be.788, IL2CPP). Install it first.[/*]
-[*]Optional: [url=https://www.nexusmods.com/survivallog/mods/61]Exiled's Toolkit[/url] 0.4.0 or newer. With it, settings changed on the Mod Manager's Mods screen take effect without restarting the game. Without it, those take effect at the next game start; settings changed on the rewards screen take effect at once either way. With 0.10.0 or newer, its UI size setting also sizes the shop, the ban list and the settings. With 0.17.0 or newer, each world can keep its own settings.[/*]
+[*][url=https://www.nexusmods.com/survivallog/mods/61]Exiled's Toolkit[/url] 0.19.0 or newer. More Rewards does not load without it. It applies settings changed on the Mod Manager's Mods screen without restarting the game, lets each world keep its own settings, and its UI size setting sizes the shop, the ban list and the settings.[/*]
 [*]Optional: [url=https://www.nexusmods.com/survivallog/mods/73]Mod Manager[/url]. With it, you can change every setting in game on its Mods screen and see what each one does, without opening the config file.[/*]
 [/list]
 
 [size=5]Installation[/size]
 [list=1]
 [*]Install [url=https://www.nexusmods.com/survivallog/mods/12]BepInEx[/url] [i](if no other mods were installed before, start the game once so BepInEx finishes setup, then quit)[/i].[/*]
-[*]Optional, to change settings without a restart: install Exiled's Toolkit the same way. Download its zip and extract it into the game folder.[/*]
+[*]Install Exiled's Toolkit the same way: download its zip and extract it into the game folder.[/*]
 [*]Download the zip from the Files tab.[/*]
 [*]Extract it into the game folder (the folder with [font=Courier New]SurvivalLog.exe[/font]). The zip holds a BepInEx folder, so the DLL lands in the right place. When asked, merge the folders. The result should be:
 [code]C:\Program Files (x86)\Steam\steamapps\common\Survival Log\BepInEx\plugins\MoreRewards.dll[/code][/*]
@@ -66,7 +66,7 @@ Works in English and Chinese.
 Delete [font=Courier New]MoreRewards.dll[/font] from the [font=Courier New]BepInEx\plugins[/font] folder.
 
 [size=5]Configuration[/size]
-Edit [font=Courier New]BepInEx\config\com.dev.survivallog.morerewards.cfg[/font] while the game is closed, or do it in game with the Settings button on the rewards screen or on the Mod Manager's Mods screen (see [url=https://github.com/AnExiledDev/SurvivalLog-MoreRewards/blob/main/CONFIG.md]CONFIG.md[/url] for every setting and the full cost table). Changed in game, every setting takes effect at once. With Exiled's Toolkit 0.17.0 or newer, each world can keep its own reward count, refresh cost, interest, locks, bans, cash out and shop rules: pick them for a new world in Customizable Difficulty, or, while you play, change them for that world alone on the Mods screen. Enabled, Labels, ShopUnavailable and UiScale stay the same for every world. Without Exiled's Toolkit installed, changes made on the Mods screen take effect at the next game start instead; changes made on the rewards screen still take effect at once.
+Edit [font=Courier New]BepInEx\config\com.dev.survivallog.morerewards.cfg[/font] while the game is closed, or do it in game with the Settings button on the rewards screen or on the Mod Manager's Mods screen (see [url=https://github.com/AnExiledDev/SurvivalLog-MoreRewards/blob/main/CONFIG.md]CONFIG.md[/url] for every setting and the full cost table). Changed in game, every setting takes effect at once. Each world can keep its own reward count, refresh cost, interest, locks, bans, cash out and shop rules: pick them for a new world in Customizable Difficulty, or, while you play, change them for that world alone on the Mods screen. Enabled, Labels, ShopUnavailable and UiScale stay the same for every world.
 [list]
 [*][b]OptionCount[/b] (default 3): how many rewards to choose from, 3 to 20.[/*]
 [*][b]RefreshCost[/b] (default -1): -1 scales the cost with OptionCount, 0 makes every refresh free, and 1 to 99 is the cost of every refresh.[/*]
@@ -107,7 +107,7 @@ Open source under MIT: [url=https://github.com/AnExiledDev/SurvivalLog-MoreRewar
 [*][b]明天的回息[/b]：底栏显示当天结束时能得到的回息。[/*]
 [*][b]刷新不重复和兑现[/b]（默认关闭）：刷新只给当天没出现过的卡；离开界面时剩下的生存点换成现金。[/*]
 [*][b]商店[/b]（默认关闭）：「商店」按钮打开可搜索、按分类排列的列表，包含所有能获得的规划卡，还能按永久、一次性或限时筛选。价格比卡片高 25%，每买一次再涨 15%，第二天恢复，每天可买 2 次，均可设置。现在买不了的卡会显示为灰色并写明原因，也可以隐藏。[/*]
-[*][b]界面大小[/b]：安装 Exiled's Toolkit 0.10.0 或更新版本后，可以用它的界面大小设置放大或缩小商店、禁用列表和设置窗口，最大放到窗口仍能完整显示在屏幕上为止。0.11.0 或更新版本还可以用 More Rewards 自己的 UiScale 设置单独调整本模组的大小。[/*]
+[*][b]界面大小[/b]：可以用 Exiled's Toolkit 的界面大小设置放大或缩小商店、禁用列表和设置窗口，最大放到窗口仍能完整显示在屏幕上为止。还可以用 More Rewards 自己的 UiScale 设置单独调整本模组的大小。[/*]
 [*][b]每张卡都放得下[/b]：5 张以内排成一行。超过 5 张时平均分成几行，卡片会缩小；如果还是放不下，卡片区域可以滚动。[/*]
 [*][b]不改设置就保持原样[/b]：默认设置下，仍是游戏原本的 3 张规划卡和原本的刷新花费。[/*]
 [/list]
@@ -132,14 +132,14 @@ Open source under MIT: [url=https://github.com/AnExiledDev/SurvivalLog-MoreRewar
 [list]
 [*]Survival Log 1.1.20719。游戏更新后模组可能暂时失效，直到模组更新为止。[/*]
 [*][url=https://www.nexusmods.com/survivallog/mods/12]BepInEx for Survival Log[/url]（BepInEx 6.0.0-be.788，IL2CPP），请先安装。[/*]
-[*]可选：[url=https://www.nexusmods.com/survivallog/mods/61]Exiled's Toolkit[/url] 0.4.0 或更新版本。装了它，在 Mod Manager 的「模组」界面改动的设置无需重启游戏即可生效；没装的话，那里的改动在下次启动游戏时生效。在奖励界面改动的设置无论如何都立即生效。0.10.0 或更新版本还能用它的界面大小设置调整商店、禁用列表和设置窗口的大小。0.17.0 或更新版本时，每个存档都可以有自己的设置。[/*]
+[*][url=https://www.nexusmods.com/survivallog/mods/61]Exiled's Toolkit[/url] 0.19.0 或更新版本。没有它本模组不会加载。它让在 Mod Manager 的「模组」界面改动的设置无需重启游戏即可生效，让每个存档可以有自己的设置，它的界面大小设置还能调整商店、禁用列表和设置窗口的大小。[/*]
 [*]可选：[url=https://www.nexusmods.com/survivallog/mods/73]Mod Manager[/url]。装了它，可以在游戏里它的「模组」界面修改每项设置，并看到每项的说明，不用打开配置文件。[/*]
 [/list]
 
 [size=5]安装[/size]
 [list=1]
 [*]安装 [url=https://www.nexusmods.com/survivallog/mods/12]BepInEx[/url] [i]（如果之前没有装过其他模组，先启动一次游戏，让 BepInEx 完成初始化，然后退出）[/i]。[/*]
-[*]可选（改动设置无需重启游戏）：用同样的方式安装 Exiled's Toolkit，下载它的压缩包并解压到游戏目录。[/*]
+[*]用同样的方式安装 Exiled's Toolkit：下载它的压缩包并解压到游戏目录。[/*]
 [*]在「文件」页下载压缩包。[/*]
 [*]把压缩包解压到游戏目录（[font=Courier New]SurvivalLog.exe[/font] 所在的文件夹）。压缩包里带有 BepInEx 文件夹，DLL 会自动放到正确位置。如果提示合并文件夹，选择合并。解压后应为：
 [code]C:\Program Files (x86)\Steam\steamapps\common\Survival Log\BepInEx\plugins\MoreRewards.dll[/code][/*]
@@ -150,7 +150,7 @@ Open source under MIT: [url=https://github.com/AnExiledDev/SurvivalLog-MoreRewar
 从 [font=Courier New]BepInEx\plugins[/font] 文件夹中删除 [font=Courier New]MoreRewards.dll[/font]。
 
 [size=5]配置[/size]
-可以在游戏内奖励界面的「设置」按钮或 Mod Manager 的「模组」界面修改，也可以在游戏关闭时编辑 [font=Courier New]BepInEx\config\com.dev.survivallog.morerewards.cfg[/font]。配置文件中每项设置都有中文说明，所有设置和完整的刷新花费表见 [url=https://github.com/AnExiledDev/SurvivalLog-MoreRewards/blob/main/CONFIG.md]CONFIG.md[/url]（英文）。在游戏内修改时，所有设置都立即生效。装了 Exiled's Toolkit 0.17.0 或更新版本时，每个存档都可以有自己的奖励数量、刷新花费、利息、锁定、禁用、兑现和商店规则：新存档可以在「自定义难度」里选，游戏中也可以在「模组」界面只为当前存档修改。Enabled、Labels、ShopUnavailable 和 UiScale 对所有存档都一样。没装 Exiled's Toolkit 的话，在「模组」界面的改动改为在下次启动游戏时生效；在奖励界面的改动仍然立即生效。
+可以在游戏内奖励界面的「设置」按钮或 Mod Manager 的「模组」界面修改，也可以在游戏关闭时编辑 [font=Courier New]BepInEx\config\com.dev.survivallog.morerewards.cfg[/font]。配置文件中每项设置都有中文说明，所有设置和完整的刷新花费表见 [url=https://github.com/AnExiledDev/SurvivalLog-MoreRewards/blob/main/CONFIG.md]CONFIG.md[/url]（英文）。在游戏内修改时，所有设置都立即生效。每个存档都可以有自己的奖励数量、刷新花费、利息、锁定、禁用、兑现和商店规则：新存档可以在「自定义难度」里选，游戏中也可以在「模组」界面只为当前存档修改。Enabled、Labels、ShopUnavailable 和 UiScale 对所有存档都一样。
 [list]
 [*][b]OptionCount[/b]（默认 3）：可供选择的规划卡数量，3 到 20。[/*]
 [*][b]RefreshCost[/b]（默认 -1）：-1 表示刷新花费随 OptionCount 自动调整，0 表示每次刷新免费，1 到 99 则是每次刷新的固定花费。[/*]

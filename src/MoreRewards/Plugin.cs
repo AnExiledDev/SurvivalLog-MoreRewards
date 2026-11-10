@@ -1,10 +1,12 @@
 using System;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using BepInEx;
 using BepInEx.Configuration;
 using BepInEx.Unity.IL2CPP;
+using ExiledToolkit;
+using ExiledToolkit.Game;
+using ExiledToolkit.Kit;
 using HarmonyLib;
 using MoreRewards.Adapters;
 using MoreRewards.Core;
@@ -12,17 +14,16 @@ using MoreRewards.Core;
 namespace MoreRewards;
 
 [BepInPlugin(Guid, "More Rewards", Version)]
-[BepInDependency(OptionalLive.ToolkitGuid, BepInDependency.DependencyFlags.SoftDependency)]
+[BepInDependency(ExiledToolkit.Plugin.Guid, ">=0.19.0")]
 public sealed class Plugin : BasePlugin
 {
     private const string Guid = "com.dev.survivallog.morerewards";
-    private const string Version = "0.7.4";
+    private const string Version = "0.7.5";
+    private const long MaxLogBytes = 1024 * 1024;
 
     public override void Load()
     {
-        if (!OptionalLive.IsToolkitInstalled) Log.LogInfo(OptionalLive.MissingNote);
-
-        OptionalUiSize.Bind(Config);
+        ModUiSize.Bind(Config, "MoreRewards");
 
         var enabled = Config.Bind("General", "Enabled", true, new ConfigDescription(
             "Turn the mod on or off. false leaves the end-of-day rewards, the refresh cost and the interest on survival points as the game has them, and takes the mod's buttons off the rewards screen. Applies at once.\n" +
@@ -43,22 +44,26 @@ public sealed class Plugin : BasePlugin
             "The most interest your survival points can earn when a day ends. The interest is the points you hold times InterestRate, rounded down, and at least 1 while you hold any points; 0 keeps the game's limit of 10, and any number from 1 to 100 sets a new limit.\n" +
             "每天结算时生存点回息的上限。回息为持有生存点乘以 InterestRate 的比例，向下取整，只要持有生存点最少 1 点；设为 0 保持游戏原本的上限 10，设为 1 到 100 则以该数作为新的上限。",
             new AcceptableValueRange<int>(0, InterestCap.MostCap), "ModManager.ShowWhen=General.Enabled", WorldRule.Tag));
-        var log = new RewardsLog(Log, Path.Combine(Paths.BepInExRootPath, "more-rewards.log"));
+        var log = new ModLog(Log, "more-rewards.log") { MaxFileBytes = MaxLogBytes };
 
-        PatchKit.Log = log.Write;
-        log.TrimIfLarge();
+        // Not a "could not hook" line, so it is marked as an error here, which Mod Manager shows red.
+        void LogError(string message)
+        {
+            Log.LogError(message);
+            log.WriteFileOnly(message);
+        }
+
         log.Write($"===== More Rewards {Version} started: {(enabled.Value ? "on" : "off")}, interest {InterestText(enabled.Value ? InterestCap.From(maxInterest.Value) : null)}");
 
         // Every setting is watched from the start, with the mod off too, so it can be turned on in game and each
         // world's own values reach it.
-        var capKeeper = WatchCap(enabled, maxInterest, log);
+        var capKeeper = WatchCap(enabled, maxInterest, log, LogError);
         var rateKeeper = WatchRate(enabled, interestRate, log);
         var screen = new ScreenConfig(Config, optionCount);
         var board = new SettingsBoard(new ConfigEntryBase[] { enabled, optionCount, refreshCost, interestRate, maxInterest }.Concat(screen.Entries).Distinct().ToList());
 
         WatchRewards(enabled, optionCount, refreshCost, screen, log);
         RewardsTicker.Log = log.Write;
-        RewardsTicker.OnQuit = () => log.Finish(TimeSpan.FromSeconds(2));
         AddComponent<RewardsTicker>();
         WatchEnabled(enabled, () => new InterestTerms((rateKeeper.Rate ?? InterestRate.GameRate) / 100f, capKeeper()), board, log);
     }
@@ -68,12 +73,12 @@ public sealed class Plugin : BasePlugin
     /// the game's rewards alone and the page takes the mod's buttons away; the hooks stay, so turning it back on needs no
     /// restart. With the mod off from the start the rewards screen is never hooked.
     /// </summary>
-    private static void WatchEnabled(ConfigEntry<bool> enabled, Func<InterestTerms> interest, SettingsBoard board, RewardsLog log)
+    private static void WatchEnabled(ConfigEntry<bool> enabled, Func<InterestTerms> interest, SettingsBoard board, ModLog log)
     {
         RewardPage? page = null;
         var isLoading = true;
 
-        OptionalLive.Watch(enabled, on =>
+        LiveSettings.Watch(enabled, on =>
         {
             if (on == LiveScreen.IsOn) return;
 
@@ -95,7 +100,7 @@ public sealed class Plugin : BasePlugin
     }
 
     /// <summary>Compiles the mod's own code on a worker, so the first rewards screen and shop do not pay for it in a frame.</summary>
-    private static void WarmUpOnWorker(RewardsLog log) =>
+    private static void WarmUpOnWorker(ModLog log) =>
         Task.Run(() =>
         {
             try
@@ -110,7 +115,7 @@ public sealed class Plugin : BasePlugin
         });
 
     /// <summary>Off, the game's three rewards and refresh cost, and the game's screen.</summary>
-    private static void WatchRewards(ConfigEntry<bool> enabled, ConfigEntry<int> optionCount, ConfigEntry<int> refreshCost, ScreenConfig screen, RewardsLog log)
+    private static void WatchRewards(ConfigEntry<bool> enabled, ConfigEntry<int> optionCount, ConfigEntry<int> refreshCost, ScreenConfig screen, ModLog log)
     {
         RewardSettings SettingsNow() => enabled.Value ? RewardSettings.From(optionCount.Value, refreshCost.Value) : RewardSettings.Game;
 
@@ -118,14 +123,14 @@ public sealed class Plugin : BasePlugin
 
         RewardsTicker.Checks.Add(new CostField(costKeeper, log.Write).Tick);
 
-        OptionalLive.Watch(() =>
+        LiveSettings.Watch(() =>
         {
             var settings = SettingsNow();
 
             costKeeper.Use(settings);
             log.Write($"{settings.OptionCount} rewards, refresh cost {RefreshCostText(settings)}");
         }, enabled, optionCount, refreshCost);
-        OptionalLive.Watch(() =>
+        LiveSettings.Watch(() =>
         {
             LiveScreen.Settings = enabled.Value ? screen.Read() : ScreenSettings.Game;
             LiveScreen.Changed();
@@ -135,18 +140,17 @@ public sealed class Plugin : BasePlugin
 
     /// <summary>Hooks the rewards screen and wires the page's buttons to the actions that carry them out.</summary>
     /// <returns>The page, which the mod tells when it is turned off.</returns>
-    private static RewardPage WatchScreen(Func<InterestTerms> interest, SettingsBoard board, RewardsLog log)
+    private static RewardPage WatchScreen(Func<InterestTerms> interest, SettingsBoard board, ModLog log)
     {
-        var harmony = new Harmony(Guid);
+        var hooks = new PatchKit(new Harmony(Guid), log.Write);
         RewardActions? actions = null;
         var page = new RewardPage(log.Write, () => actions?.AskSetup());
         var budget = new FrameBudget();
         var catalog = new RewardCatalog(budget);
 
         actions = new RewardActions(page, catalog, interest, board, budget, log.Write);
-        OfferPatch.Apply(harmony);
-        ListPatch.Apply(harmony);
-        PageMessages.Apply(harmony, log.Write);
+        OfferPatch.Apply(hooks, log.Write);
+        ListPatch.Apply(hooks, log.Write);
         RewardsTicker.Checks.Add(page.Tick);
         RewardsTicker.Checks.Add(actions.Tick);
         RewardsTicker.Checks.Add(catalog.Tick);
@@ -155,7 +159,7 @@ public sealed class Plugin : BasePlugin
     }
 
     /// <summary>Off, the character keeps its own rate.</summary>
-    private static RateKeeper WatchRate(ConfigEntry<bool> enabled, ConfigEntry<int> interestRate, RewardsLog log)
+    private static RateKeeper WatchRate(ConfigEntry<bool> enabled, ConfigEntry<int> interestRate, ModLog log)
     {
         int? RateNow() => enabled.Value ? InterestRate.From(interestRate.Value) : null;
 
@@ -163,7 +167,7 @@ public sealed class Plugin : BasePlugin
 
         RewardsTicker.Checks.Add(new RateField(rateKeeper, log.Write).Tick);
 
-        OptionalLive.Watch(() =>
+        LiveSettings.Watch(() =>
         {
             var rate = RateNow();
 
@@ -181,17 +185,17 @@ public sealed class Plugin : BasePlugin
     /// the mod off from the start the game's code is never touched.
     /// </summary>
     /// <returns>The cap in force now.</returns>
-    private static Func<int> WatchCap(ConfigEntry<bool> enabled, ConfigEntry<int> maxInterest, RewardsLog log)
+    private static Func<int> WatchCap(ConfigEntry<bool> enabled, ConfigEntry<int> maxInterest, ModLog log, Action<string> logError)
     {
         var written = InterestCap.GameCap;
 
-        OptionalLive.Watch(() =>
+        LiveSettings.Watch(() =>
         {
             var cap = (enabled.Value ? InterestCap.From(maxInterest.Value) : null) ?? InterestCap.GameCap;
 
             if (cap == written) return;
 
-            if (!InterestCode.Apply(cap, log)) return;
+            if (!InterestCode.Apply(cap, log.Write, logError)) return;
 
             written = cap;
             LiveScreen.Changed();

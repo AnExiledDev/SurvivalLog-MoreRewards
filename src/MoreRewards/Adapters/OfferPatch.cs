@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using ExiledToolkit.Game;
 using GameCore.HotUpdate;
 using GameCore.HotUpdate.Battle.Logic;
 using GameCore.HotUpdate.ReduxUI;
-using HarmonyLib;
 using MoreRewards.Core;
 using Il2CppInts = Il2CppSystem.Collections.Generic.List<int>;
 using Il2CppIntSet = Il2CppSystem.Collections.Generic.ICollection<int>;
@@ -33,15 +33,20 @@ internal static class OfferPatch
     private static readonly Type[] DayParameters = { typeof(int), typeof(Il2CppIntSet), typeof(int), typeof(int) };
     private static readonly Type[] RefreshParameters = { typeof(int), typeof(Il2CppInts), typeof(Il2CppInts), typeof(Il2CppIntSet), typeof(int), typeof(int) };
 
-    public static void Apply(Harmony harmony)
+    private static Action<string> _log = _ => { };
+    private static PatchKit? _hooks;
+
+    public static void Apply(PatchKit hooks, Action<string> log)
     {
         var type = typeof(SurvivalPlanningComponent);
         const string method = nameof(SurvivalPlanningComponent.GetRandomSurvivalPlanIds);
 
-        PatchKit.Patch(harmony, typeof(OfferPatch), type, method, DayParameters, nameof(ShapeDay),
-            "hooked the end-of-day rewards", "the end of the day keeps the game's 3 rewards, with no extra locks and nothing kept away");
-        PatchKit.Patch(harmony, typeof(OfferPatch), type, method, RefreshParameters, nameof(ShapeRefresh),
-            "hooked the rewards refresh", "a refresh keeps the game's 3 rewards, with no extra locks and nothing kept away");
+        _log = log;
+        _hooks = hooks;
+        hooks.Patch(typeof(OfferPatch), type, method, DayParameters, postfix: nameof(ShapeDay),
+            done: "hooked the end-of-day rewards", consequence: "the end of the day keeps the game's 3 rewards, with no extra locks and nothing kept away");
+        hooks.Patch(typeof(OfferPatch), type, method, RefreshParameters, postfix: nameof(ShapeRefresh),
+            done: "hooked the rewards refresh", consequence: "a refresh keeps the game's 3 rewards, with no extra locks and nothing kept away");
     }
 
     /// <summary>The day's reward groups, or null on a day the game gives a fixed list.</summary>
@@ -109,7 +114,7 @@ internal static class OfferPatch
         }
         catch (Exception ex)
         {
-            PatchKit.Fail(DoingDay, ex);
+            _hooks?.Fail(DoingDay, ex);
         }
     }
 
@@ -140,7 +145,7 @@ internal static class OfferPatch
         }
         catch (Exception ex)
         {
-            PatchKit.Fail(DoingRefresh, ex);
+            _hooks?.Fail(DoingRefresh, ex);
         }
     }
 
@@ -154,6 +159,6 @@ internal static class OfferPatch
 
         var shortBy = LiveScreen.Settings.OptionCount - offer.Count;
 
-        PatchKit.Log($"{when}: the game offered {gameOffer.Count}, now {offer.Count}" + (shortBy > 0 ? $" ({shortBy} short, the day had no more to give)" : ""));
+        _log($"{when}: the game offered {gameOffer.Count}, now {offer.Count}" + (shortBy > 0 ? $" ({shortBy} short, the day had no more to give)" : ""));
     }
 }

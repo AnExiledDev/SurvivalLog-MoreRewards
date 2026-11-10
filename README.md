@@ -21,7 +21,7 @@ At the end of each day, Survival Log offers 3 rewards you can buy with survival 
 - **Tomorrow's interest**: the footer shows the interest you will get when the day ends.
 - **Cash out** (off by default): survival points left when you leave the rewards screen turn into cash.
 - **The shop** (off by default): a 「Shop」 button opens a searchable list of every reward you can get, by category and by permanent, one-time or temporary. Shop prices are 25% above card prices and go up 15% with each purchase until the next day, all of it configurable. Rewards you cannot buy now are greyed out with the reason, or hidden. Purchases are limited to 2 a day, and a reward can be bought before the one it needs at double the price; both are configurable.
-- **UI size**: with Exiled's Toolkit 0.10.0 or newer, its UI size setting (`UiScale`) draws the shop, the ban list and the settings bigger or smaller, as far as each still fits on the screen. The buttons on the cards and in the footer keep the game's size. With Toolkit 0.11.0 or newer, More Rewards's own `UiScale` under Interface sets a size for this mod alone; at 0, the default, it follows the Toolkit's.
+- **UI size**: Exiled's Toolkit's UI size setting (`UiScale`) draws the shop, the ban list and the settings bigger or smaller, as far as each still fits on the screen. The buttons on the cards and in the footer keep the game's size. More Rewards's own `UiScale` under Interface sets a size for this mod alone; at 0, the default, it follows the Toolkit's.
 - **Room for every card**: up to 5 rewards sit in one row. More are spread over even rows with smaller cards, and the area scrolls if they still do not fit.
 - **Rewards stay as they are until you ask**: with the default settings you get the game's 3 rewards and its own refresh cost.
 - **A log file**: what the mod did is written to `BepInEx\more-rewards.log`.
@@ -47,13 +47,13 @@ More Rewards does not edit game files. Extra locks, bans and shop purchases are 
 
 - Survival Log 1.1.20719. Built for this version; a game update can break it until the mod is updated.
 - The [BepInEx Pack for Survival Log](https://www.nexusmods.com/survivallog/mods/12), the BepInEx 6 (IL2CPP) build for the game, version `6.0.0-be.788`.
-- Optional: [Exiled's Toolkit](https://github.com/AnExiledDev/SurvivalLog-ExiledToolkit) 0.4.0 or newer. With it, settings changed on the Mod Manager's Mods screen take effect without restarting the game. Without it, those take effect at the next game start; settings changed on the rewards screen take effect at once either way. With 0.10.0 or newer, its UI size setting also sizes the shop, the ban list and the settings.
+- [Exiled's Toolkit](https://github.com/AnExiledDev/SurvivalLog-ExiledToolkit) 0.19.0 or newer. More Rewards does not load without it. It applies settings changed on the Mod Manager's Mods screen without restarting the game, lets each world keep its own settings, and its UI size setting sizes the shop, the ban list and the settings.
 - Optional: [Mod Manager](https://www.nexusmods.com/survivallog/mods/73). With it, you can change every setting in game on its Mods screen and see what each one does, without opening the config file.
 
 ## Install
 
 1. Install the [BepInEx Pack for Survival Log](https://www.nexusmods.com/survivallog/mods/12) (if no other mods were installed before, start the game once so BepInEx finishes setup, then quit).
-2. Optional, to change settings without a restart: install Exiled's Toolkit. Download `ExiledToolkit-x.y.z.zip` from [its latest release](https://github.com/AnExiledDev/SurvivalLog-ExiledToolkit/releases/latest) or from [Nexus Mods](https://www.nexusmods.com/survivallog/mods/61), and extract it into the game folder (the folder with `SurvivalLog.exe`).
+2. Install Exiled's Toolkit. Download `ExiledToolkit-x.y.z.zip` from [its latest release](https://github.com/AnExiledDev/SurvivalLog-ExiledToolkit/releases/latest) or from [Nexus Mods](https://www.nexusmods.com/survivallog/mods/61), and extract it into the game folder (the folder with `SurvivalLog.exe`).
 3. Download `MoreRewards-x.y.z.zip` from the [latest release](https://github.com/AnExiledDev/SurvivalLog-MoreRewards/releases/latest) or from [Nexus Mods](https://www.nexusmods.com/survivallog/mods/49).
 4. Extract the zip into the game folder (the folder with `SurvivalLog.exe`). It holds a `BepInEx` folder, so the DLL lands in the right place. When asked, merge the folders. The result should be:
    `C:\Program Files (x86)\Steam\steamapps\common\Survival Log\BepInEx\plugins\MoreRewards.dll`
@@ -65,13 +65,13 @@ Delete `MoreRewards.dll` from the `BepInEx\plugins` folder. For a clean slate, a
 
 ## Configuration
 
-Settings live in `BepInEx\config\com.dev.survivallog.morerewards.cfg`, created the first time the game starts with the mod. Change them in game with the 「Settings」 button on the rewards screen or on the Mod Manager's Mods screen, or edit the file while the game is closed. Changed in game, every setting takes effect at once. With Exiled's Toolkit 0.17.0 or newer, each world can keep its own reward settings: every setting in Rewards, Interest, Locks, Cards and Shop except `Labels` and `ShopUnavailable`. Pick them for a new world in Customizable Difficulty, or, while you play, change them for that world alone on the Mods screen. The rewards screen's 「Settings」 changes a setting the world has its own value for in that world alone, and any other for every world. `Enabled`, `Labels`, `ShopUnavailable` and `UiScale` stay the same for every world. See [CONFIG.md](CONFIG.md) for every setting and the full refresh cost table. Without Exiled's Toolkit installed, changes made on the Mods screen take effect at the next game start instead; changes made on the rewards screen still take effect at once.
+Settings live in `BepInEx\config\com.dev.survivallog.morerewards.cfg`, created the first time the game starts with the mod. Change them in game with the 「Settings」 button on the rewards screen or on the Mod Manager's Mods screen, or edit the file while the game is closed. Changed in game, every setting takes effect at once. Each world can keep its own reward settings: every setting in Rewards, Interest, Locks, Cards and Shop except `Labels` and `ShopUnavailable`. Pick them for a new world in Customizable Difficulty, or, while you play, change them for that world alone on the Mods screen. The rewards screen's 「Settings」 changes a setting the world has its own value for in that world alone, and any other for every world. `Enabled`, `Labels`, `ShopUnavailable` and `UiScale` stay the same for every world. See [CONFIG.md](CONFIG.md) for every setting and the full refresh cost table.
 
 ## Troubleshooting
 
 Built against BepInEx `6.0.0-be.788`.
 
-Check `BepInEx\LogOutput.log` for a line starting `===== More Rewards 0.7.4 started`. It says whether the mod is on and the interest limit; turning `Enabled` off or on in game writes `turned off` or `turned on`. The lines after it say what took effect: the interest limit (`interest is now up to 20 survival points a day`), how many rewards and the refresh cost (`10 rewards, refresh cost automatic`), the interest rate, and `hooked the end-of-day rewards`. Changing one of these on the Mods screen writes its line again. Once a game is loaded, a line says `interest rate is now 10%`.
+Check `BepInEx\LogOutput.log` for a line starting `===== More Rewards 0.7.5 started`. It says whether the mod is on and the interest limit; turning `Enabled` off or on in game writes `turned off` or `turned on`. The lines after it say what took effect: the interest limit (`interest is now up to 20 survival points a day`), how many rewards and the refresh cost (`10 rewards, refresh cost automatic`), the interest rate, and `hooked the end-of-day rewards`. Changing one of these on the Mods screen writes its line again. Once a game is loaded, a line says `interest rate is now 10%`.
 
 Each time a day ends or you refresh, the log gets a line saying how many rewards the game offered and how many the mod added. Shortly after the game starts, a line says what a refresh costs now. The reward lines are written when `OptionCount` is above 3 or a lock or ban changed the offer, and the cost line only when the mod changes the cost.
 
@@ -89,13 +89,13 @@ A Survival Log wiki with detailed documentation for all of my mods is coming soo
 
 ## Build
 
-This is a BepInEx 6 IL2CPP plugin. It compiles against BepInEx and the game's IL2CPP interop assemblies, so a game install with BepInEx set up and started once is required. Those assemblies come from the game and are not part of this repo. The .NET 8 SDK is required.
+This is a BepInEx 6 IL2CPP plugin. It compiles against BepInEx, the game's IL2CPP interop assemblies and Exiled's Toolkit, so a game install with BepInEx set up and started once is required. Those assemblies are not part of this repo. The .NET 8 SDK is required.
 
 ```
-dotnet build src/MoreRewards -c Release -p:GameDir="C:\path\to\Survival Log"
+dotnet build src/MoreRewards -c Release -p:GameDir="C:\path\to\Survival Log" -p:ToolkitDll="C:\path\to\ExiledToolkit.dll"
 ```
 
-`GameDir` is the game folder. The default in the project file is a local path you will almost certainly need to override. The output DLL is at `src\MoreRewards\bin\Release\MoreRewards.dll`.
+`GameDir` is the game folder and `ToolkitDll` is a built `ExiledToolkit.dll` (0.19.0 or newer), in the `bin\Release` folder of a copy of Exiled's Toolkit's source; the tests read the Toolkit's page script and one helper from that copy. The defaults in the project file are local paths you will almost certainly need to override. The output DLL is at `src\MoreRewards\bin\Release\MoreRewards.dll`.
 
 The unit tests cover the pure rules (the settings, the refresh cost, how extra rewards are drawn, the interest rate and limit, locks, bans and shop prices) and the page script that lays out the cards and draws the buttons and the shop, and need nothing from the game:
 

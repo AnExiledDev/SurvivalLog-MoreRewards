@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.7.5
+
+- Now uses Exiled's Toolkit for its shared parts, so it needs Exiled's Toolkit 0.19.0 or newer.
+- Made for Survival Log 1.1.20719.
+
 ## 0.7.4
 
 - `InterestRate` and `MaxInterest` now default to 0, the game's 5% and limit of 10, so the mod changes no balance until you set them. A value you already saved is kept.
