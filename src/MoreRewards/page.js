@@ -1025,27 +1025,36 @@
   }
 
   // A number box between - and +. A typed number is sent when the box loses focus or on Enter, held to the range.
+  // The box always ends up showing the number the setting will have: a blank box or one with no number in it changes
+  // nothing and shows the setting again, and a number past the range shows the end of the range it was held to.
   function numberControls(doc, controls, row) {
     var value = Number(row.value) || 0;
     var input = doc.createElement('input');
     var send = function (number) {
-      if (isNaN(number)) return;
+      if (isNaN(number)) {
+        input.value = row.value;
+        return;
+      }
 
       var held = Math.max(row.min, Math.min(row.max, Math.round(number)));
 
+      input.value = String(held);
+
       if (String(held) !== row.value) setSetting(row, String(held));
     };
+    // Number('') is 0, so a box left blank would set the lowest value.
+    var typed = function () { return input.value.trim() === '' ? NaN : Number(input.value); };
 
     controls.appendChild(button(doc, '', '-', function () { send(value - 1); }));
     controls.appendChild(input);
     controls.appendChild(button(doc, '', '+', function () { send(value + 1); }));
     input.value = row.value;
-    input.addEventListener('change', function () { send(Number(input.value)); });
+    input.addEventListener('change', function () { send(typed()); });
     // Typed keys stay in the box: the game must not read them as hotkeys.
     input.addEventListener('keydown', function (e) {
       e.stopPropagation();
 
-      if (e.key === 'Enter') send(Number(input.value));
+      if (e.key === 'Enter') send(typed());
 
       if (e.key === 'Escape') input.closest('.mr-pane').hidden = true;
     });

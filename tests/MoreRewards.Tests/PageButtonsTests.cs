@@ -203,6 +203,23 @@ public class PageButtonsTests
     }
 
     [Fact]
+    public void A_number_box_always_shows_the_number_the_setting_gets()
+    {
+        var page = OpenSettings();
+
+        // A blank box used to set the lowest value; it and a box with no number in it change nothing.
+        page.Run("var box = " + Row(1) + ".querySelector('input'); box.value = ' '; fire(box, 'change'); var blank = box.value; box.value = 'abc'; fire(box, 'change'); var word = box.value;");
+
+        Assert.Equal("2,2", page.Text("[blank, word].join(',')"));
+        Assert.Equal("", page.Text("posted.join(',')"));
+
+        page.Run("box.value = '99'; fire(box, 'change');");
+
+        Assert.Equal("20", page.Text("box.value"));
+        Assert.Equal(Prefix + "set|Shop.ShopPerDay|20", page.Text("posted.join(',')"));
+    }
+
+    [Fact]
     public void Keys_typed_in_a_number_box_do_not_reach_the_game()
     {
         var page = OpenSettings();

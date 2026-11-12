@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.7.9
+
+- Leaving a number box in the settings blank no longer sets it to the lowest value. A blank box, or one with no number in it, now goes back to what the setting is, and a number past the limit shows the limit instead.
+- Made for Survival Log 1.1.20719.
+
 ## 0.7.8
 
 - Clearer wording in the settings, the shop and the rewards screen footer.
