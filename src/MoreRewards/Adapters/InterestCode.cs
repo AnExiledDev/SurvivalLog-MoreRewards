@@ -14,9 +14,10 @@ namespace MoreRewards.Adapters;
 /// while it is written. There is no hook, so the 14-byte rule for hook targets does not apply;
 /// only two numbers inside the method change. The code is found by name: SettleDailySurvivalPoints's start comes from
 /// its il2cpp method info, and the code is searched for in the method (<see cref="InterestCap.FindIn"/>), so a game
-/// update that only moves the method changes nothing. Before the method is read, the module's size from its PE header
-/// must reach past what is searched, so a module is never read beyond its end. When the code is not found the cap is
-/// left as the game's and the reason is logged as an error, so the mod shows red in Mod Manager. The code is in
+/// update that only moves the method changes nothing. The method is read from its start to its end, which the module's
+/// exception table gives, and only inside the module's size from its PE header. When the method's end can't be found,
+/// or the code is not found in the method, the cap is left as the game's and the reason is logged as an error, so the
+/// mod shows red in Mod Manager. The code is in
 /// GameAssembly.dll's executable il2cpp section, so it is made writable for the write and given its old protection back.
 /// </summary>
 internal static class InterestCode
@@ -78,18 +79,9 @@ internal static class InterestCode
 
         if (method == IntPtr.Zero) return "could not find SettleDailySurvivalPoints in the game (a game update?)";
 
-        var firstPage = new byte[PeHeader.PageSize];
+        if (MethodLength(module, method) is not { } length) return $"could not tell where SettleDailySurvivalPoints ends in {GameModule}, so it is not read";
 
-        Marshal.Copy(module, firstPage, 0, firstPage.Length);
-
-        if (PeHeader.SizeOfImage(firstPage) is not { } size || !InterestCap.FitsIn(method.ToInt64() - module.ToInt64(), size))
-            return $"SettleDailySurvivalPoints would lie outside {GameModule}, so it is not read";
-
-        var body = new byte[InterestCap.SearchBytes];
-
-        Marshal.Copy(method, body, 0, body.Length);
-
-        if (InterestCap.FindIn(body) is not { } at) return "the game's interest code is not the one this mod knows (a game update?)";
+        if (InterestCap.FindIn(Read(method, length)) is not { } at) return "the game's interest code is not the one this mod knows (a game update?)";
 
         _code = method + at;
 
@@ -106,6 +98,25 @@ internal static class InterestCode
         if (fields.Count != 1 || fields[0].GetValue(null) is not IntPtr methodInfo || methodInfo == IntPtr.Zero) return IntPtr.Zero;
 
         return Marshal.ReadIntPtr(methodInfo);
+    }
+
+    /// <returns>How long the method at <paramref name="method"/> is, from the module's exception table, or null when the table can't say.</returns>
+    private static int? MethodLength(IntPtr module, IntPtr method)
+    {
+        var firstPage = Read(module, PeHeader.PageSize);
+
+        if (PeHeader.SizeOfImage(firstPage) is not { } size || PeHeader.ExceptionTableOf(firstPage) is not { } table) return null;
+
+        return FunctionTable.MethodLength((rva, count) => Read(module + rva, count), size, table, method.ToInt64() - module.ToInt64());
+    }
+
+    private static byte[] Read(IntPtr address, int count)
+    {
+        var bytes = new byte[count];
+
+        Marshal.Copy(address, bytes, 0, count);
+
+        return bytes;
     }
 
     private static void Write(IntPtr address, byte[] code, Action<string> log)

@@ -9,6 +9,9 @@ namespace MoreRewards.Tests;
 
 public class InterestCapTests
 {
+    /// <summary>How long SettleDailySurvivalPoints is in game 1.1.20719, its setup and its chained piece together.</summary>
+    private const int SettleLength = 2992;
+
     [Theory]
     [InlineData(1, 1)]
     [InlineData(9, 9)]
@@ -94,17 +97,6 @@ public class InterestCapTests
     }
 
     [Fact]
-    public void A_method_is_searched_only_when_the_module_reaches_past_everything_searched()
-    {
-        const int method = 0x28b6a20;
-        var end = method + InterestCap.SearchBytes;
-
-        Assert.True(InterestCap.FitsIn(method, end));
-        Assert.False(InterestCap.FitsIn(method, end - 1));
-        Assert.False(InterestCap.FitsIn(-1, end));
-    }
-
-    [Fact]
     public void The_code_is_found_wherever_the_method_holds_it()
     {
         Assert.Equal(0x601, InterestCap.FindIn(Method((0x601, InterestCap.GameCode))));
@@ -131,18 +123,19 @@ public class InterestCapTests
     }
 
     [Fact]
-    public void Code_cut_off_at_the_end_of_what_is_searched_is_not_found()
+    public void Code_cut_off_at_the_end_of_the_method_is_not_found()
     {
-        var body = Method((InterestCap.SearchBytes - InterestCap.GameCode.Count, InterestCap.GameCode));
+        var end = SettleLength - InterestCap.GameCode.Count;
+        var body = Method((end, InterestCap.GameCode));
 
-        Assert.Equal(InterestCap.SearchBytes - InterestCap.GameCode.Count, InterestCap.FindIn(body));
+        Assert.Equal(end, InterestCap.FindIn(body));
         Assert.Null(InterestCap.FindIn(body.AsSpan(0, body.Length - 1)));
     }
 
     /// <summary>A method body of int3 padding (the byte the game pads its code with) holding each code at its place.</summary>
     private static byte[] Method(params (int At, IReadOnlyList<byte> Code)[] codes)
     {
-        var body = Enumerable.Repeat((byte)0xCC, InterestCap.SearchBytes).ToArray();
+        var body = Enumerable.Repeat((byte)0xCC, SettleLength).ToArray();
 
         foreach (var (at, code) in codes) code.ToArray().CopyTo(body, at);
 

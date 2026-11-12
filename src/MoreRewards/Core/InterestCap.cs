@@ -12,7 +12,9 @@ namespace MoreRewards.Core;
 /// the smaller of the interest and 10. The mod writes its own cap over both numbers and leaves the rest of the rule,
 /// the rate (<see cref="InterestRate"/>) and the minimum of 1, as it is.
 /// The method moves with every game update while its code stays the same (0x601 bytes in, in 1.1.19611, 1.1.20151 and
-/// 1.1.20719), so the code is found by searching the method (<see cref="FindIn"/>), never at a fixed address.
+/// 1.1.20719), so the code is found by searching the method (<see cref="FindIn"/>), never at a fixed address. The method
+/// is searched from its start to its end, which comes from the game's exception table (<see cref="FunctionTable"/>);
+/// in 1.1.20719 it is 2992 bytes long.
 /// </summary>
 public static class InterestCap
 {
@@ -23,12 +25,6 @@ public static class InterestCap
 
     /// <summary>The compare holds a signed byte, so the cap must stay below 128.</summary>
     public const int MostCap = 100;
-
-    /// <summary>
-    /// How much of SettleDailySurvivalPoints is searched from its start: the method is 2992 bytes long in game 1.1.20719,
-    /// with <see cref="GameCode"/> 0x601 bytes in.
-    /// </summary>
-    public const int SearchBytes = 0x2000;
 
     /// <summary>The start of the name of the interop field holding SettleDailySurvivalPoints's il2cpp method info, on SurvivalResultsManager.</summary>
     public const string MethodInfoField = "NativeMethodInfoPtr_SettleDailySurvivalPoints_";
@@ -56,12 +52,6 @@ public static class InterestCap
 
     private const int CompareCapAt = CapAt + 2;
     private const int MoveCapAt = CapAt + 6;
-
-    /// <returns>
-    /// Whether a module of <paramref name="sizeOfImage"/> bytes holds the <see cref="SearchBytes"/> from a method at
-    /// <paramref name="methodRva"/>, so reading them is safe.
-    /// </returns>
-    public static bool FitsIn(long methodRva, int sizeOfImage) => methodRva >= 0 && methodRva <= sizeOfImage - SearchBytes;
 
     /// <returns>
     /// Where in <paramref name="body"/> the game's code starts, with the game's cap or one this mod wrote, or null when it

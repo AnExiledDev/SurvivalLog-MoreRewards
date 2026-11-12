@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.7.7
+
+- The interest cap now only looks for the two numbers it changes in the code that pays interest when a day ends, so after a game update it can't change some other part of the game by mistake.
+- Made for Survival Log 1.1.20719.
+
 ## 0.7.6
 
 - Now needs Exiled's Toolkit 0.20.0 or newer.

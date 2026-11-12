@@ -8,8 +8,14 @@ namespace MoreRewards.Tests;
 public class PeHeaderTests
 {
     private const int PeAt = 0x108;
-    private const int SizeOfImageAt = PeAt + 4 + 20 + 56;
+    private const int OptionalAt = PeAt + 4 + 20;
+    private const int SizeOfImageAt = OptionalAt + 56;
+    private const int DirectoryCountAt = OptionalAt + 108;
+    private const int ExceptionDirectoryAt = OptionalAt + 112 + 3 * 8;
     private const int GameAssemblySize = 0x4000000;
+
+    /// <summary>Where GameAssembly.dll 1.1.20719 keeps its exception table.</summary>
+    private static readonly ExceptionTable GameTable = new(0x627b000, 0x35133c);
 
     [Fact]
     public void The_size_of_a_module_is_read_from_its_header()
@@ -53,7 +59,52 @@ public class PeHeaderTests
         Assert.Null(PeHeader.SizeOfImage(new byte[] { (byte)'M', (byte)'Z' }));
     }
 
-    /// <summary>A fake first page of a module: "MZ", the offset of "PE\0\0", then SizeOfImage where the optional header keeps it.</summary>
+    [Fact]
+    public void The_exception_table_is_read_from_a_64_bit_header()
+    {
+        Assert.Equal(GameTable, PeHeader.ExceptionTableOf(FirstPage()));
+    }
+
+    [Fact]
+    public void A_32_bit_module_has_no_exception_table_to_read()
+    {
+        var page = FirstPage();
+        BinaryPrimitives.WriteUInt16LittleEndian(page.AsSpan(OptionalAt), 0x10b);
+
+        Assert.Null(PeHeader.ExceptionTableOf(page));
+    }
+
+    [Fact]
+    public void A_header_with_too_few_directories_has_no_exception_table()
+    {
+        var page = FirstPage();
+        BinaryPrimitives.WriteInt32LittleEndian(page.AsSpan(DirectoryCountAt), 3);
+
+        Assert.Null(PeHeader.ExceptionTableOf(page));
+    }
+
+    [Fact]
+    public void An_empty_exception_directory_is_no_table()
+    {
+        var page = FirstPage();
+        BinaryPrimitives.WriteInt32LittleEndian(page.AsSpan(ExceptionDirectoryAt + 4), 0);
+
+        Assert.Null(PeHeader.ExceptionTableOf(page));
+    }
+
+    [Fact]
+    public void A_page_without_the_pe_signature_has_no_exception_table()
+    {
+        var page = FirstPage();
+        page[PeAt] = 0;
+
+        Assert.Null(PeHeader.ExceptionTableOf(page));
+    }
+
+    /// <summary>
+    /// A fake first page of a 64-bit module: "MZ", the offset of "PE\0\0", then the optional header's magic, SizeOfImage,
+    /// the number of data directories and the exception directory where the optional header keeps them.
+    /// </summary>
     private static byte[] FirstPage()
     {
         var page = new byte[PeHeader.PageSize];
@@ -62,7 +113,11 @@ public class PeHeaderTests
         BinaryPrimitives.WriteInt32LittleEndian(page.AsSpan(0x3c), PeAt);
         page[PeAt] = (byte)'P';
         page[PeAt + 1] = (byte)'E';
+        BinaryPrimitives.WriteUInt16LittleEndian(page.AsSpan(OptionalAt), 0x20b);
         BinaryPrimitives.WriteInt32LittleEndian(page.AsSpan(SizeOfImageAt), GameAssemblySize);
+        BinaryPrimitives.WriteInt32LittleEndian(page.AsSpan(DirectoryCountAt), 16);
+        BinaryPrimitives.WriteInt32LittleEndian(page.AsSpan(ExceptionDirectoryAt), GameTable.Rva);
+        BinaryPrimitives.WriteInt32LittleEndian(page.AsSpan(ExceptionDirectoryAt + 4), GameTable.Size);
 
         return page;
     }
