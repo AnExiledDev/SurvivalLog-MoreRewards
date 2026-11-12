@@ -312,7 +312,7 @@ public class PageButtonsTests
     {
         var page = Rewards("[{id: 11, state: 'affordable', pinned: false}]", points: 100, setup: "cashOut: 15");
 
-        Assert.Equal("Interest tomorrow: +5Leaving cashes out: $1500", page.Text("frame.contentDocument.querySelector('.mr-foot').textContent"));
+        Assert.Equal("Interest tomorrow: +5Cash when you leave: $1500", page.Text("frame.contentDocument.querySelector('.mr-foot').textContent"));
     }
 
     [Fact]
@@ -492,7 +492,7 @@ public class PageButtonsTests
         var page = new PageScript();
         const string data = "{points: 20, left: 0, rows: [shopRow(1, 'Axe', 5)]}";
 
-        Assert.Equal("No shop buys left today", page.Text($"window.__slmorerewards.shopList({data}, {{query: ''}}, 'en').rows[0].why"));
+        Assert.Equal("No shop purchases left today", page.Text($"window.__slmorerewards.shopList({data}, {{query: ''}}, 'en').rows[0].why"));
     }
 
     [Fact]

@@ -1,32 +1,32 @@
 Name: More Rewards
-Summary: Choose from up to 20 rewards at the end of each day instead of 3, lock several, and ban the cards you do not want, with a list to undo bans. Raise the daily interest on survival points, change every setting on the rewards screen, and turn on an optional shop to search and buy any reward you can get. Cards shrink into rows so all fit.
+Summary: Choose from up to 20 rewards at the end of each day instead of 3, lock several, and ban the cards you do not want. Set your own daily interest on survival points, change every setting right on the rewards screen, and turn on an optional shop to search and buy any reward you can get. With more cards, they shrink into extra rows so they all fit.
 
 Description (BBCode):
 [center][img]https://sldb.core-directive.com/media/save/3-remove-with-care.png[/img][/center]
 
-At the end of each day, Survival Log offers 3 rewards you can buy with survival points, and a refresh for 2 points draws 3 new ones. More Rewards lets you raise that to any number up to 20, from the same reward pool the game draws from, lock several, ban the ones you do not want, and open an optional shop. The refresh cost goes up with the number of rewards on its own, or you can make it free or set any cost you like. You can also raise the interest your survival points earn each day, and the most it can pay, above the game's 5% and 10.
+At the end of each day, Survival Log offers 3 rewards you can buy with survival points, and a refresh for 2 points draws 3 new ones. More Rewards lets you raise that to any number up to 20, from the same reward pool the game draws from. You can also lock several, ban the ones you do not want, and open an optional shop. By default the refresh cost goes up with the number of rewards, or you can make it free or set any cost you like. And you can raise the interest your survival points earn each day, and the most it can pay, above the game's 5% and 10.
 
-Out of the box the mod changes nothing about the game's balance: you get the game's 3 rewards, its refresh cost and its interest. Set OptionCount for more rewards, and InterestRate and MaxInterest for more interest.
+Out of the box the mod changes nothing about the game's balance. You get the game's 3 rewards, its refresh cost and its interest. Set OptionCount for more rewards, and InterestRate and MaxInterest for more interest.
 
 [size=5]Main features[/size]
 [list]
 [*][b]More rewards to choose from[/b]: set how many rewards the end of the day offers, from the game's 3 up to 20. A refresh draws that many too.[/*]
-[*][b]The game's rewards[/b]: the extra rewards come from the same groups the game picks that day's rewards from, never repeat a reward already on offer, skip the rewards the game has on cooldown just as its own picks do, and are bought like any other.[/*]
-[*][b]A fair refresh cost[/b]: by default the cost goes up by 1 survival point at 4, 6, 8 rewards and so on (3 rewards cost 2, 4 or 5 cost 3, 6 or 7 cost 4, 10 cost 6). Or make every refresh free, or set a fixed cost of your own.[/*]
-[*][b]More interest[/b]: when a day ends, the game pays interest on the survival points you hold, 5% of them, at most 10. Set your own rate and limit up to 100 (a rate of 10% and a limit of 20 make saving up to 200 points pay off), or keep the game's, which is the default. The Savings Plan reward keeps paying its own bonus on top.[/*]
+[*][b]The same rewards the game offers[/b]: the extra rewards come from the same groups the game picks that day's rewards from. They never repeat a reward already on offer, they skip rewards on cooldown like the game does, and you buy them like any other card.[/*]
+[*][b]Refresh cost[/b]: by default the cost goes up by 1 survival point at 4, 6, 8 rewards and so on (3 rewards cost 2, 4 or 5 cost 3, 6 or 7 cost 4, 10 cost 6). Or make every refresh free, or set a fixed cost of your own.[/*]
+[*][b]Interest[/b]: when a day ends, the game pays interest on the survival points you hold, 5% of them, at most 10. Set your own rate and limit up to 100 (a rate of 10% and a limit of 20 make saving up to 200 points pay off), or keep the game's, which is the default. The Savings Plan reward keeps paying its own bonus on top.[/*]
 [*][b]Lock more than one reward[/b]: set MaxLocked and lock up to 1 less than the number of rewards. Locked rewards stay through a refresh and are still there the next day.[/*]
-[*][b]Ban[/b]: a Ban button swaps a card for another and keeps it away for the rest of the run, for 2 survival points by default, and can ban every level of the same reward.[/*]
+[*][b]Ban[/b]: a Ban button swaps a card for another and keeps that reward away for the rest of the run. A ban costs survival points (2 by default), and you can set it to ban every level of the same reward.[/*]
 [*][b]The ban list[/b]: a Bans button in the footer lists this run's bans. Removing one lets its rewards come back and gives back half of what the ban cost (configurable).[/*]
 [*][b]Settings on the rewards screen[/b]: a Settings button in the footer changes every More Rewards setting right there, and the change takes effect at once.[/*]
 [*][b]How long a reward lasts[/b]: each card says whether its reward is permanent, one-time, or lasts for a time, such as 3 DAYS.[/*]
 [*][b]Tomorrow's interest[/b]: the footer shows the interest you will get when the day ends.[/*]
 [*][b]No repeats on refresh and cash out[/b] (both off by default): a refresh shows rewards you have not seen that day, and survival points left when you leave the screen turn into cash.[/*]
-[*][b]The shop[/b] (off by default): a Shop button opens a searchable list of every reward you can get, by category and by permanent, one-time or temporary. Prices are 25% above card prices and go up 15% with each purchase until the next day, with 2 purchases a day, all configurable. Rewards you cannot buy now are greyed out with the reason, or hidden.[/*]
-[*][b]UI size[/b]: Exiled's Toolkit's UI size setting draws the shop, the ban list and the settings bigger or smaller, as far as each still fits on the screen. More Rewards's own UiScale setting can set a size for this mod alone.[/*]
+[*][b]The shop[/b] (off by default): a Shop button opens a searchable list of every reward you can get, by category and by permanent, one-time or temporary. You set the prices and limits. By default prices are 25% above card prices and go up 15% with each purchase until the next day, and you can buy 2 rewards a day. Rewards you cannot buy now are greyed out with the reason, or hidden.[/*]
+[*][b]UI size[/b]: Exiled's Toolkit's UI size setting draws the shop, the ban list and the settings bigger or smaller, as far as each still fits on the screen. More Rewards also has a UiScale setting that sets a size for this mod alone.[/*]
 [*][b]Room for every card[/b]: up to 5 rewards sit in one row. More are spread over even rows with smaller cards, and the area scrolls if they still do not fit.[/*]
-[*][b]Rewards stay as they are until you ask[/b]: with the default settings you get the game's 3 rewards and its own refresh cost.[/*]
+[*][b]Nothing changes until you set it[/b]: with the default settings you get the game's 3 rewards, its refresh cost and its interest.[/*]
 [/list]
-No new keys. The new buttons are Ban on each card, and Shop, Bans and Settings in the footer. Settings is always there; the others are switched by their settings. More Rewards does not edit game files; extra locks, bans and shop purchases are saved with the run. Your save keeps the game's interest rate. You can remove it at any time.
+There are no new keys. The new buttons are Ban on each card, and Shop, Bans and Settings in the footer. Settings is always there, and each of the others has a setting that turns it on or off. More Rewards does not edit game files. Extra locks, bans and shop purchases are saved with the run. Your save keeps the game's interest rate. You can remove the mod at any time.
 
 Works in English and Chinese.
 
@@ -59,29 +59,30 @@ Works in English and Chinese.
 [*]Download the zip from the Files tab.[/*]
 [*]Extract it into the game folder (the folder with [font=Courier New]SurvivalLog.exe[/font]). The zip holds a BepInEx folder, so the DLL lands in the right place. When asked, merge the folders. The result should be:
 [code]C:\Program Files (x86)\Steam\steamapps\common\Survival Log\BepInEx\plugins\MoreRewards.dll[/code][/*]
-[*]Start the game once, quit, and set OptionCount in the settings file (see Configuration below). Until you do, you get the game's 3 rewards and its own interest.[/*]
+[*]Start the game once, quit, and set OptionCount in the settings file (see Configuration below). Until you do, you get the game's 3 rewards and its interest.[/*]
 [/list]
 
 [size=5]Uninstall[/size]
 Delete [font=Courier New]MoreRewards.dll[/font] from the [font=Courier New]BepInEx\plugins[/font] folder.
 
 [size=5]Configuration[/size]
-Edit [font=Courier New]BepInEx\config\com.dev.survivallog.morerewards.cfg[/font] while the game is closed, or do it in game with the Settings button on the rewards screen or on the Mod Manager's Mods screen (see [url=https://github.com/AnExiledDev/SurvivalLog-MoreRewards/blob/main/CONFIG.md]CONFIG.md[/url] for every setting and the full cost table). Changed in game, every setting takes effect at once. Each world can keep its own reward count, refresh cost, interest, locks, bans, cash out and shop rules: pick them for a new world in Customizable Difficulty, or, while you play, change them for that world alone on the Mods screen. Enabled, Labels, ShopUnavailable and UiScale stay the same for every world.
+Edit [font=Courier New]BepInEx\config\com.dev.survivallog.morerewards.cfg[/font] while the game is closed, or do it in game with the Settings button on the rewards screen or on the Mod Manager's Mods screen (see [url=https://github.com/AnExiledDev/SurvivalLog-MoreRewards/blob/main/CONFIG.md]CONFIG.md[/url] for every setting and the full cost table). Changed in game, every setting takes effect at once. Each world can keep its own reward count, refresh cost, interest, locks, bans, cash out and shop rules. Pick them for a new world in Customizable Difficulty, or change them for the world you are playing on the Mods screen. Enabled, Labels, ShopUnavailable and UiScale are always the same for every world.
 [list]
 [*][b]OptionCount[/b] (default 3): how many rewards to choose from, 3 to 20.[/*]
 [*][b]RefreshCost[/b] (default -1): -1 scales the cost with OptionCount, 0 makes every refresh free, and 1 to 99 is the cost of every refresh.[/*]
-[*][b]InterestRate[/b] (default 0): the daily interest rate on your survival points, in percent. 0 keeps the game's 5%; 1 to 100 sets a new rate.[/*]
-[*][b]MaxInterest[/b] (default 0): the most interest your survival points earn in a day. 0 keeps the game's limit of 10; 1 to 100 sets a new limit.[/*]
+[*][b]InterestRate[/b] (default 0): the daily interest rate on your survival points, in percent. 0 keeps the game's 5%, and 1 to 100 sets a new rate.[/*]
+[*][b]MaxInterest[/b] (default 0): the most interest your survival points earn in a day. 0 keeps the game's limit of 10, and 1 to 100 sets a new limit.[/*]
 [*][b]MaxLocked[/b] (default 1): how many rewards you can lock at once.[/*]
-[*][b]BanButton[/b], [b]Labels[/b] (default true): the Ban button and the label. [b]BanCost[/b] (default 2) is what a ban costs; [b]BanWholeLine[/b] (default false) bans every level of a reward; [b]UnbanRefund[/b] (default 50) is the percent of the cost given back when a ban is removed.[/*]
-[*][b]NoRepeatOnRefresh[/b] (default false) and [b]CashOut[/b] (default 0, cash per point left).[/*]
+[*][b]BanButton[/b] and [b]Labels[/b] (default true): the Ban button and the labels on the cards. [b]BanCost[/b] (default 2) is what a ban costs, and [b]BanWholeLine[/b] (default false) bans every level of a reward. [b]UnbanRefund[/b] (default 50) is the percent of the cost you get back when you remove a ban.[/*]
+[*][b]NoRepeatOnRefresh[/b] (default false): true makes a refresh show only rewards you have not seen yet that day.[/*]
+[*][b]CashOut[/b] (default 0): the cash you get for each survival point left when you leave the rewards screen. 0 is off.[/*]
 [*][b]ShopEnabled[/b] (default false) turns the shop on. [b]ShopMarkup[/b] (25), [b]ShopIncrease[/b] (15), [b]ShopReset[/b] (Day), [b]ShopPerDay[/b] (2), [b]ShopUnavailable[/b] (Grey) and [b]ShopLocked[/b] (true) set its prices and rules.[/*]
 [*][b]Enabled[/b] (default true): false turns the whole mod off at once, and takes its buttons off the rewards screen.[/*]
 [/list]
 
 [size=5]Feedback[/size]
 Found a bug or have an idea? Come say hi on the [url=https://discord.gg/trTsyxUFqg]Core Directive Discord[/url], or post in this page's Posts tab. For bugs, please include [font=Courier New]BepInEx\LogOutput.log[/font] and [font=Courier New]BepInEx\more-rewards.log[/font].
-To reach me directly, message [b]exiled.dev[/b] on Discord; you can find me in the [url=https://discord.gg/MZGg4gQAUe]official Survival Log Discord[/url]. I'm also on X as [url=https://x.com/AnExiledDev]@AnExiledDev[/url].
+To reach me directly, message [b]exiled.dev[/b] on Discord. You can find me in the [url=https://discord.gg/MZGg4gQAUe]official Survival Log Discord[/url]. I'm also on X as [url=https://x.com/AnExiledDev]@AnExiledDev[/url].
 
 [size=5]Source and license[/size]
 Open source under MIT: [url=https://github.com/AnExiledDev/SurvivalLog-MoreRewards]github.com/AnExiledDev/SurvivalLog-MoreRewards[/url]
@@ -89,29 +90,29 @@ Open source under MIT: [url=https://github.com/AnExiledDev/SurvivalLog-MoreRewar
 [line]
 [size=5]简体中文[/size]
 
-每天结束时，Survival Log 会提供 3 张可以用生存点购买的规划卡，花 2 点刷新可以换 3 张新的。More Rewards 让你把数量提高到最多 20 张，全部来自游戏本身抽卡的卡池，还能锁定多张、禁用不想要的卡，并可开启商店。刷新花费会随规划卡数量自动上涨，你也可以让刷新免费，或者自定任意花费。你还可以把生存点的每日回息比例和上限提高到游戏原本的 5% 和 10 以上。
+每天结束时，Survival Log 会提供 3 张可以用生存点购买的规划卡，花 2 点刷新可以换 3 张新的。More Rewards 让你把数量提高到最多 20 张，全部来自游戏本身抽卡的卡池，还能锁定多张、禁用不想要的卡，并可开启商店。默认情况下刷新花费会随规划卡数量上涨，你也可以让刷新免费，或者自定任意花费。你还可以把生存点的每日回息比例和上限提高到游戏原本的 5% 和 10 以上。
 
 默认设置下，本模组不改变游戏的任何平衡：仍是游戏原本的 3 张规划卡、刷新花费和回息。设置 OptionCount 可以获得更多规划卡，设置 InterestRate 和 MaxInterest 可以获得更多回息。
 
 [size=5]主要功能[/size]
 [list]
 [*][b]更多规划卡可选[/b]：设置每天结束时提供几张规划卡，从游戏原本的 3 张到最多 20 张。刷新时也会抽出同样多的卡。[/*]
-[*][b]都是游戏自己的规划卡[/b]：额外的规划卡来自游戏当天抽卡所用的同一批卡组，不会和已经在列的卡重复，也会像游戏自己抽卡一样跳过冷却中的卡，购买方式和其他卡完全相同。[/*]
-[*][b]合理的刷新花费[/b]：默认情况下，规划卡数量到 4、6、8 张等时，刷新花费各加 1 点生存点（3 张花 2 点，4 或 5 张花 3 点，6 或 7 张花 4 点，10 张花 6 点）。也可以让每次刷新都免费，或者设一个固定花费。[/*]
-[*][b]更多回息[/b]：每天结束时，游戏会按持有生存点的 5% 发放回息，最多 10 点。比例和上限都可以自己设，最高 100（比例 10%、上限 20 时，生存点攒到 200 都有回报），也可以保持游戏原样，这也是默认设置。「储蓄计划」照样会在此之外发放它自己的加成。[/*]
+[*][b]和游戏提供的规划卡一样[/b]：额外的规划卡来自游戏当天抽卡所用的同一批卡组，不会和已经在列的卡重复，也会像游戏自己抽卡一样跳过冷却中的卡，购买方式和其他卡完全相同。[/*]
+[*][b]刷新花费[/b]：默认情况下，规划卡数量到 4、6、8 张等时，刷新花费各加 1 点生存点（3 张花 2 点，4 或 5 张花 3 点，6 或 7 张花 4 点，10 张花 6 点）。也可以让每次刷新都免费，或者设一个固定花费。[/*]
+[*][b]回息[/b]：每天结束时，游戏会按持有生存点的 5% 发放回息，最多 10 点。比例和上限都可以自己设，最高 100（比例 10%、上限 20 时，生存点攒到 200 都有回报），也可以保持游戏原样，这也是默认设置。「储蓄计划」照样会在此之外发放它自己的加成。[/*]
 [*][b]锁定多张[/b]：设置 MaxLocked，最多可锁定比卡数少 1 张。锁定的卡在刷新后和第二天仍会保留。[/*]
-[*][b]「禁用」[/b]：「禁用」按钮把卡换成另一张，并让它在本局剩余时间内不再出现，默认花 2 点生存点，也可以一并禁用同一系列的所有等级。[/*]
+[*][b]「禁用」[/b]：「禁用」按钮把卡换成另一张，并让它在本局剩余时间内不再出现。禁用要花生存点（默认 2 点），也可以设置为一并禁用同一系列的所有等级。[/*]
 [*][b]禁用列表[/b]：底栏的「禁用列表」按钮列出本局禁用的卡。解除禁用后，这些卡可以再次出现，并退还禁用花费的一半（可设置）。[/*]
 [*][b]在奖励界面修改设置[/b]：底栏的「设置」按钮可以直接修改更多奖励的所有设置，改动立即生效。[/*]
 [*][b]效果持续多久[/b]：每张卡会标明效果是永久的、一次性的，还是持续一段时间，例如「持续3天」。[/*]
 [*][b]明天的回息[/b]：底栏显示当天结束时能得到的回息。[/*]
-[*][b]刷新不重复和兑现[/b]（默认关闭）：刷新只给当天没出现过的卡；离开界面时剩下的生存点换成现金。[/*]
-[*][b]商店[/b]（默认关闭）：「商店」按钮打开可搜索、按分类排列的列表，包含所有能获得的规划卡，还能按永久、一次性或限时筛选。价格比卡片高 25%，每买一次再涨 15%，第二天恢复，每天可买 2 次，均可设置。现在买不了的卡会显示为灰色并写明原因，也可以隐藏。[/*]
+[*][b]刷新不重复和兑现[/b]（默认关闭）：刷新只给当天没出现过的卡。离开界面时剩下的生存点换成现金。[/*]
+[*][b]商店[/b]（默认关闭）：「商店」按钮打开可搜索、按分类排列的列表，包含所有能获得的规划卡，还能按永久、一次性或限时筛选。价格和次数都由你设置，默认价格比卡片高 25%，每买一次再涨 15%，第二天恢复，每天可买 2 次。现在买不了的卡会显示为灰色并写明原因，也可以隐藏。[/*]
 [*][b]界面大小[/b]：可以用 Exiled's Toolkit 的界面大小设置放大或缩小商店、禁用列表和设置窗口，最大放到窗口仍能完整显示在屏幕上为止。还可以用 More Rewards 自己的 UiScale 设置单独调整本模组的大小。[/*]
-[*][b]每张卡都放得下[/b]：5 张以内排成一行。超过 5 张时平均分成几行，卡片会缩小；如果还是放不下，卡片区域可以滚动。[/*]
-[*][b]不改设置就保持原样[/b]：默认设置下，仍是游戏原本的 3 张规划卡和原本的刷新花费。[/*]
+[*][b]每张卡都放得下[/b]：5 张以内排成一行。超过 5 张时平均分成几行，卡片会缩小。如果还是放不下，卡片区域可以滚动。[/*]
+[*][b]不改设置就保持原样[/b]：默认设置下，仍是游戏原本的 3 张规划卡、刷新花费和回息。[/*]
 [/list]
-没有新增按键。新增的按钮是每张卡上的「禁用」，以及底栏的「商店」、「禁用列表」和「设置」。「设置」始终显示，其他按钮由对应设置开关。More Rewards 不会修改游戏文件；额外的锁定、禁用和商店购买记录随本局存档保存。存档里保存的仍是游戏原本的回息比例。随时可以移除。
+没有新增按键。新增的按钮是每张卡上的「禁用」，以及底栏的「商店」、「禁用列表」和「设置」。「设置」始终显示，其他按钮由对应设置开关。More Rewards 不会修改游戏文件。额外的锁定、禁用和商店购买记录随本局存档保存。存档里保存的仍是游戏原本的回息比例。随时可以移除本模组。
 
 支持英文和中文。
 
@@ -150,15 +151,16 @@ Open source under MIT: [url=https://github.com/AnExiledDev/SurvivalLog-MoreRewar
 从 [font=Courier New]BepInEx\plugins[/font] 文件夹中删除 [font=Courier New]MoreRewards.dll[/font]。
 
 [size=5]配置[/size]
-可以在游戏内奖励界面的「设置」按钮或 Mod Manager 的「模组」界面修改，也可以在游戏关闭时编辑 [font=Courier New]BepInEx\config\com.dev.survivallog.morerewards.cfg[/font]。配置文件中每项设置都有中文说明，所有设置和完整的刷新花费表见 [url=https://github.com/AnExiledDev/SurvivalLog-MoreRewards/blob/main/CONFIG.md]CONFIG.md[/url]（英文）。在游戏内修改时，所有设置都立即生效。每个存档都可以有自己的奖励数量、刷新花费、利息、锁定、禁用、兑现和商店规则：新存档可以在「自定义难度」里选，游戏中也可以在「模组」界面只为当前存档修改。Enabled、Labels、ShopUnavailable 和 UiScale 对所有存档都一样。
+可以在游戏内奖励界面的「设置」按钮或 Mod Manager 的「模组」界面修改，也可以在游戏关闭时编辑 [font=Courier New]BepInEx\config\com.dev.survivallog.morerewards.cfg[/font]。配置文件中每项设置都有中文说明，所有设置和完整的刷新花费表见 [url=https://github.com/AnExiledDev/SurvivalLog-MoreRewards/blob/main/CONFIG.md]CONFIG.md[/url]（英文）。在游戏内修改时，所有设置都立即生效。每个存档都可以有自己的奖励数量、刷新花费、回息、锁定、禁用、兑现和商店规则：新存档可以在「自定义难度」里选，游戏中也可以在「模组」界面只为当前存档修改。Enabled、Labels、ShopUnavailable 和 UiScale 对所有存档都一样。
 [list]
 [*][b]OptionCount[/b]（默认 3）：可供选择的规划卡数量，3 到 20。[/*]
 [*][b]RefreshCost[/b]（默认 -1）：-1 表示刷新花费随 OptionCount 自动调整，0 表示每次刷新免费，1 到 99 则是每次刷新的固定花费。[/*]
-[*][b]InterestRate[/b]（默认 0）：生存点每日回息的比例（百分比）。0 保持游戏原本的 5%；1 到 100 设定新的比例。[/*]
-[*][b]MaxInterest[/b]（默认 0）：生存点每天最多能得到的回息。0 保持游戏原本的上限 10；1 到 100 设定新的上限。[/*]
+[*][b]InterestRate[/b]（默认 0）：生存点每日回息的比例（百分比）。0 保持游戏原本的 5%，1 到 100 设定新的比例。[/*]
+[*][b]MaxInterest[/b]（默认 0）：生存点每天最多能得到的回息。0 保持游戏原本的上限 10，1 到 100 设定新的上限。[/*]
 [*][b]MaxLocked[/b]（默认 1）：可同时锁定的卡数。[/*]
-[*][b]BanButton[/b]、[b]Labels[/b]（默认 true）：「禁用」按钮和卡上的标签。[b]BanCost[/b]（默认 2）是禁用的花费；[b]BanWholeLine[/b]（默认 false）会禁用同一系列的所有等级；[b]UnbanRefund[/b]（默认 50）是解除禁用时退还花费的百分比。[/*]
-[*][b]NoRepeatOnRefresh[/b]（默认 false）和 [b]CashOut[/b]（默认 0，每个剩余生存点换得的现金）。[/*]
+[*][b]BanButton[/b]、[b]Labels[/b]（默认 true）：「禁用」按钮和卡上的标签。[b]BanCost[/b]（默认 2）是禁用的花费，[b]BanWholeLine[/b]（默认 false）会禁用同一系列的所有等级。[b]UnbanRefund[/b]（默认 50）是解除禁用时退还花费的百分比。[/*]
+[*][b]NoRepeatOnRefresh[/b]（默认 false）：设为 true 时，刷新只给出当天还没出现过的卡。[/*]
+[*][b]CashOut[/b]（默认 0）：离开奖励界面时，每个剩余生存点换得的现金。0 为关闭。[/*]
 [*][b]ShopEnabled[/b]（默认 false）开启商店。[b]ShopMarkup[/b]（25）、[b]ShopIncrease[/b]（15）、[b]ShopReset[/b]（Day）、[b]ShopPerDay[/b]（2）、[b]ShopUnavailable[/b]（Grey）和 [b]ShopLocked[/b]（true）设置价格和规则。[/*]
 [*][b]Enabled[/b]（默认 true）：设为 false 则立即关闭整个模组，奖励界面上也不再显示它的按钮。[/*]
 [/list]

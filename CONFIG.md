@@ -1,8 +1,10 @@
 # More Rewards settings
 
-Settings live in `BepInEx\config\com.dev.survivallog.morerewards.cfg`, created the first time the game starts with the mod. Change them in game with the 「Settings」 button on the rewards screen or on the Mod Manager's Mods screen, or edit the file while the game is closed. Changed in game, every setting takes effect at once. Each world can keep its own reward settings: every setting in Rewards, Interest, Locks, Cards and Shop except `Labels` and `ShopUnavailable`. Pick them for a new world in Customizable Difficulty, or, while you play, change them for that world alone on the Mods screen. The rewards screen's 「Settings」 changes a setting the world has its own value for in that world alone, and any other for every world. `Enabled`, `Labels`, `ShopUnavailable` and `UiScale` stay the same for every world. Delete the file to get the defaults back. The file describes each setting in English and Simplified Chinese.
+Settings live in `BepInEx\config\com.dev.survivallog.morerewards.cfg`, created the first time the game starts with the mod. Change them in game with the 「Settings」 button on the rewards screen or on the Mod Manager's Mods screen, or edit the file while the game is closed. Changed in game, every setting takes effect at once. Delete the file to get the defaults back. The file describes each setting in English and Simplified Chinese.
 
-With the defaults you get the game's 3 rewards, its own refresh cost and its own interest: the mod changes nothing about the game's balance until you change a setting. Raise `OptionCount` to get more rewards to choose from, and set `InterestRate` and `MaxInterest` to earn more interest. The 「Ban」 button and the labels are on by default; the shop is off until you turn it on.
+Each world can keep its own value for every setting in Rewards, Interest, Locks, Cards and Shop except `Labels` and `ShopUnavailable`. Pick them for a new world in Customizable Difficulty, or change them for the world you are playing on the Mods screen. If the world has its own value for a setting, the 「Settings」 button on the rewards screen changes it for that world only. Any other setting changes for every world. `Enabled`, `Labels`, `ShopUnavailable` and `UiScale` are always the same for every world.
+
+With the defaults you get the game's 3 rewards, its refresh cost and its interest, so the mod changes nothing about the game's balance until you change a setting. Raise `OptionCount` to get more rewards to choose from, and set `InterestRate` and `MaxInterest` to earn more interest. The 「Ban」 button and the labels are on by default, and the shop is off until you turn it on.
 
 ## General
 
@@ -19,7 +21,7 @@ With the defaults you get the game's 3 rewards, its own refresh cost and its own
 
 ### The automatic refresh cost
 
-With `RefreshCost` at `-1`, a refresh costs the game's cost with 3 rewards, going up by 1 at 4, 6, 8 rewards and so on. In numbers: the game's cost, minus 1, plus half of `OptionCount` rounded down.
+With `RefreshCost` at `-1` and 3 rewards, a refresh costs what the game charges. It costs 1 more at 4, 6, 8 rewards and so on. As a formula, it is the game's cost, minus 1, plus half of `OptionCount` rounded down.
 
 With the game's usual cost of 2 survival points:
 
@@ -50,7 +52,7 @@ A refresh that finds no new rewards at all costs nothing, whatever `RefreshCost`
 
 ### How interest works
 
-When a day ends, the game pays interest on the survival points you hold: the points times the interest rate, rounded down, at least 1 while you hold any points, and at most the limit. The game's rate is 5% and its limit is 10; `InterestRate` and `MaxInterest` change them. `InterestRate` is the whole rate for every character: it replaces the game's 5% and is not added to it. The interest shows on the end-of-day page as its own card.
+When a day ends, the game pays interest on the survival points you hold: the points times the interest rate, rounded down, at least 1 while you hold any points, and at most the limit. The game's rate is 5% and its limit is 10, and `InterestRate` and `MaxInterest` change them. `InterestRate` is the whole rate for every character. It replaces the game's 5% instead of adding to it. The interest shows on the end-of-day page as its own card.
 
 | Points held | Game and defaults (5%, limit 10) | `InterestRate` 10, `MaxInterest` 0 | `InterestRate` 10, `MaxInterest` 20 |
 | --- | --- | --- | --- |
@@ -61,7 +63,7 @@ When a day ends, the game pays interest on the survival points you hold: the poi
 
 So at 10% and a limit of 20, holding more than 200 points earns no more interest. Raise `MaxInterest` to let it grow further.
 
-The Savings Plan reward does not change the interest rate. It pays its own bonus on the same card: on a day you earned survival points, 5% of them, rounded down, at least 1 and at most 10. Its limit of 10 is the reward's own, and `MaxInterest` does not change it.
+The Savings Plan reward does not change the interest rate. It pays its own bonus on the same card: on a day you earned survival points, 5% of them, rounded down, at least 1 and at most 10. That limit of 10 belongs to the reward, and `MaxInterest` does not change it.
 
 The tip on the end-of-day page still says the rate is 5% and the limit is 10. The interest you are paid follows `InterestRate` and `MaxInterest`.
 
@@ -71,7 +73,7 @@ The mod sets the rate a moment after a game is loaded, long before the day ends.
 
 | Setting | Default | What it does |
 | --- | --- | --- |
-| `MaxLocked` | `1` | How many rewards you can lock at once. Locked rewards stay on the screen after a refresh and are still there the next day. `1` is the game's number; it can go up to 1 less than `OptionCount`, so a refresh always has a card to change. |
+| `MaxLocked` | `1` | How many rewards you can lock at once. Locked rewards stay on the screen after a refresh and are still there the next day. `1` is the game's number. It can go up to 1 less than `OptionCount`, so a refresh always has a card to change. |
 
 With `MaxLocked` above 1, the footer shows how many locks are in use (for example 2/3 next to a lock), and the lock button on a card adds or removes a lock. When every lock is in use, unlock a card first.
 
@@ -79,27 +81,27 @@ With `MaxLocked` above 1, the footer shows how many locks are in use (for exampl
 
 | Setting | Default | What it does |
 | --- | --- | --- |
-| `NoRepeatOnRefresh` | `false` | `true` makes a refresh show rewards you have not seen yet that day, while the day's groups still have others to give. |
+| `NoRepeatOnRefresh` | `false` | `true` makes a refresh show only rewards you have not seen yet that day. Once the day runs out of new ones, a refresh shows fewer cards. |
 | `BanButton` | `true` | A 「Ban」 button on each card. A banned reward is swapped for another and never comes back for the rest of the run. |
 | `BanCost` | `2` | How many survival points a ban costs, 0 to 99. `0` makes it free. |
 | `BanWholeLine` | `false` | `true` makes a ban also ban every level of the same reward. |
 | `UnbanRefund` | `50` | How much of what a ban cost, in percent, comes back when you remove it from the 「Bans」 list, 0 to 100. |
 | `Labels` | `true` | Shows on each card whether its reward is permanent, one-time, or lasts for a time (for example 3 DAYS). |
-| `CashOut` | `0` | Cash for each survival point you still hold when you leave the rewards screen, 0 to 1000; the points are spent. `0` is off and keeps your points. |
+| `CashOut` | `0` | Cash for each survival point you still hold when you leave the rewards screen, 0 to 1000. The points are spent. `0` is off and keeps your points. |
 
-The buttons show only on cards you can still act on: not bought and not locked. The footer also shows the interest you will get tomorrow, and with `CashOut` on, how much cash leaving the screen gives. With `BanButton` on, a 「Bans」 button in the footer lists this run's bans; removing one lets its rewards come back. A ban made with `BanWholeLine` comes off as one, and its refund is a share of what it cost when it was made.
+The buttons show only on cards you can still act on: not bought and not locked. The footer also shows the interest you will get tomorrow, and with `CashOut` on, how much cash you get for leaving the screen. With `BanButton` on, a 「Bans」 button in the footer lists this run's bans. Removing one lets its rewards come back. A ban made with `BanWholeLine` is removed as a whole, and its refund is a share of what it cost when you made it.
 
 ## Shop
 
 | Setting | Default | What it does |
 | --- | --- | --- |
 | `ShopEnabled` | `false` | A 「Shop」 button on the rewards screen: search every reward you can get and buy it with survival points. |
-| `ShopUnavailable` | `Grey` | What the shop does with a reward you cannot buy now. `Grey` shows it greyed out with the reason; `Hide` leaves it out. |
+| `ShopUnavailable` | `Grey` | What the shop does with a reward you cannot buy now. `Grey` shows it greyed out with the reason, and `Hide` leaves it out. |
 | `ShopMarkup` | `25` | How much more, in percent, a reward costs in the shop than on a card, 0 to 200. |
 | `ShopIncrease` | `15` | How much more, in percent of the card price, each shop purchase adds to every shop price until the prices reset, 0 to 100. |
-| `ShopReset` | `Day` | When the increase goes back to the markup alone: `Day`, `Week` (every 7 days) or `Never`. |
+| `ShopReset` | `Day` | When shop prices drop back after your purchases have raised them: `Day`, `Week` (every 7 days) or `Never`. |
 | `ShopPerDay` | `2` | How many shop purchases you can make in a day, 0 to 99. `0` is no limit. |
-| `ShopLocked` | `true` | `true` lets the shop sell a reward before the reward it needs first, at double the price. |
+| `ShopLocked` | `true` | `true` lets you buy a reward in the shop before you have the reward it needs, at double the price. |
 
 A shop price is the card price times (100 + `ShopMarkup` + `ShopIncrease` x purchases since the last reset) / 100, rounded up. With the defaults, a reward that costs 8 on a card costs 10 in the shop, then 12 after one purchase, then 13 after two. The shop lists rewards by category, with a search box, a filter for permanent, one-time or temporary rewards, and a switch to show only what you can buy now. Rewards you cannot buy say why: you own it, it needs another reward first, it is banned this run, not available yet, and so on.
 
@@ -113,4 +115,4 @@ There are no keys to set. The buttons on the rewards screen are set with the set
 
 | Setting | Default | What it does |
 | --- | --- | --- |
-| `UiScale` | `0` | How big More Rewards's own windows, panels and messages are drawn, in percent, from 75 to 200. At `0` they follow the UI size set in Exiled's Toolkit (its `UiScale`). |
+| `UiScale` | `0` | How big the windows, panels and messages of More Rewards are drawn, in percent, from 75 to 200. At `0` they follow the UI size set in Exiled's Toolkit (its `UiScale`). |

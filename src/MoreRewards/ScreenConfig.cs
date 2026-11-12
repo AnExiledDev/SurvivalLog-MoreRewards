@@ -31,12 +31,12 @@ internal sealed class ScreenConfig
     {
         _optionCount = optionCount;
         _maxLocked = config.Bind("Locks", "MaxLocked", ScreenSettings.GameMaxLocked, new ConfigDescription(
-            "How many rewards you can lock at once, so they stay on the screen after a refresh and are still there the next day. 1 is the game's number; it can go up to 1 less than OptionCount, so a refresh always has a card to change.\n" +
-            "可同时锁定的生存规划数量，锁定的规划在刷新后和第二天仍会保留。1 是游戏原本的数量；最多可设为 OptionCount 减 1，保证每次刷新至少有一张卡会变。",
+            "How many rewards you can lock at once, so they stay on the screen after a refresh and are still there the next day. 1 is the game's number. It can go up to 1 less than OptionCount, so a refresh always has a card to change.\n" +
+            "可同时锁定的生存规划数量，锁定的规划在刷新后和第二天仍会保留。1 是游戏原本的数量。最多可设为 OptionCount 减 1，保证每次刷新至少有一张卡会变。",
             new AcceptableValueRange<int>(ScreenSettings.GameMaxLocked, RewardSettings.MostOptions - 1), Shown, WorldRule.Tag));
         _noRepeatOnRefresh = config.Bind("Cards", "NoRepeatOnRefresh", false, new ConfigDescription(
-            "true makes a refresh show rewards you have not seen yet that day, while the day's groups still have others to give.\n" +
-            "设为 true 时，刷新只会给出当天还没出现过的生存规划，直到当天的规划组没有其他可给为止。", null, Shown, WorldRule.Tag));
+            "true makes a refresh show only rewards you have not seen yet that day. Once the day runs out of new ones, a refresh shows fewer cards.\n" +
+            "设为 true 时，刷新只会给出当天还没出现过的生存规划。没出现过的用完后，刷新给出的卡会变少。", null, Shown, WorldRule.Tag));
         _banButton = config.Bind("Cards", "BanButton", true, new ConfigDescription(
             "Adds a 「Ban」 button to each card. A banned reward is swapped for another and never comes back for the rest of the run.\n" +
             "在每张卡上加一个「禁用」按钮。被禁用的生存规划会换成另一张，本局剩余时间内不会再出现。", null, Shown, WorldRule.Tag));
@@ -55,15 +55,15 @@ internal sealed class ScreenConfig
             "Shows on each card whether its reward is permanent, one-time, or lasts for a time (for example 3 DAYS).\n" +
             "在每张卡上显示该生存规划是永久、一次性，还是持续一段时间（例如持续3天）。", null, Shown));
         _cashOut = config.Bind("Cards", "CashOut", 0, new ConfigDescription(
-            "Cash you get for each survival point you still hold when you leave the rewards screen; the points are spent. 0 is off and keeps your points.\n" +
+            "Cash you get for each survival point you still hold when you leave the rewards screen. The points are spent. 0 is off and keeps your points.\n" +
             "离开生存规划界面时，每个剩余生存点可换得的现金，生存点会被用掉。0 为关闭，保留生存点。",
             new AcceptableValueRange<int>(0, ScreenSettings.MostCashOut), Shown, WorldRule.Tag));
         _shopEnabled = config.Bind("Shop", "ShopEnabled", false, new ConfigDescription(
             "Adds a 「Shop」 button to the rewards screen: a searchable list of every reward you can get, bought with survival points at a higher price than a card.\n" +
             "在生存规划界面加一个「商店」按钮：可搜索所有能获得的生存规划，用生存点购买，价格比卡片更高。", null, Shown, WorldRule.Tag));
         _shopUnavailable = config.Bind("Shop", "ShopUnavailable", ShopUnavailable.Grey, new ConfigDescription(
-            "What the shop does with a reward you cannot buy now. Grey shows it greyed out with the reason; Hide leaves it out.\n" +
-            "商店如何显示现在无法购买的生存规划。Grey 显示为灰色并写明原因；Hide 不显示。", null, ShopShown));
+            "What the shop does with a reward you cannot buy now. Grey shows it greyed out with the reason, and Hide leaves it out.\n" +
+            "商店如何显示现在无法购买的生存规划。Grey 显示为灰色并写明原因，Hide 不显示。", null, ShopShown));
         _shopMarkup = config.Bind("Shop", "ShopMarkup", 25, new ConfigDescription(
             "How much more, in percent, a reward costs in the shop than on a card. Prices round up.\n" +
             "商店价格比卡片价格高出的百分比。价格向上取整。",
@@ -73,15 +73,15 @@ internal sealed class ScreenConfig
             "每次在商店购买后，所有商店价格再增加的百分比（按卡片价格计），直到价格重置。",
             new AcceptableValueRange<int>(0, ScreenSettings.MostShopIncrease), ShopShown, WorldRule.Tag));
         _shopReset = config.Bind("Shop", "ShopReset", ShopReset.Day, new ConfigDescription(
-            "When the shop's price increase goes back to the markup alone: every Day, every Week (7 days), or Never.\n" +
-            "商店的涨价何时恢复为只有加价：Day 每天，Week 每 7 天，Never 从不。", null, ShopShown, WorldRule.Tag));
+            "When shop prices drop back after your purchases have raised them: every Day, every Week (7 days), or Never.\n" +
+            "购买后上涨的商店价格何时恢复：Day 每天，Week 每 7 天，Never 从不。", null, ShopShown, WorldRule.Tag));
         _shopPerDay = config.Bind("Shop", "ShopPerDay", 2, new ConfigDescription(
             "How many shop purchases you can make in a day. 0 is no limit.\n" +
             "每天可在商店购买的次数。0 表示不限。",
             new AcceptableValueRange<int>(0, ScreenSettings.MostShopPerDay), ShopShown, WorldRule.Tag));
         _shopLocked = config.Bind("Shop", "ShopLocked", true, new ConfigDescription(
-            "true lets the shop sell a reward before the reward it needs first, at double the price.\n" +
-            "设为 true 时，商店可以在前置规划之前出售生存规划，价格翻倍。", null, ShopShown, WorldRule.Tag));
+            "true lets you buy a reward in the shop before you have the reward it needs, at double the price.\n" +
+            "设为 true 时，还没获得前置规划也能在商店购买，价格翻倍。", null, ShopShown, WorldRule.Tag));
     }
 
     public ConfigEntryBase[] Entries => new ConfigEntryBase[]

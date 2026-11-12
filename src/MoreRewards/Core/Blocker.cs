@@ -57,7 +57,7 @@ public static class Blocker
         return facts.IsValid ? null : Say(language, "Not available yet", "暂不可用");
     }
 
-    public static string NoBuysLeft(Language language) => Say(language, "No shop buys left today", "今日购买次数已用完");
+    public static string NoBuysLeft(Language language) => Say(language, "No shop purchases left today", "今日购买次数已用完");
 
     public static string Say(Language language, string english, string chinese) => language == Language.Chinese ? chinese : english;
 }
