@@ -36,7 +36,7 @@ More Rewards does not edit game files. Extra locks, bans and shop purchases are 
 
 - Some days give a fixed set of rewards instead of drawing them. Those days are left as the game has them.
 - If a day's reward groups run out, you get fewer rewards than you asked for. The log says how many short it was.
-- A refresh that finds no new rewards at all stays empty and costs nothing, as in the game. It is not filled up with the rewards you already saw.
+- If a refresh finds no new rewards at all, it stays empty and costs nothing, the same as without the mod. It is not filled up with the rewards you already saw.
 - The new refresh cost applies a moment after the game starts, once the game has loaded its cost.
 - The new interest rate applies a moment after a game is loaded, long before the day ends.
 - The interest shown in the footer comes from your points, the rate and the limit. It leaves out the Savings Plan bonus.

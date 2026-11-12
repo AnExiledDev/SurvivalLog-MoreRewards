@@ -34,7 +34,7 @@ Works in English and Chinese.
 [list]
 [*]Some days give a fixed set of rewards instead of drawing them. Those days are left as the game has them.[/*]
 [*]If a day's reward groups run out, you get fewer rewards than you asked for.[/*]
-[*]A refresh that finds no new rewards at all stays empty and costs nothing, as in the game. It is not filled up with the rewards you already saw.[/*]
+[*]If a refresh finds no new rewards at all, it stays empty and costs nothing, the same as without the mod. It is not filled up with the rewards you already saw.[/*]
 [*]The new refresh cost applies a moment after the game starts, once the game has loaded its own cost.[/*]
 [*]The new interest rate applies a moment after a game is loaded, long before the day ends.[/*]
 [*]The tip on the end-of-day page still says interest is 5% and at most 10. The interest you are paid follows InterestRate and MaxInterest.[/*]
