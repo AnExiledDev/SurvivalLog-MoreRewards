@@ -24,6 +24,8 @@ Out of the box the mod changes nothing about the game's balance. You get the gam
 [*][b]The shop[/b] (off by default): a Shop button opens a searchable list of every reward you can get, by category and by permanent, one-time or temporary. You set the prices and limits. By default prices are 25% above card prices and go up 15% with each purchase until the next day, and you can buy 2 rewards a day. Rewards you cannot buy now are greyed out with the reason, or hidden.[/*]
 [*][b]UI size[/b]: Exiled's Toolkit's UI size setting draws the shop, the ban list and the settings bigger or smaller, as far as each still fits on the screen. More Rewards also has a UiScale setting that sets a size for this mod alone.[/*]
 [*][b]Room for every card[/b]: up to 5 rewards sit in one row. More are spread over even rows with smaller cards, and the area scrolls if they still do not fit.[/*]
+[*][b]Your own rewards[/b]: the file [font=Courier New]BepInEx\config\MoreRewards.Rewards.json[/font] adds new end-of-day rewards or changes the game's. You can set a reward's cost, name and description, what it needs, which pools it comes from and how often, and what it gives. The file explains each part and holds one example, switched off.[/*]
+[*][b]Wind rewards[/b] (off by default): with Wind Power 0.9.3 or newer, turn on WindCards for Wind Collection I, II and III. They work like the game's Sunlight Collection. Each one makes wind turbines produce 15% more power, they cost 10, 16 and 24 survival points, and they show up once you can build a wind turbine.[/*]
 [*][b]Nothing changes until you set it[/b]: with the default settings you get the game's 3 rewards, its refresh cost and its interest.[/*]
 [/list]
 There are no new keys. The new buttons are Ban on each card, and Shop, Bans and Settings in the footer. Settings is always there, and each of the others has a setting that turns it on or off. More Rewards does not edit game files. Extra locks, bans and shop purchases are saved with the run. Your save keeps the game's interest rate. You can remove the mod at any time.
@@ -46,9 +48,10 @@ Works in English and Chinese.
 
 [size=5]Requirements[/size]
 [list]
-[*]Survival Log 1.1.20719. A game update can break it until the mod is updated.[/*]
+[*]Survival Log 1.1.21271. A game update can break it until the mod is updated.[/*]
 [*][url=https://www.nexusmods.com/survivallog/mods/12]BepInEx for Survival Log[/url] (BepInEx 6.0.0-be.788, IL2CPP). Install it first.[/*]
 [*][url=https://www.nexusmods.com/survivallog/mods/61]Exiled's Toolkit[/url] 0.20.0 or newer. More Rewards does not load without it. It applies settings changed on the Mod Manager's Mods screen without restarting the game, lets each world keep its own settings, and its UI size setting sizes the shop, the ban list and the settings.[/*]
+[*]Optional: Wind Power 0.9.3 or newer, for the wind rewards.[/*]
 [*]Optional: [url=https://www.nexusmods.com/survivallog/mods/73]Mod Manager[/url]. With it, you can change every setting in game on its Mods screen and see what each one does, without opening the config file.[/*]
 [/list]
 
@@ -63,7 +66,7 @@ Works in English and Chinese.
 [/list]
 
 [size=5]Uninstall[/size]
-Delete [font=Courier New]MoreRewards.dll[/font] from the [font=Courier New]BepInEx\plugins[/font] folder.
+Delete [font=Courier New]MoreRewards.dll[/font] from the [font=Courier New]BepInEx\plugins[/font] folder. New rewards from the rewards file or WindCards that a save already owns are dropped when the save loads without the mod. The rest of the save is fine.
 
 [size=5]Configuration[/size]
 Edit [font=Courier New]BepInEx\config\com.dev.survivallog.morerewards.cfg[/font] while the game is closed, or do it in game with the Settings button on the rewards screen or on the Mod Manager's Mods screen (see [url=https://github.com/AnExiledDev/SurvivalLog-MoreRewards/blob/main/CONFIG.md]CONFIG.md[/url] for every setting and the full cost table). Changed in game, every setting takes effect at once. Each world can keep its own reward count, refresh cost, interest, locks, bans, cash out and shop rules. Pick them for a new world in Customizable Difficulty, or change them for the world you are playing on the Mods screen. Enabled, Labels, ShopUnavailable and UiScale are always the same for every world.
@@ -74,6 +77,7 @@ Edit [font=Courier New]BepInEx\config\com.dev.survivallog.morerewards.cfg[/font]
 [*][b]MaxInterest[/b] (default 0): the most interest your survival points earn in a day. 0 keeps the game's limit of 10, and 1 to 100 sets a new limit.[/*]
 [*][b]MaxLocked[/b] (default 1): how many rewards you can lock at once.[/*]
 [*][b]BanButton[/b] and [b]Labels[/b] (default true): the Ban button and the labels on the cards. [b]BanCost[/b] (default 2) is what a ban costs, and [b]BanWholeLine[/b] (default false) bans every level of a reward. [b]UnbanRefund[/b] (default 50) is the percent of the cost you get back when you remove a ban.[/*]
+[*][b]WindCards[/b] (default false): true adds the three wind rewards. Does nothing without Wind Power.[/*]
 [*][b]NoRepeatOnRefresh[/b] (default false): true makes a refresh show only rewards you have not seen yet that day.[/*]
 [*][b]CashOut[/b] (default 0): the cash you get for each survival point left when you leave the rewards screen. 0 is off.[/*]
 [*][b]ShopEnabled[/b] (default false) turns the shop on. [b]ShopMarkup[/b] (25), [b]ShopIncrease[/b] (15), [b]ShopReset[/b] (Day), [b]ShopPerDay[/b] (2), [b]ShopUnavailable[/b] (Grey) and [b]ShopLocked[/b] (true) set its prices and rules.[/*]
@@ -110,6 +114,8 @@ Open source under MIT: [url=https://github.com/AnExiledDev/SurvivalLog-MoreRewar
 [*][b]商店[/b]（默认关闭）：「商店」按钮打开可搜索、按分类排列的列表，包含所有能获得的规划卡，还能按永久、一次性或限时筛选。价格和次数都由你设置，默认价格比卡片高 25%，每买一次再涨 15%，第二天恢复，每天可买 2 次。现在买不了的卡会显示为灰色并写明原因，也可以隐藏。[/*]
 [*][b]界面大小[/b]：可以用 Exiled's Toolkit 的界面大小设置放大或缩小商店、禁用列表和设置窗口，最大放到窗口仍能完整显示在屏幕上为止。还可以用 More Rewards 自己的 UiScale 设置单独调整本模组的大小。[/*]
 [*][b]每张卡都放得下[/b]：5 张以内排成一行。超过 5 张时平均分成几行，卡片会缩小。如果还是放不下，卡片区域可以滚动。[/*]
+[*][b]自定义规划卡[/b]：[font=Courier New]BepInEx\config\MoreRewards.Rewards.json[/font] 可以新增每天结束时的规划卡，或修改游戏原有的卡。花费、名称、说明、前置条件、出现在哪些卡池和出现的概率，以及卡的效果都可以设置。文件里有每一项的说明，还有一个关闭状态的示例。[/*]
+[*][b]风力规划卡[/b]（默认关闭）：装有 Wind Power 0.9.3 或更新版本时，开启 WindCards 即可获得「风力收集」Lv1、Lv2、Lv3。它们与游戏的「阳光收集」相同：每张让风力发电机产电 +15%，花费 10、16、24 点生存点，能建造风力发电机后才会出现。[/*]
 [*][b]不改设置就保持原样[/b]：默认设置下，仍是游戏原本的 3 张规划卡、刷新花费和回息。[/*]
 [/list]
 没有新增按键。新增的按钮是每张卡上的「禁用」，以及底栏的「商店」、「禁用列表」和「设置」。「设置」始终显示，其他按钮由对应设置开关。More Rewards 不会修改游戏文件。额外的锁定、禁用和商店购买记录随本局存档保存。存档里保存的仍是游戏原本的回息比例。随时可以移除本模组。
@@ -131,9 +137,10 @@ Open source under MIT: [url=https://github.com/AnExiledDev/SurvivalLog-MoreRewar
 
 [size=5]前置要求[/size]
 [list]
-[*]Survival Log 1.1.20719。游戏更新后模组可能暂时失效，直到模组更新为止。[/*]
+[*]Survival Log 1.1.21271。游戏更新后模组可能暂时失效，直到模组更新为止。[/*]
 [*][url=https://www.nexusmods.com/survivallog/mods/12]BepInEx for Survival Log[/url]（BepInEx 6.0.0-be.788，IL2CPP），请先安装。[/*]
 [*][url=https://www.nexusmods.com/survivallog/mods/61]Exiled's Toolkit[/url] 0.20.0 或更新版本。没有它本模组不会加载。它让在 Mod Manager 的「模组」界面改动的设置无需重启游戏即可生效，让每个存档可以有自己的设置，它的界面大小设置还能调整商店、禁用列表和设置窗口的大小。[/*]
+[*]可选：Wind Power 0.9.3 或更新版本，用于风力规划卡。[/*]
 [*]可选：[url=https://www.nexusmods.com/survivallog/mods/73]Mod Manager[/url]。装了它，可以在游戏里它的「模组」界面修改每项设置，并看到每项的说明，不用打开配置文件。[/*]
 [/list]
 
@@ -148,7 +155,7 @@ Open source under MIT: [url=https://github.com/AnExiledDev/SurvivalLog-MoreRewar
 [/list]
 
 [size=5]卸载[/size]
-从 [font=Courier New]BepInEx\plugins[/font] 文件夹中删除 [font=Courier New]MoreRewards.dll[/font]。
+从 [font=Courier New]BepInEx\plugins[/font] 文件夹中删除 [font=Courier New]MoreRewards.dll[/font]。存档已拥有的自定义规划卡或风力规划卡，在没有本模组时载入存档会被移除，存档的其他部分不受影响。
 
 [size=5]配置[/size]
 可以在游戏内奖励界面的「设置」按钮或 Mod Manager 的「模组」界面修改，也可以在游戏关闭时编辑 [font=Courier New]BepInEx\config\com.dev.survivallog.morerewards.cfg[/font]。配置文件中每项设置都有中文说明，所有设置和完整的刷新花费表见 [url=https://github.com/AnExiledDev/SurvivalLog-MoreRewards/blob/main/CONFIG.md]CONFIG.md[/url]（英文）。在游戏内修改时，所有设置都立即生效。每个存档都可以有自己的奖励数量、刷新花费、回息、锁定、禁用、兑现和商店规则：新存档可以在「自定义难度」里选，游戏中也可以在「模组」界面只为当前存档修改。Enabled、Labels、ShopUnavailable 和 UiScale 对所有存档都一样。
@@ -159,6 +166,7 @@ Open source under MIT: [url=https://github.com/AnExiledDev/SurvivalLog-MoreRewar
 [*][b]MaxInterest[/b]（默认 0）：生存点每天最多能得到的回息。0 保持游戏原本的上限 10，1 到 100 设定新的上限。[/*]
 [*][b]MaxLocked[/b]（默认 1）：可同时锁定的卡数。[/*]
 [*][b]BanButton[/b]、[b]Labels[/b]（默认 true）：「禁用」按钮和卡上的标签。[b]BanCost[/b]（默认 2）是禁用的花费，[b]BanWholeLine[/b]（默认 false）会禁用同一系列的所有等级。[b]UnbanRefund[/b]（默认 50）是解除禁用时退还花费的百分比。[/*]
+[*][b]WindCards[/b]（默认 false）：设为 true 时加入三张风力规划卡。没有 Wind Power 时无效果。[/*]
 [*][b]NoRepeatOnRefresh[/b]（默认 false）：设为 true 时，刷新只给出当天还没出现过的卡。[/*]
 [*][b]CashOut[/b]（默认 0）：离开奖励界面时，每个剩余生存点换得的现金。0 为关闭。[/*]
 [*][b]ShopEnabled[/b]（默认 false）开启商店。[b]ShopMarkup[/b]（25）、[b]ShopIncrease[/b]（15）、[b]ShopReset[/b]（Day）、[b]ShopPerDay[/b]（2）、[b]ShopUnavailable[/b]（Grey）和 [b]ShopLocked[/b]（true）设置价格和规则。[/*]

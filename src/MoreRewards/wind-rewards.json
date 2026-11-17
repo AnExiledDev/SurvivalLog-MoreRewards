@@ -1,0 +1,41 @@
+// The wind rewards, built like the game's Sunlight Collection I, II and III (31271, 31272, 31273):
+// the same costs, pools and weights, offered once a wind turbine can be built, each one +15%.
+{
+  "rewards": [
+    {
+      "id": 39001,
+      "copyFrom": 31271,
+      "name": { "en": "Wind Collection I", "zh": "风力收集 Lv1" },
+      "description": { "en": "Increases wind turbine power generation by 15%.", "zh": "风力发电机产电 +15%" },
+      "cost": 10,
+      "furniture": [910001, 910002, 910003],
+      "pools": { "1013": 1, "1020": 3, "9105": 1, "9106": 1, "9107": 1, "9108": 1, "9110": 1, "9111": 1, "9112": 1, "9130": 1, "9131": 1, "9132": 1, "9133": 1 },
+      "fields": { "WebIcon": "../../Res/Mods/WindPower/UI_Item_Icon_WindTurbine_M.png" },
+      "give": { "effect": "mr:wind-power", "fields": { "FloatValue0": 0.15 } }
+    },
+    {
+      "id": 39002,
+      "copyFrom": 31272,
+      "name": { "en": "Wind Collection II", "zh": "风力收集 Lv2" },
+      "description": { "en": "Increases wind turbine power generation by 15%.", "zh": "风力发电机产电 +15%" },
+      "cost": 16,
+      "needs": [39001],
+      "furniture": [910001, 910002, 910003],
+      "pools": { "1013": 1, "1021": 3, "9105": 1, "9106": 1, "9107": 1, "9108": 1, "9111": 1, "9112": 1, "9130": 1, "9131": 1, "9132": 1, "9133": 1 },
+      "fields": { "WebIcon": "../../Res/Mods/WindPower/UI_Item_Icon_WindTurbine_M.png" },
+      "give": { "effect": "mr:wind-power", "fields": { "FloatValue0": 0.15 } }
+    },
+    {
+      "id": 39003,
+      "copyFrom": 31273,
+      "name": { "en": "Wind Collection III", "zh": "风力收集 Lv3" },
+      "description": { "en": "Increases wind turbine power generation by 15%.", "zh": "风力发电机产电 +15%" },
+      "cost": 24,
+      "needs": [39002],
+      "furniture": [910001, 910002, 910003],
+      "pools": { "1013": 1, "1022": 3, "9107": 1, "9108": 1, "9112": 1, "9132": 1, "9133": 1 },
+      "fields": { "WebIcon": "../../Res/Mods/WindPower/UI_Item_Icon_WindTurbine_M.png" },
+      "give": { "effect": "mr:wind-power", "fields": { "FloatValue0": 0.15 } }
+    }
+  ]
+}

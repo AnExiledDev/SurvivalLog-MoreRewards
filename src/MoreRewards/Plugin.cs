@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using BepInEx;
@@ -15,11 +16,13 @@ namespace MoreRewards;
 
 [BepInPlugin(Guid, "More Rewards", Version)]
 [BepInDependency(ExiledToolkit.Plugin.Guid, ">=0.20.0")]
+[BepInDependency(WindLink.Guid, BepInDependency.DependencyFlags.SoftDependency)]
 public sealed class Plugin : BasePlugin
 {
     private const string Guid = "com.dev.survivallog.morerewards";
-    private const string Version = "0.7.9";
+    private const string Version = "0.8.0";
     private const long MaxLogBytes = 1024 * 1024;
+    private const string RewardsFileName = "MoreRewards.Rewards.json";
 
     public override void Load()
     {
@@ -44,6 +47,10 @@ public sealed class Plugin : BasePlugin
             "The most interest your survival points can earn when a day ends. 0 keeps the game's limit of 10, and any number from 1 to 100 sets a new limit. The interest is the points you hold times InterestRate, rounded down, and at least 1 while you hold any points.\n" +
             "每天结算时生存点回息的上限。设为 0 保持游戏原本的上限 10，设为 1 到 100 则以该数作为新的上限。回息为持有生存点乘以 InterestRate 的比例，向下取整，只要持有生存点就至少 1 点。",
             new AcceptableValueRange<int>(0, InterestCap.MostCap), "ModManager.ShowWhen=General.Enabled", WorldRule.Tag));
+        var windCards = Config.Bind("Rewards", "WindCards", false, new ConfigDescription(
+            "Adds three rewards for the Wind Power mod, Wind Collection I, II and III. They work like the game's Sunlight Collection: each one makes wind turbines produce 15% more power, they cost 10, 16 and 24 points, and they show up once you can build a wind turbine. Does nothing without Wind Power. Applies at once.\n" +
+            "加入三张 Wind Power 模组的生存规划：风力收集 Lv1、Lv2、Lv3。与游戏的阳光收集相同：每张让风力发电机产电 +15%，花费 10、16、24 点，能建造风力发电机后才会出现。没有 Wind Power 时无效果。立即生效。",
+            null, "ModManager.ShowWhen=General.Enabled", WorldRule.Tag));
         var log = new ModLog(Log, "more-rewards.log") { MaxFileBytes = MaxLogBytes };
 
         log.Write($"===== More Rewards {Version} started: {(enabled.Value ? "on" : "off")}, interest {InterestText(enabled.Value ? InterestCap.From(maxInterest.Value) : null)}");
@@ -53,20 +60,63 @@ public sealed class Plugin : BasePlugin
         var capKeeper = WatchCap(enabled, maxInterest, log, log.WriteError);
         var rateKeeper = WatchRate(enabled, interestRate, log);
         var screen = new ScreenConfig(Config, optionCount);
-        var board = new SettingsBoard(new ConfigEntryBase[] { enabled, optionCount, refreshCost, interestRate, maxInterest }.Concat(screen.Entries).Distinct().ToList());
+        var board = new SettingsBoard(new ConfigEntryBase[] { enabled, optionCount, refreshCost, windCards, interestRate, maxInterest }.Concat(screen.Entries).Distinct().ToList());
+        var tables = WatchRewardsFile(enabled, windCards, log);
 
         WatchRewards(enabled, optionCount, refreshCost, screen, log);
         RewardsTicker.Log = log.Write;
         AddComponent<RewardsTicker>();
-        WatchEnabled(enabled, () => new InterestTerms((rateKeeper.Rate ?? InterestRate.GameRate) / 100f, capKeeper()), board, log);
+        WatchEnabled(enabled, () => new InterestTerms((rateKeeper.Rate ?? InterestRate.GameRate) / 100f, capKeeper()), board, () => tables.Edits, log);
     }
+
+    /// <summary>
+    /// Writes the player's rewards file into the game's tables, and the wind rewards while WindCards is on. With the mod
+    /// off, neither applies. Without Wind Power, no reward that gives it more power applies.
+    /// </summary>
+    private static RewardTables WatchRewardsFile(ConfigEntry<bool> enabled, ConfigEntry<bool> windCards, ModLog log)
+    {
+        RewardTables? tables = null;
+        var hasWindPower = LinkWind(() => tables?.Grants ?? Array.Empty<MrGrant>(), log);
+        var windEffect = RewardPlan.MrPrefix + RewardPlan.WindPower;
+        var file = RewardFileStore.Load(Path.Combine(Paths.ConfigPath, RewardsFileName), log.Write);
+        var wind = RewardFileStore.Wind(log.Write);
+
+        if (!hasWindPower) file = file.Without(windEffect);
+
+        tables = new RewardTables(() => !enabled.Value ? RewardFile.Empty : windCards.Value && hasWindPower ? file.With(wind) : file, log.Write);
+        RewardsTicker.Checks.Add(tables.Tick);
+        LiveSettings.Watch(() => tables.Changed(), enabled, windCards);
+
+        return tables;
+    }
+
+    /// <summary>With Wind Power installed, the wind rewards owned in the run make its turbines stronger.</summary>
+    private static bool LinkWind(Func<System.Collections.Generic.IReadOnlyList<MrGrant>> grants, ModLog log)
+    {
+        if (!IL2CPPChainloader.Instance.Plugins.ContainsKey(WindLink.Guid)) return false;
+
+        try
+        {
+            if (WindLink.Add(AppDomain.CurrentDomain.GetAssemblies(), "More Rewards", () => WindLink.Multiplier(WindLink.Share(grants(), IsOwned)))) return true;
+
+            log.Write("Wind Power is older than 0.9.3, so the wind rewards are left out");
+        }
+        catch (Exception ex)
+        {
+            log.Write("could not hand the wind rewards to Wind Power, so they are left out: " + ex.Message);
+        }
+
+        return false;
+    }
+
+    private static bool IsOwned(int rewardId) => RunGame.Planning()?.HasActivated(rewardId) == true;
 
     /// <summary>
     /// Hooks the rewards screen the first time the mod is on, and turns it off and on after that. Off, the hooks leave
     /// the game's rewards alone and the page takes the mod's buttons away; the hooks stay, so turning it back on needs no
     /// restart. With the mod off from the start the rewards screen is never hooked.
     /// </summary>
-    private static void WatchEnabled(ConfigEntry<bool> enabled, Func<InterestTerms> interest, SettingsBoard board, ModLog log)
+    private static void WatchEnabled(ConfigEntry<bool> enabled, Func<InterestTerms> interest, SettingsBoard board, Func<int> edits, ModLog log)
     {
         RewardPage? page = null;
         var isLoading = true;
@@ -80,7 +130,7 @@ public sealed class Plugin : BasePlugin
 
             if (on && page == null)
             {
-                page = WatchScreen(interest, board, log);
+                page = WatchScreen(interest, board, edits, log);
                 WarmUpOnWorker(log);
             }
 
@@ -133,13 +183,13 @@ public sealed class Plugin : BasePlugin
 
     /// <summary>Hooks the rewards screen and wires the page's buttons to the actions that carry them out.</summary>
     /// <returns>The page, which the mod tells when it is turned off.</returns>
-    private static RewardPage WatchScreen(Func<InterestTerms> interest, SettingsBoard board, ModLog log)
+    private static RewardPage WatchScreen(Func<InterestTerms> interest, SettingsBoard board, Func<int> edits, ModLog log)
     {
         var hooks = new PatchKit(new Harmony(Guid), log.Write);
         RewardActions? actions = null;
         var page = new RewardPage(log.Write, () => actions?.AskSetup());
         var budget = new FrameBudget();
-        var catalog = new RewardCatalog(budget);
+        var catalog = new RewardCatalog(budget, edits);
 
         actions = new RewardActions(page, catalog, interest, board, budget, log.Write);
         OfferPatch.Apply(hooks, log.Write);

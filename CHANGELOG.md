@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.8.0
+
+- Your own rewards: `BepInEx\config\MoreRewards.Rewards.json` adds new end-of-day rewards or changes the game's (cost, name, description, needs, pools and what they give). It is written the first time the game starts, with notes and one example that is switched off, so nothing changes until you edit it.
+- Wind rewards for Wind Power 0.9.3 or newer: Wind Collection I, II and III, built like Sunlight Collection, each giving wind turbines 15% more power. Turn them on with `WindCards`, which is off by default.
+- Made for Survival Log 1.1.21271.
+
 ## 0.7.9
 
 - Leaving a number box in the settings blank no longer sets it to the lowest value. A blank box, or one with no number in it, now goes back to what the setting is, and a number past the limit shows the limit instead.

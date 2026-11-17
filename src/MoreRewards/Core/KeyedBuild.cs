@@ -16,9 +16,10 @@ public interface ISlicedBuild<out T>
 /// <summary>
 /// Which game table a cache was read from (<paramref name="Table"/>), and which of the game's text tables its names
 /// came from (<paramref name="Text"/>): the game swaps in another text table when the language changes. Both are the
-/// tables' addresses, which stay put while the game keeps them.
+/// tables' addresses, which stay put while the game keeps them. <paramref name="Edits"/> counts the times the mod's
+/// rewards files were written into the table, which changes its rows in place.
 /// </summary>
-public readonly record struct TableKey(long Table, long Text);
+public readonly record struct TableKey(long Table, long Text, int Edits = 0);
 
 /// <summary>
 /// Something built once for a key (the game's table and language) and kept until the key changes: another table or

@@ -21,7 +21,7 @@ namespace MoreRewards.Adapters;
 internal sealed class RewardCatalog
 {
     /// <summary>Config_Talent.Type of the end-of-day rewards.</summary>
-    private const int PlanType = 2;
+    internal const int PlanType = 2;
 
     /// <summary>How often, with no build running, the catalog looks for a run and a table to build.</summary>
     private const float LookSeconds = 1f;
@@ -32,12 +32,15 @@ internal sealed class RewardCatalog
     private static PropertyInfo[]? _tellingFields;
 
     private readonly FrameBudget _budget;
+    private readonly Func<int> _edits;
     private readonly KeyedBuild<TableKey, PlanTable> _plans;
     private float _nextLookAt = LookSeconds / 4;
 
-    public RewardCatalog(FrameBudget budget)
+    /// <param name="edits">How many times the rewards files have been written into the tables; a new count lists them again.</param>
+    public RewardCatalog(FrameBudget budget, Func<int> edits)
     {
         _budget = budget;
+        _edits = edits;
         _plans = new KeyedBuild<TableKey, PlanTable>(_ => new PlanTableBuild());
     }
 
@@ -165,7 +168,7 @@ internal sealed class RewardCatalog
         return Read(talent);
     }
 
-    private static TableKey? Key()
+    private TableKey? Key()
     {
         var configs = Configs();
 
@@ -173,7 +176,7 @@ internal sealed class RewardCatalog
 
         var text = configs._customCache_k__BackingField?._LanguageMap_k__BackingField;
 
-        return new TableKey(table.Pointer.ToInt64(), text?.Pointer.ToInt64() ?? 0);
+        return new TableKey(table.Pointer.ToInt64(), text?.Pointer.ToInt64() ?? 0, _edits());
     }
 
     /// <summary>What a run changes about the reward: read every time.</summary>

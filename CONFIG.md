@@ -18,6 +18,7 @@ With the defaults you get the game's 3 rewards, its refresh cost and its interes
 | --- | --- | --- |
 | `OptionCount` | `3` | How many rewards you can choose from at the end of a day and after each refresh. `3` is the game's number, and you can set any number from 3 to 20. |
 | `RefreshCost` | `-1` | How many survival points a refresh costs. `-1` is automatic: the cost goes up with `OptionCount` (see below). `0` makes every refresh free, and any number from 1 to 99 is the cost of every refresh, whatever `OptionCount` is. |
+| `WindCards` | `false` | Adds three rewards for the Wind Power mod (0.9.3 or newer): Wind Collection I, II and III. They work like the game's Sunlight Collection. Each one makes wind turbines produce 15% more power, they cost 10, 16 and 24 survival points, and they show up once you can build a wind turbine. Does nothing without Wind Power. |
 
 ### The automatic refresh cost
 
@@ -116,3 +117,11 @@ There are no keys to set. The buttons on the rewards screen are set with the set
 | Setting | Default | What it does |
 | --- | --- | --- |
 | `UiScale` | `0` | How big the windows, panels and messages of More Rewards are drawn, in percent, from 75 to 200. At `0` they follow the UI size set in Exiled's Toolkit (its `UiScale`). |
+
+## Your own rewards
+
+`BepInEx\config\MoreRewards.Rewards.json` adds your own end-of-day rewards or changes the game's. It is written the first time the game starts with the mod, with notes on every part and one example that is switched off. Edit it while the game is closed. Changes apply the next time the game starts. Delete it to get the default back.
+
+A reward can set its cost, name and description (in English and Chinese), the rewards it needs first, the furniture you must be able to build, the pools it is drawn from and how often, and what it gives. A new reward copies a game reward (`copyFrom`) for its icon and look, then changes what you set. It can give any effect the game has, such as more solar power, or more wind turbine power with Wind Power installed.
+
+Anything the mod cannot use is left out and written to `BepInEx\more-rewards.log` with the reason. The rest of the file still applies. With `Enabled` off, nothing in the file applies.
