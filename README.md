@@ -24,8 +24,9 @@ At the end of each day, Survival Log offers 3 rewards you can buy with survival 
 - **UI size**: Exiled's Toolkit's UI size setting (`UiScale`) draws the shop, the ban list and the settings bigger or smaller, as far as each still fits on the screen. The buttons on the cards and in the footer keep the game's size. More Rewards also has a `UiScale` setting under Interface that sets a size for this mod alone. At 0, the default, it follows the Toolkit's.
 - **Room for every card**: up to 5 rewards sit in one row. More are spread over even rows with smaller cards, and the area scrolls if they still do not fit.
 - **Nothing changes until you set it**: with the default settings you get the game's 3 rewards, its refresh cost and its interest.
-- **Your own rewards**: the file `BepInEx\config\MoreRewards.Rewards.json` adds new end-of-day rewards or changes the game's. You can set a reward's cost, name and description, what it needs, which pools it comes from and how often, and what it gives. The file explains each part and holds one example, switched off. Changes apply the next time the game starts.
-- **Wind rewards** (off by default): with Wind Power 0.9.3 or newer, turn on `WindCards` for Wind Collection I, II and III. They work like the game's Sunlight Collection. Each one makes wind turbines produce 15% more power, they cost 10, 16 and 24 survival points, and they show up once you can build a wind turbine.
+- **Your own rewards**: the file `BepInEx\config\MoreRewards.Rewards.json` adds new end-of-day rewards or changes the game's. You can set a reward's cost, name and description, its levels, what each level gives, what it needs, and which pools it comes from and how often. The file explains each part and holds one example, switched off. Changes made in the file apply the next time the game starts.
+- **Rewards tab**: with the Mod Manager 0.7.0 or newer, More Rewards' page gets a Rewards tab that edits the rewards file for you. Change what any reward costs, how many levels it has, its numbers, its pools and its text, switch the file's rewards on or off, or click NEW REWARD to build your own from the effects the game's rewards use and the mod's own, with any reward or item image. SAVE writes the file and the changes apply at once.
+- **Wind rewards**: with Wind Power 0.9.3 or newer installed, you get Wind Collection I, II and III. They work like the game's Sunlight Collection. Each one makes wind turbines produce 15% more power, they cost 10, 16 and 24 survival points, and they show up once you can build a wind turbine. Change them on the Rewards tab if you like.
 - **A log file**: what the mod did is written to `BepInEx\more-rewards.log`.
 
 There are no new keys. The new buttons are 「Ban」 on each card, and 「Shop」, 「Bans」 and 「Settings」 in the footer. 「Settings」 is always there, and each of the others has a setting that turns it on or off.
@@ -43,6 +44,7 @@ More Rewards does not edit game files. Extra locks, bans and shop purchases are 
 - The new interest rate applies a moment after a game is loaded, long before the day ends.
 - The interest shown in the footer comes from your points, the rate and the limit. It leaves out the Savings Plan bonus.
 - The shop leaves out rewards the game has no name for and rewards it never offers.
+- Saving from the Rewards tab drops the comments in the rewards file. The file as it was is kept next to it as `MoreRewards.Rewards.json.bak`.
 - The tip on the end-of-day page still says interest is 5% and at most 10. The interest you are paid follows `InterestRate` and `MaxInterest`.
 
 ## Requirements
@@ -51,7 +53,7 @@ More Rewards does not edit game files. Extra locks, bans and shop purchases are 
 - The [BepInEx Pack for Survival Log](https://www.nexusmods.com/survivallog/mods/12), the BepInEx 6 (IL2CPP) build for the game, version `6.0.0-be.788`.
 - [Exiled's Toolkit](https://github.com/AnExiledDev/SurvivalLog-ExiledToolkit) 0.20.0 or newer. More Rewards does not load without it. It applies settings changed on the Mod Manager's Mods screen without restarting the game, lets each world keep its own settings, and its UI size setting sizes the shop, the ban list and the settings.
 - Optional: Wind Power 0.9.3 or newer, for the wind rewards.
-- Optional: [Mod Manager](https://www.nexusmods.com/survivallog/mods/73). With it, you can change every setting in game on its Mods screen and see what each one does, without opening the config file.
+- Optional: [Mod Manager](https://www.nexusmods.com/survivallog/mods/73). With it, you can change every setting in game on its Mods screen and see what each one does, without opening the config file. Version 0.7.0 or newer also gives you the Rewards tab.
 
 ## Install
 
@@ -66,7 +68,7 @@ More Rewards does not edit game files. Extra locks, bans and shop purchases are 
 
 Delete `MoreRewards.dll` from the `BepInEx\plugins` folder. For a clean slate, also delete `BepInEx\config\com.dev.survivallog.morerewards.cfg`, `BepInEx\config\MoreRewards.Rewards.json` and `BepInEx\more-rewards.log`.
 
-New rewards from the rewards file or `WindCards` that a save already owns are dropped when the save loads without the mod. The rest of the save is fine, so there is nothing to do before you remove it.
+New rewards from the rewards file and the wind rewards that a save already owns are dropped when the save loads without the mod. The rest of the save is fine, so there is nothing to do before you remove it.
 
 ## Configuration
 
@@ -84,7 +86,7 @@ Check `BepInEx\LogOutput.log` for a line starting `===== More Rewards 0.8.0 star
 
 Each time a day ends or you refresh, the log gets a line saying how many rewards the game offered and how many the mod added. Shortly after the game starts, a line says what a refresh costs now. The reward lines are written when `OptionCount` is above 3 or a lock or ban changed the offer, and the cost line only when the mod changes the cost.
 
-Lines starting `rewards file:` say which rewards from the rewards file and `WindCards` were added, and anything in the file the mod could not use, with the reason.
+Lines starting `rewards file:` say which rewards from the rewards file and the wind rewards were added, and anything in the file the mod could not use, with the reason.
 
 The same lines are in `BepInEx\more-rewards.log`, which survives restarts.
 

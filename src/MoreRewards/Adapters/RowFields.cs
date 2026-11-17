@@ -28,6 +28,42 @@ internal static class RowFields
         }
     }
 
+    /// <summary>Every field of the row the file could set, by its table name, for the Rewards tab to show.</summary>
+    public static List<FieldSet> ReadAll(object row)
+    {
+        var fields = new List<FieldSet>();
+
+        foreach (var property in row.GetType().GetProperties(Instance))
+        {
+            if (!IsField(property) || !property.CanRead) continue;
+
+            if (ToValue(property.GetValue(row)) is { } value) fields.Add(new FieldSet(property.Name.Substring(1, property.Name.Length - 1 - Suffix.Length), value));
+        }
+
+        return fields;
+    }
+
+    private static FieldValue? ToValue(object? value) => value switch
+    {
+        int number => new FieldValue.Number(number),
+        long number => new FieldValue.Number(number),
+        float number => new FieldValue.Number(number),
+        double number => new FieldValue.Number(number),
+        bool flag => new FieldValue.Flag(flag),
+        string text => new FieldValue.Text(text),
+        Il2CppInts list => new FieldValue.Numbers(ToArray(list)),
+        _ => null,
+    };
+
+    private static int[] ToArray(Il2CppInts list)
+    {
+        var values = new int[list.Count];
+
+        for (var i = 0; i < values.Length; i++) values[i] = list[i];
+
+        return values;
+    }
+
     /// <summary>A field's value as the row holds it, so it can be put back; null when the row has no such field.</summary>
     public static object? Get(object row, string field) => Find(row.GetType(), field)?.GetValue(row);
 

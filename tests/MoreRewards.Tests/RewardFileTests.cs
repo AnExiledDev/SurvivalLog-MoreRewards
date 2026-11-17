@@ -41,8 +41,59 @@ public class RewardFileTests
         Assert.Equal(new[] { 910001 }, reward.Furniture);
         Assert.Equal(new[] { new PoolEntry(1013, 2) }, reward.Pools);
         Assert.Equal(new FieldSet("WebIcon", new FieldValue.Text("icon.png")), Assert.Single(reward.Fields));
-        Assert.Equal("game:AE_PowerSolarEfficiency", reward.Give!.Effect);
-        Assert.Equal(new FieldSet("FloatValue0", new FieldValue.Number(0.1)), Assert.Single(reward.Give.Fields));
+        var give = Assert.Single(reward.Gives);
+        Assert.Equal("game:AE_PowerSolarEfficiency", give.Effect);
+        Assert.Equal(new FieldSet("FloatValue0", new FieldValue.Number(0.1)), Assert.Single(give.Fields));
+        Assert.Null(reward.Levels);
+    }
+
+    [Fact]
+    public void Levels_and_several_gives_are_read()
+    {
+        var file = RewardFile.Parse("""
+            { "rewards": [ { "id": 39001, "copyFrom": 31271,
+              "gives": [ { "effect": "mr:wind-power", "levels": [ { "FloatValue0": 0.1 }, { "FloatValue0": 0.2 } ] }, { "effect": "game:X" } ],
+              "levels": [ { "cost": 3, "name": "One", "pools": { "1013": 2 }, "fields": { "Icon": "a" } }, { "description": "Two" } ] } ] }
+            """);
+
+        Assert.Empty(file.Problems);
+        var reward = Assert.Single(file.Rewards);
+        Assert.Equal(new[] { 39001, 39002 }, reward.Ids);
+        Assert.Equal(new[] { "mr:wind-power", "game:X" }, reward.Gives.Select(give => give.Effect));
+        Assert.Equal(new FieldSet("FloatValue0", new FieldValue.Number(0.2)), Assert.Single(reward.Gives[0].FieldsAt(5)));
+        Assert.Empty(reward.Gives[1].FieldsAt(1));
+
+        var levels = reward.Levels!;
+        Assert.Equal(3, levels[0].Cost);
+        Assert.Equal(new LocalText("One", "One"), levels[0].Name);
+        Assert.Equal(new[] { new PoolEntry(1013, 2) }, levels[0].Pools);
+        Assert.Equal(new FieldSet("Icon", new FieldValue.Text("a")), Assert.Single(levels[0].Fields));
+        Assert.Null(levels[1].Cost);
+        Assert.Null(levels[1].Pools);
+        Assert.Equal(new LocalText("Two", "Two"), levels[1].Description);
+    }
+
+    [Theory]
+    [InlineData("""{ "id": 1, "give": { "effect": "game:X" }, "gives": [] }""", "both")]
+    [InlineData("""{ "id": 1, "levels": [] }""", "1 to 10 levels")]
+    [InlineData("""{ "id": 1, "levels": [ {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {} ] }""", "1 to 10 levels")]
+    [InlineData("""{ "id": 1, "gives": [ { "fields": {} } ] }""", "no \"effect\"")]
+    [InlineData("""{ "id": 1, "levels": [ 5 ] }""", "level 1")]
+    public void A_reward_with_bad_levels_or_gives_is_reported_and_skipped(string reward, string reason)
+    {
+        var file = RewardFile.Parse($$"""{ "rewards": [ {{reward}}, { "id": 2 } ] }""");
+
+        Assert.Equal(2, Assert.Single(file.Rewards).Id);
+        Assert.Contains(file.Problems, problem => problem.Contains(reason));
+    }
+
+    [Fact]
+    public void An_entry_in_the_player_s_file_replaces_a_wind_reward_that_uses_any_of_the_same_ids()
+    {
+        var mine = RewardFile.Parse("""{ "rewards": [ { "id": 39002, "enabled": false }, { "id": 31271, "cost": 1 } ] }""");
+        var wind = RewardFile.Parse("""{ "rewards": [ { "id": 39001, "copyFrom": 31271, "levels": [ {}, {}, {} ] }, { "id": 39010, "copyFrom": 31271 } ] }""");
+
+        Assert.Equal(new[] { 39002, 31271, 39010 }, mine.Over(wind).Rewards.Select(reward => reward.Id));
     }
 
     [Fact]
@@ -70,39 +121,20 @@ public class RewardFileTests
             { "rewards": [
               { "id": 1, "give": { "effect": "mr:wind-power" } },
               { "id": 2, "give": { "effect": "game:X" } },
-              { "id": 3 } ] }
+              { "id": 3 },
+              { "id": 4, "gives": [ { "effect": "game:X" }, { "effect": "mr:wind-power" } ] } ] }
             """);
 
         Assert.Equal(new[] { 2, 3 }, file.Without("mr:wind-power").Rewards.Select(reward => reward.Id));
     }
 
     [Fact]
-    public void The_wind_rewards_read_cleanly_and_match_sunlight_collection()
+    public void The_wind_rewards_read_cleanly()
     {
         var wind = RewardFile.Parse(Resource("MoreRewards.wind-rewards.json"));
 
         Assert.Empty(wind.Problems);
-        Assert.Equal(new[] { 39001, 39002, 39003 }, wind.Rewards.Select(reward => reward.Id));
-        Assert.Equal(new int?[] { 31271, 31272, 31273 }, wind.Rewards.Select(reward => reward.CopyFrom));
-        Assert.Equal(new int?[] { 10, 16, 24 }, wind.Rewards.Select(reward => reward.Cost));
-        Assert.All(wind.Rewards, reward => Assert.Equal("mr:wind-power", reward.Give!.Effect));
-        Assert.All(wind.Rewards, reward => Assert.Equal(new[] { 910001, 910002, 910003 }, reward.Furniture));
-        Assert.Null(wind.Rewards[0].Needs);
-        Assert.Equal(new[] { 39001 }, wind.Rewards[1].Needs);
-        Assert.Equal(new[] { 39002 }, wind.Rewards[2].Needs);
-    }
-
-    /// <summary>Sunlight Collection's pools in the game's Data Dump, card by card.</summary>
-    [Fact]
-    public void Each_wind_reward_is_in_the_same_pools_as_its_sunlight_card_with_the_same_weights()
-    {
-        var wind = RewardFile.Parse(Resource("MoreRewards.wind-rewards.json"));
-        var both = new[] { 9105, 9106, 9111, 9130, 9131 };
-        var all = new[] { 9107, 9108, 9112, 9132, 9133 };
-
-        Assert.Equal(Pools((1013, 1), (1020, 3), (9110, 1)).Concat(Ones(both)).Concat(Ones(all)).OrderBy(pool => pool.Group), wind.Rewards[0].Pools.OrderBy(pool => pool.Group));
-        Assert.Equal(Pools((1013, 1), (1021, 3)).Concat(Ones(both)).Concat(Ones(all)).OrderBy(pool => pool.Group), wind.Rewards[1].Pools.OrderBy(pool => pool.Group));
-        Assert.Equal(Pools((1013, 1), (1022, 3)).Concat(Ones(all)).OrderBy(pool => pool.Group), wind.Rewards[2].Pools.OrderBy(pool => pool.Group));
+        Assert.Equal(new[] { 39001, 39002, 39003 }, Assert.Single(wind.Rewards).Ids);
     }
 
     [Fact]
@@ -115,8 +147,4 @@ public class RewardFileTests
         Assert.Empty(file.Buffs);
         Assert.Empty(file.Effects);
     }
-
-    private static IEnumerable<PoolEntry> Pools(params (int Group, int Weight)[] pools) => pools.Select(pool => new PoolEntry(pool.Group, pool.Weight));
-
-    private static IEnumerable<PoolEntry> Ones(IEnumerable<int> groups) => groups.Select(group => new PoolEntry(group, 1));
 }

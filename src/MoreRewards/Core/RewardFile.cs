@@ -35,14 +35,30 @@ public sealed record RowEntry(int Id, int? CopyFrom, IReadOnlyList<FieldSet> Fie
 public sealed record PoolEntry(int Group, int Weight);
 
 /// <summary>
-/// What a reward does: a game effect script (<c>game:&lt;script&gt;</c>) run with <paramref name="Fields"/>, or an effect
-/// More Rewards runs itself (<c>mr:&lt;name&gt;</c>), which reads <paramref name="Fields"/>.
+/// One thing a reward does: a game effect script (<c>game:&lt;script&gt;</c>) run with <paramref name="Fields"/>, or an
+/// effect More Rewards runs itself (<c>mr:&lt;name&gt;</c>), which reads <paramref name="Fields"/>. A reward with levels
+/// adds the fields of <paramref name="Levels"/> at each level; a level past the end of the list uses the last one.
 /// </summary>
-public sealed record GiveEntry(string Effect, IReadOnlyList<FieldSet> Fields);
+public sealed record GiveEntry(string Effect, IReadOnlyList<FieldSet> Fields, IReadOnlyList<IReadOnlyList<FieldSet>> Levels)
+{
+    public GiveEntry(string effect, IReadOnlyList<FieldSet> fields)
+        : this(effect, fields, Array.Empty<IReadOnlyList<FieldSet>>())
+    {
+    }
+
+    /// <summary>The fields at <paramref name="level"/>, counted from 0.</summary>
+    public IReadOnlyList<FieldSet> FieldsAt(int level) =>
+        Levels.Count == 0 ? Fields : Fields.Concat(Levels[Math.Min(level, Levels.Count - 1)]).ToList();
+}
+
+/// <summary>One level of a reward. Anything left out is the reward's own value; null pools keep the reward's pools.</summary>
+public sealed record LevelEntry(int? Cost, LocalText? Name, LocalText? Description, IReadOnlyList<PoolEntry>? Pools, IReadOnlyList<FieldSet> Fields);
 
 /// <summary>
 /// One reward in the file. Anything left out keeps the game's value, or the value of the reward it copies.
 /// <paramref name="Needs"/> and <paramref name="Furniture"/> are null when the file leaves them as they are.
+/// <paramref name="Levels"/> is null for a reward of one level. Level n (from 0) is the reward with ID
+/// <paramref name="Id"/> + n, as the game numbers Sunlight Collection I, II and III.
 /// </summary>
 public sealed record RewardEntry(
     int Id,
@@ -55,22 +71,42 @@ public sealed record RewardEntry(
     IReadOnlyList<int>? Furniture,
     IReadOnlyList<PoolEntry> Pools,
     IReadOnlyList<FieldSet> Fields,
-    GiveEntry? Give,
+    IReadOnlyList<GiveEntry> Gives,
+    IReadOnlyList<LevelEntry>? Levels,
     IReadOnlyList<RowEntry> Buffs,
-    IReadOnlyList<RowEntry> Effects);
+    IReadOnlyList<RowEntry> Effects)
+{
+    /// <summary>The most levels and the most gives a reward can have.</summary>
+    public const int MaxLevels = 10;
+
+    public const int MaxGives = 10;
+
+    public int LevelCount => Levels?.Count ?? 1;
+
+    /// <summary>The reward IDs its levels use.</summary>
+    public IEnumerable<int> Ids => Enumerable.Range(Id, LevelCount);
+}
 
 /// <summary>The rewards file as read, with every entry that could not be read.</summary>
 public sealed record RewardFile(IReadOnlyList<RewardEntry> Rewards, IReadOnlyList<RowEntry> Buffs, IReadOnlyList<RowEntry> Effects, IReadOnlyList<string> Problems)
 {
     public static readonly RewardFile Empty = new(Array.Empty<RewardEntry>(), Array.Empty<RowEntry>(), Array.Empty<RowEntry>(), Array.Empty<string>());
 
-    /// <summary>Both files' entries, this one's first.</summary>
-    public RewardFile With(RewardFile other) =>
-        new(Rewards.Concat(other.Rewards).ToList(), Buffs.Concat(other.Buffs).ToList(), Effects.Concat(other.Effects).ToList(), Problems.Concat(other.Problems).ToList());
+    /// <summary>
+    /// This file's entries with those of <paramref name="under"/> that use none of the same reward IDs. An entry here,
+    /// switched off or not, replaces the one below, so the player's file can change or turn off a reward the mod carries.
+    /// </summary>
+    public RewardFile Over(RewardFile under)
+    {
+        var taken = new HashSet<int>(Rewards.SelectMany(reward => reward.Ids));
+        var kept = under.Rewards.Where(reward => !reward.Ids.Any(taken.Contains));
+
+        return new RewardFile(Rewards.Concat(kept).ToList(), Buffs.Concat(under.Buffs).ToList(), Effects.Concat(under.Effects).ToList(), Problems.Concat(under.Problems).ToList());
+    }
 
     /// <summary>The file without the rewards that give <paramref name="effect"/>.</summary>
     public RewardFile Without(string effect) =>
-        this with { Rewards = Rewards.Where(reward => reward.Give?.Effect != effect).ToList() };
+        this with { Rewards = Rewards.Where(reward => reward.Gives.All(give => give.Effect != effect)).ToList() };
 
     /// <summary>
     /// Reads the file. Comments and trailing commas are allowed, since people edit it by hand. An entry that cannot be
@@ -120,20 +156,82 @@ public sealed record RewardFile(IReadOnlyList<RewardEntry> Rewards, IReadOnlyLis
             OptionalInts(entry, "furniture"),
             ReadPools(entry),
             ReadFields(entry),
-            entry.TryGetProperty("give", out var give) ? ReadGive(give) : null,
+            ReadGives(entry),
+            ReadLevels(entry),
             ReadList(entry, "buffs", where + " buff", problems, ReadRow),
             ReadList(entry, "effects", where + " effect", problems, ReadRow));
     }
 
-    private static GiveEntry ReadGive(JsonElement give)
+    /// <summary>"gives" is a list; "give" is the one-give form files from before levels use. A bad give skips the reward.</summary>
+    private static IReadOnlyList<GiveEntry> ReadGives(JsonElement entry)
     {
-        if (give.ValueKind != JsonValueKind.Object) throw new FormatException("\"give\" must be a { } object");
+        var hasOne = entry.TryGetProperty("give", out var one);
+        var hasList = entry.TryGetProperty("gives", out var list);
+
+        if (hasOne && hasList) throw new FormatException("it has both \"give\" and \"gives\"; use one");
+
+        if (hasOne) return new[] { ReadGive(one, "\"give\"") };
+
+        if (!hasList) return Array.Empty<GiveEntry>();
+
+        if (list.ValueKind != JsonValueKind.Array) throw new FormatException("\"gives\" must be a [ ] list");
+
+        var gives = list.EnumerateArray().Select((give, i) => ReadGive(give, $"give {i + 1}")).ToList();
+
+        if (gives.Count > RewardEntry.MaxGives) throw new FormatException($"it has {gives.Count} gives; the most is {RewardEntry.MaxGives}");
+
+        return gives;
+    }
+
+    private static GiveEntry ReadGive(JsonElement give, string what)
+    {
+        if (give.ValueKind != JsonValueKind.Object) throw new FormatException($"{what} must be a {{ }} object");
 
         var effect = give.TryGetProperty("effect", out var name) && name.ValueKind == JsonValueKind.String ? name.GetString() ?? "" : "";
 
-        if (effect.Length == 0) throw new FormatException("\"give\" has no \"effect\"");
+        if (effect.Length == 0) throw new FormatException($"{what} has no \"effect\"");
 
-        return new GiveEntry(effect, ReadFields(give));
+        var levels = new List<IReadOnlyList<FieldSet>>();
+
+        if (give.TryGetProperty("levels", out var list))
+        {
+            if (list.ValueKind != JsonValueKind.Array) throw new FormatException($"{what}: \"levels\" must be a [ ] list");
+
+            foreach (var level in list.EnumerateArray())
+            {
+                if (level.ValueKind != JsonValueKind.Object) throw new FormatException($"{what}: each level must be a {{ }} object");
+
+                levels.Add(ReadFieldObject(level));
+            }
+        }
+
+        return new GiveEntry(effect, ReadFields(give), levels);
+    }
+
+    /// <summary>A bad level skips the whole reward, so no level of it ends up half made.</summary>
+    private static IReadOnlyList<LevelEntry>? ReadLevels(JsonElement entry)
+    {
+        if (!entry.TryGetProperty("levels", out var list)) return null;
+
+        if (list.ValueKind != JsonValueKind.Array) throw new FormatException("\"levels\" must be a [ ] list");
+
+        var levels = new List<LevelEntry>();
+
+        foreach (var level in list.EnumerateArray())
+        {
+            if (level.ValueKind != JsonValueKind.Object) throw new FormatException($"level {levels.Count + 1} must be a {{ }} object");
+
+            levels.Add(new LevelEntry(
+                OptionalInt(level, "cost"),
+                OptionalText(level, "name"),
+                OptionalText(level, "description"),
+                level.TryGetProperty("pools", out _) ? ReadPools(level) : null,
+                ReadFields(level)));
+        }
+
+        if (levels.Count is 0 or > RewardEntry.MaxLevels) throw new FormatException($"it needs 1 to {RewardEntry.MaxLevels} levels, not {levels.Count}");
+
+        return levels;
     }
 
     /// <summary>{ "1013": 1, "1020": 3 }: each pool's ID, and the reward's weight in it.</summary>
@@ -200,6 +298,11 @@ public sealed record RewardFile(IReadOnlyList<RewardEntry> Rewards, IReadOnlyLis
 
         if (set.ValueKind != JsonValueKind.Object) throw new FormatException("\"fields\" must be a { } object");
 
+        return ReadFieldObject(set);
+    }
+
+    private static IReadOnlyList<FieldSet> ReadFieldObject(JsonElement set)
+    {
         var fields = new List<FieldSet>();
 
         foreach (var field in set.EnumerateObject()) fields.Add(new FieldSet(field.Name, ReadValue(field.Name, field.Value)));

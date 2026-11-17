@@ -36,7 +36,7 @@ internal static class RewardFileStore
         }
     }
 
-    /// <summary>The three wind rewards, which apply while WindCards is on and Wind Power is installed.</summary>
+    /// <summary>The wind rewards, Wind Collection I, II and III, which apply while Wind Power is installed.</summary>
     public static RewardFile Wind(Action<string> log)
     {
         var file = RewardFile.Parse(Resource(WindResource));
@@ -45,6 +45,9 @@ internal static class RewardFileStore
 
         return file;
     }
+
+    /// <summary>The wind rewards as the mod carries them, for the Rewards tab to show.</summary>
+    public static string WindText() => Resource(WindResource);
 
     private static string Resource(string name)
     {

@@ -29,6 +29,9 @@ public interface IRewardTables
 
     /// <summary>An effect row that runs the script; null when no effect runs it.</summary>
     int? EffectRunning(string script);
+
+    /// <summary>The game reward one level up from <paramref name="id"/> (id + 1, needing id); 0 when there is none.</summary>
+    int NextTier(int id);
 }
 
 public enum Table
@@ -51,8 +54,11 @@ public sealed record TextEntry(string Key, string En, string Zh);
 /// <summary>A More Rewards effect a reward gives: whoever owns <paramref name="RewardId"/> gets <paramref name="Effect"/> with <paramref name="Fields"/>.</summary>
 public sealed record MrGrant(string Effect, int RewardId, IReadOnlyList<FieldSet> Fields);
 
+/// <summary>Whoever gets <paramref name="LevelBuff"/> also gets <paramref name="Buffs"/>: a reward's second give onwards.</summary>
+public sealed record Companion(int LevelBuff, IReadOnlyList<int> Buffs);
+
 /// <summary>Everything the rewards files change in the game's tables, in the order it must be applied.</summary>
-public sealed record RewardPlan(IReadOnlyList<RowEdit> Rows, IReadOnlyList<PoolEdit> Pools, IReadOnlyList<TextEntry> Texts, IReadOnlyList<MrGrant> Grants, IReadOnlyList<string> Problems)
+public sealed record RewardPlan(IReadOnlyList<RowEdit> Rows, IReadOnlyList<PoolEdit> Pools, IReadOnlyList<TextEntry> Texts, IReadOnlyList<MrGrant> Grants, IReadOnlyList<Companion> Companions, IReadOnlyList<string> Problems)
 {
     public const string GamePrefix = "game:";
 
@@ -87,10 +93,10 @@ public sealed record RewardPlan(IReadOnlyList<RowEdit> Rows, IReadOnlyList<PoolE
 
         foreach (var reward in enabled) builder.AddReward(reward);
 
-        return new RewardPlan(builder.Rows, builder.Pools, builder.Texts, builder.Grants, builder.Problems);
+        return new RewardPlan(builder.Rows, builder.Pools, builder.Texts, builder.Grants, builder.Companions, builder.Problems);
     }
 
-    /// <summary>The first enabled entry for each ID; a second one is reported and left out.</summary>
+    /// <summary>The first enabled entry to use each ID; a later one that uses any of them, at any level, is reported and left out.</summary>
     private static List<RewardEntry> Distinct(IEnumerable<RewardEntry> rewards, List<string> problems)
     {
         var seen = new HashSet<int>();
@@ -98,11 +104,50 @@ public sealed record RewardPlan(IReadOnlyList<RowEdit> Rows, IReadOnlyList<PoolE
 
         foreach (var reward in rewards)
         {
-            if (seen.Add(reward.Id)) kept.Add(reward);
-            else problems.Add($"reward {reward.Id} is listed twice; only the first one applies");
+            var taken = reward.Ids.FirstOrDefault(seen.Contains);
+
+            if (taken != 0)
+            {
+                problems.Add($"reward {reward.Id} was skipped: reward {taken} is already used by an entry above it");
+
+                continue;
+            }
+
+            seen.UnionWith(reward.Ids);
+            kept.Add(reward);
         }
 
         return kept;
+    }
+
+    /// <summary>
+    /// One level of an entry, worked out: the row it is, whether that row is new, and the row it copies (for a row the
+    /// game has, the row itself).
+    /// </summary>
+    private sealed record Level(
+        int Index,
+        int Id,
+        bool IsNew,
+        int Source,
+        IReadOnlyList<int>? Needs,
+        int? Cost,
+        LocalText? Name,
+        LocalText? Description,
+        IReadOnlyList<PoolEntry> Pools,
+        IReadOnlyList<FieldSet> Fields);
+
+    /// <summary>What one entry adds, kept apart until every level of it has been checked.</summary>
+    private sealed class Pending
+    {
+        public List<RowEdit> Rows { get; } = new();
+
+        public List<PoolEdit> Pools { get; } = new();
+
+        public List<TextEntry> Texts { get; } = new();
+
+        public List<MrGrant> Grants { get; } = new();
+
+        public List<Companion> Companions { get; } = new();
     }
 
     private sealed class Builder
@@ -123,6 +168,8 @@ public sealed record RewardPlan(IReadOnlyList<RowEdit> Rows, IReadOnlyList<PoolE
         public List<TextEntry> Texts { get; } = new();
 
         public List<MrGrant> Grants { get; } = new();
+
+        public List<Companion> Companions { get; } = new();
 
         public List<string> Problems { get; } = new();
 
@@ -153,13 +200,20 @@ public sealed record RewardPlan(IReadOnlyList<RowEdit> Rows, IReadOnlyList<PoolE
             }
         }
 
-        /// <summary>Either every row of the reward is made or, on any problem, none is.</summary>
+        /// <summary>Either every row of every level of the reward is made or, on any problem, none is.</summary>
         public void AddReward(RewardEntry reward)
         {
-            var rows = new List<RowEdit>();
-            var problem = Check(reward) ?? AddCondition(reward, rows) ?? AddGive(reward, rows);
+            var pending = new Pending();
+            var problem = Levels(reward, out var levels);
 
-            if (problem == null && PoolProblem(reward) is { } pool) problem = pool;
+            foreach (var level in levels)
+            {
+                problem ??= AddCondition(reward, level, pending) ?? AddGives(reward, level, pending) ?? PoolProblem(level);
+
+                if (problem != null) break;
+
+                AddLevel(reward, level, pending);
+            }
 
             if (problem != null)
             {
@@ -168,142 +222,202 @@ public sealed record RewardPlan(IReadOnlyList<RowEdit> Rows, IReadOnlyList<PoolE
                 return;
             }
 
-            foreach (var row in rows.Where(row => row.Table is Table.Effect or Table.Buff)) Made(row.Table).Add(row.Id);
+            foreach (var row in pending.Rows.Where(row => row.Table is Table.Effect or Table.Buff)) Made(row.Table).Add(row.Id);
 
-            Rows.AddRange(rows);
-            Rows.Add(RewardRow(reward));
-            Pools.AddRange(reward.Pools.Select(pool => new PoolEdit(pool.Group, reward.Id, pool.Weight)));
-
-            if (reward.Give is { } give && IsMr(give)) Grants.Add(new MrGrant(give.Effect.Substring(MrPrefix.Length), reward.Id, give.Fields));
-        }
-
-        private string? Check(RewardEntry reward)
-        {
-            if (_tables.IsReward(reward.Id)) return null;
-
-            if (_tables.HasTalent(reward.Id)) return "that ID is a talent, not an end-of-day reward";
-
-            if (reward.CopyFrom == null) return "the game has no such reward; give a copyFrom to make a new one";
-
-            return _tables.IsReward(reward.CopyFrom.Value) ? null : $"copyFrom {reward.CopyFrom} is not an end-of-day reward the game has";
+            Rows.AddRange(pending.Rows);
+            Pools.AddRange(pending.Pools);
+            Texts.AddRange(pending.Texts);
+            Grants.AddRange(pending.Grants);
+            Companions.AddRange(pending.Companions);
         }
 
         /// <summary>
-        /// A reward's needs live in its condition set. A new reward gets its own, copied from the one it copies, so
+        /// Level n is reward ID + n. A level the game already has as the next level of the one below is changed in place,
+        /// as Sunlight Collection II is to I. Any other level is a new row, copied from the same level of the reward it
+        /// copies (that reward's top level when it has fewer), and needs the level below it.
+        /// </summary>
+        private string? Levels(RewardEntry reward, out List<Level> levels)
+        {
+            levels = new List<Level>();
+
+            var chain = Chain(reward.CopyFrom ?? reward.Id);
+
+            for (var i = 0; i < reward.LevelCount; i++)
+            {
+                var id = reward.Id + i;
+                var level = reward.Levels?[i];
+                var isGameLevel = _tables.IsReward(id) && (i == 0 || (!levels[i - 1].IsNew && _tables.NextTier(id - 1) == id));
+                var where = i == 0 ? "" : $"level {i + 1} (reward {id}) ";
+
+                if (!isGameLevel && _tables.IsReward(id)) return $"{where}is a reward the game has, but not the next level of {id - 1}";
+
+                if (!isGameLevel && _tables.HasTalent(id)) return $"{where}that ID is a talent, not an end-of-day reward";
+
+                if (!isGameLevel && i == 0 && reward.CopyFrom == null) return "the game has no such reward; give a copyFrom to make a new one";
+
+                if (!isGameLevel && chain.Count == 0) return $"copyFrom {reward.CopyFrom} is not an end-of-day reward the game has";
+
+                levels.Add(new Level(
+                    i,
+                    id,
+                    !isGameLevel,
+                    isGameLevel ? id : chain[Math.Min(i, chain.Count - 1)],
+                    i == 0 ? reward.Needs : isGameLevel ? null : new[] { id - 1 },
+                    level?.Cost ?? reward.Cost,
+                    level?.Name ?? Numbered(reward.Name, i, reward.LevelCount),
+                    level?.Description ?? reward.Description,
+                    level?.Pools ?? reward.Pools,
+                    level == null ? reward.Fields : reward.Fields.Concat(level.Fields).ToList()));
+            }
+
+            return null;
+        }
+
+        /// <summary>The reward and the game's levels above it, as far as they go; empty when it is not a reward.</summary>
+        private List<int> Chain(int first)
+        {
+            var chain = new List<int>();
+
+            for (var id = first; id != 0 && _tables.IsReward(id) && chain.Count < RewardEntry.MaxLevels; id = _tables.NextTier(id)) chain.Add(id);
+
+            return chain;
+        }
+
+        /// <summary>
+        /// A reward's needs live in its condition set. A new level gets its own, copied from the one its source uses, so
         /// changing its needs never changes the other reward's.
         /// </summary>
-        private string? AddCondition(RewardEntry reward, List<RowEdit> rows)
+        private string? AddCondition(RewardEntry reward, Level level, Pending pending)
         {
-            var source = Source(reward);
-            var sourceCondition = _tables.RewardCondition(source);
+            var sourceCondition = _tables.RewardCondition(level.Source);
             var fields = new List<FieldSet>();
 
-            if (reward.Needs is { } needs) fields.Add(new FieldSet("TalentNeed", new FieldValue.Numbers(needs)));
+            if (level.Needs is { } needs) fields.Add(new FieldSet("TalentNeed", new FieldValue.Numbers(needs)));
 
             if (reward.Furniture is { } furniture) fields.Add(new FieldSet("NeedFurnitureObtainable", new FieldValue.Numbers(furniture)));
 
-            if (IsNew(reward))
+            if (level.IsNew)
             {
                 if (sourceCondition == 0)
                 {
-                    return fields.Count == 0 ? null : $"reward {source} has no condition set to copy, so \"needs\" and \"furniture\" cannot be set";
+                    return fields.Count == 0 ? null : $"reward {level.Source} has no condition set to copy, so \"needs\" and \"furniture\" cannot be set";
                 }
 
-                if (_tables.HasCondition(reward.Id)) return $"it needs condition set {reward.Id}, which the game already uses";
+                if (_tables.HasCondition(level.Id)) return $"it needs condition set {level.Id}, which the game already uses";
 
-                rows.Add(new RowEdit(Table.Condition, reward.Id, sourceCondition, Prepend(fields, Whole("ID", reward.Id))));
+                pending.Rows.Add(new RowEdit(Table.Condition, level.Id, sourceCondition, Prepend(fields, Whole("ID", level.Id))));
 
                 return null;
             }
 
             if (fields.Count == 0) return null;
 
-            if (sourceCondition == 0) return "it has no condition set, so \"needs\" and \"furniture\" cannot be set";
+            if (sourceCondition == 0) return $"reward {level.Id} has no condition set, so \"needs\" and \"furniture\" cannot be set";
 
-            rows.Add(new RowEdit(Table.Condition, sourceCondition, null, fields));
+            pending.Rows.Add(new RowEdit(Table.Condition, sourceCondition, null, fields));
 
             return null;
         }
 
         /// <summary>
-        /// A give makes the reward's own buff (ID * 10, as the game numbers them) and effect: the buff copied from the
-        /// reward's buff so it shows the same way, the effect copied from a row that runs the script.
+        /// The first give makes the level's own buff (ID * 10, as the game numbers them) and effect: the buff copied from
+        /// the source's buff so it shows the same way, the effect copied from a row that runs the script. Each further
+        /// give makes a hidden buff (ID * 10 + n) that the player gets along with the first.
         /// </summary>
-        private string? AddGive(RewardEntry reward, List<RowEdit> rows)
+        private string? AddGives(RewardEntry reward, Level level, Pending pending)
         {
-            if (reward.Give is not { } give) return null;
+            if (reward.Gives.Count == 0) return null;
 
-            var isMr = IsMr(give);
+            var sourceBuff = _tables.RewardBuff(level.Source);
+            var riders = new List<int>();
 
-            if (!isMr && !give.Effect.StartsWith(GamePrefix, StringComparison.Ordinal)) return $"\"give\" is \"{give.Effect}\"; only game effects (\"{GamePrefix}...\") and More Rewards effects (\"{MrPrefix}...\") can be given";
+            if (sourceBuff == 0) return $"reward {level.Source} gives no buff to copy";
 
-            if (isMr && !MrEffects.Contains(give.Effect.Substring(MrPrefix.Length))) return $"\"give\" is \"{give.Effect}\", which More Rewards does not have; it has {string.Join(", ", MrEffects.Select(name => MrPrefix + name))}";
+            for (var k = 0; k < reward.Gives.Count; k++)
+            {
+                var give = reward.Gives[k];
+                var what = reward.Gives.Count == 1 ? "\"give\"" : $"give {k + 1}";
+                var isMr = IsMr(give);
 
-            var script = isMr ? MarkerScript : give.Effect.Substring(GamePrefix.Length);
+                if (!isMr && !give.Effect.StartsWith(GamePrefix, StringComparison.Ordinal)) return $"{what} is \"{give.Effect}\"; only game effects (\"{GamePrefix}...\") and More Rewards effects (\"{MrPrefix}...\") can be given";
 
-            if (_tables.EffectRunning(ScriptPrefix + script) is not { } template) return $"no effect in the game runs \"{GamePrefix}{script}\"";
+                if (isMr && !MrEffects.Contains(give.Effect.Substring(MrPrefix.Length))) return $"{what} is \"{give.Effect}\", which More Rewards does not have; it has {string.Join(", ", MrEffects.Select(name => MrPrefix + name))}";
 
-            var buff = BuffOf(reward.Id);
-            var effect = EffectOf(buff);
-            var sourceBuff = _tables.RewardBuff(Source(reward));
-            var isOwnBuff = !IsNew(reward) && sourceBuff == buff;
+                var script = isMr ? MarkerScript : give.Effect.Substring(GamePrefix.Length);
 
-            if (sourceBuff == 0) return $"reward {Source(reward)} gives no buff to copy";
+                if (_tables.EffectRunning(ScriptPrefix + script) is not { } template) return $"no effect in the game runs \"{GamePrefix}{script}\"";
 
-            if (_madeBuffs.Contains(buff) || _madeEffects.Contains(effect) || (!isOwnBuff && (_tables.HasBuff(buff) || _tables.HasEffect(effect)))) return $"it needs buff {buff} and effect {effect}, and one of them is already in use";
+                var buff = BuffOf(level.Id) + k;
+                var effect = EffectOf(buff);
+                var isOwnBuff = k == 0 && !level.IsNew && sourceBuff == buff;
 
-            var effectFields = new List<FieldSet> { Whole("ID", effect), Text("ConfigName", ScriptPrefix + script) };
-            var buffFields = new List<FieldSet> { Whole("ID", buff), Whole("EffectConfigId", effect) };
+                if (_madeBuffs.Contains(buff) || _madeEffects.Contains(effect) || (!isOwnBuff && (_tables.HasBuff(buff) || _tables.HasEffect(effect)))) return $"it needs buff {buff} and effect {effect}, and one of them is already in use";
 
-            // An mr give's fields are read by More Rewards, not by the marker script, so the game row keeps none of them.
-            if (!isMr) effectFields.AddRange(give.Fields);
+                var effectFields = new List<FieldSet> { Whole("ID", effect), Text("ConfigName", ScriptPrefix + script) };
+                var buffFields = new List<FieldSet> { Whole("ID", buff), Whole("EffectConfigId", effect) };
 
-            AddText(buffFields, "Name", "Buff", buff, reward.Name);
-            AddText(buffFields, "Des", "Buff", buff, reward.Description);
-            rows.Add(new RowEdit(Table.Effect, effect, template, effectFields));
-            rows.Add(new RowEdit(Table.Buff, buff, sourceBuff, buffFields));
+                // An mr give's fields are read by More Rewards, not by the marker script, so the game row keeps none of them.
+                if (isMr) pending.Grants.Add(new MrGrant(give.Effect.Substring(MrPrefix.Length), level.Id, give.FieldsAt(level.Index)));
+                else effectFields.AddRange(give.FieldsAt(level.Index));
+
+                if (k == 0)
+                {
+                    AddText(buffFields, "Name", "Buff", buff, level.Name, pending);
+                    AddText(buffFields, "Des", "Buff", buff, level.Description, pending);
+                }
+                else
+                {
+                    buffFields.Add(new FieldSet("IsHide", new FieldValue.Flag(true)));
+                    riders.Add(buff);
+                }
+
+                pending.Rows.Add(new RowEdit(Table.Effect, effect, template, effectFields));
+                pending.Rows.Add(new RowEdit(Table.Buff, buff, sourceBuff, buffFields));
+            }
+
+            if (riders.Count > 0) pending.Companions.Add(new Companion(BuffOf(level.Id), riders));
 
             return null;
         }
 
-        private string? PoolProblem(RewardEntry reward)
+        private string? PoolProblem(Level level)
         {
-            var missing = reward.Pools.Where(pool => !_tables.HasPool(pool.Group)).Select(pool => pool.Group).ToList();
+            var missing = level.Pools.Where(pool => !_tables.HasPool(pool.Group)).Select(pool => pool.Group).ToList();
 
             return missing.Count == 0 ? null : $"the game has no pool {string.Join(", ", missing)}";
         }
 
-        private RowEdit RewardRow(RewardEntry reward)
+        private void AddLevel(RewardEntry reward, Level level, Pending pending)
         {
             var fields = new List<FieldSet>();
 
-            if (IsNew(reward))
+            if (level.IsNew)
             {
-                fields.Add(Whole("ID", reward.Id));
-                fields.Add(Whole("TalentID", reward.Id));
+                fields.Add(Whole("ID", level.Id));
+                fields.Add(Whole("TalentID", level.Id));
                 fields.Add(Whole("Lv", 1));
                 fields.Add(Whole("Available", 1));
 
-                if (_tables.RewardCondition(Source(reward)) != 0) fields.Add(Whole("ConditionSetId", reward.Id));
+                if (_tables.RewardCondition(level.Source) != 0) fields.Add(Whole("ConditionSetId", level.Id));
             }
 
-            fields.AddRange(reward.Fields);
+            fields.AddRange(level.Fields);
 
-            if (reward.Cost is { } cost) fields.Add(Whole("LvUpCost", cost));
+            if (level.Cost is { } cost) fields.Add(Whole("LvUpCost", cost));
 
-            if (reward.Give != null) fields.Add(Whole("BuffID", BuffOf(reward.Id)));
+            if (reward.Gives.Count > 0) fields.Add(Whole("BuffID", BuffOf(level.Id)));
 
-            AddText(fields, "Name", "Reward", reward.Id, reward.Name);
-            AddText(fields, "Dec", "Reward", reward.Id, reward.Description);
-
-            return new RowEdit(Table.Reward, reward.Id, IsNew(reward) ? reward.CopyFrom : null, fields);
+            AddText(fields, "Name", "Reward", level.Id, level.Name, pending);
+            AddText(fields, "Dec", "Reward", level.Id, level.Description, pending);
+            pending.Rows.Add(new RowEdit(Table.Reward, level.Id, level.IsNew ? level.Source : null, fields));
+            pending.Pools.AddRange(level.Pools.Select(pool => new PoolEdit(pool.Group, level.Id, pool.Weight)));
         }
 
         /// <summary>
         /// Text gets keys of its own, so a copied row never changes the text of the row it came from. The _Local field
         /// holds the Chinese, as the game's rows do.
         /// </summary>
-        private void AddText(List<FieldSet> fields, string field, string table, int id, LocalText? text)
+        private static void AddText(List<FieldSet> fields, string field, string table, int id, LocalText? text, Pending pending)
         {
             if (text == null) return;
 
@@ -311,18 +425,20 @@ public sealed record RewardPlan(IReadOnlyList<RowEdit> Rows, IReadOnlyList<PoolE
 
             fields.Add(Text(field, key));
             fields.Add(Text(field + "_Local", text.Zh));
-            Texts.Add(new TextEntry(key, text.En, text.Zh));
+            pending.Texts.Add(new TextEntry(key, text.En, text.Zh));
         }
-
-        private bool IsNew(RewardEntry reward) => !_tables.IsReward(reward.Id);
-
-        private int Source(RewardEntry reward) => IsNew(reward) ? reward.CopyFrom ?? 0 : reward.Id;
 
         private bool Exists(Table table, int id) =>
             Made(table).Contains(id) || (table == Table.Effect ? _tables.HasEffect(id) : _tables.HasBuff(id));
 
         private HashSet<int> Made(Table table) => table == Table.Effect ? _madeEffects : _madeBuffs;
     }
+
+    private static readonly string[] Roman = { "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X" };
+
+    /// <summary>"Wind Collection" at level 2 of 3 is "Wind Collection II" and "... Lv2", as the game names its levels.</summary>
+    private static LocalText? Numbered(LocalText? name, int index, int count) =>
+        name == null || count == 1 ? name : new LocalText($"{name.En} {Roman[index]}", $"{name.Zh} Lv{index + 1}");
 
     private static bool IsMr(GiveEntry give) => give.Effect.StartsWith(MrPrefix, StringComparison.Ordinal);
 

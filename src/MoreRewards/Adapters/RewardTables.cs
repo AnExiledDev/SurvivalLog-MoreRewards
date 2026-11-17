@@ -24,6 +24,7 @@ internal sealed class RewardTables
     private readonly Func<RewardFile> _active;
     private readonly Action<string> _log;
     private readonly List<Action> _undo = new();
+    private readonly HashSet<(Table, int)> _made = new();
     private (IntPtr Talents, IntPtr Buffs, IntPtr Effects, IntPtr Conditions, IntPtr Pools) _applied;
     private bool _isStale = true;
     private float _nextCheckAt;
@@ -37,6 +38,12 @@ internal sealed class RewardTables
 
     /// <summary>The More Rewards effects the rewards written now give.</summary>
     public IReadOnlyList<MrGrant> Grants { get; private set; } = Array.Empty<MrGrant>();
+
+    /// <summary>The game's rewards as the game made them, read just before the last write, for the Rewards tab.</summary>
+    public GameSnapshot Game { get; private set; } = GameSnapshot.Empty;
+
+    /// <summary>What went wrong in the last write, for the Rewards tab.</summary>
+    public IReadOnlyList<string> Problems { get; private set; } = Array.Empty<string>();
 
     /// <summary>Goes up each time the tables are written, so the shop knows to list them again.</summary>
     public int Edits { get; private set; }
@@ -67,12 +74,14 @@ internal sealed class RewardTables
         if (tables == _applied && !_isStale) return;
 
         if (tables == _applied) Undo();
-        else _undo.Clear();
+        else Forget();
 
         _applied = tables;
         _isStale = false;
 
-        var plan = RewardPlan.Build(_active(), new GameTables(talents, buffs, effects, conditions, pools));
+        Game = GameReader.Read(config, cache, (table, id) => _made.Contains((table, id)));
+
+        var plan = RewardPlan.Build(_active(), new GameTables(talents, buffs, effects, conditions, pools, _made));
         var problems = new List<string>(plan.Problems);
 
         foreach (var edit in plan.Rows)
@@ -92,6 +101,8 @@ internal sealed class RewardTables
 
         WriteTexts(cache, plan.Texts);
         Grants = plan.Grants;
+        Problems = problems;
+        CompanionBuffs.Use(plan.Companions);
         Edits++;
         Report(plan, problems);
     }
@@ -104,6 +115,13 @@ internal sealed class RewardTables
         _undo.Clear();
     }
 
+    /// <summary>The game loaded its tables afresh, so nothing in them is ours any more.</summary>
+    private void Forget()
+    {
+        _undo.Clear();
+        _made.Clear();
+    }
+
     private string? Apply<T>(Il2CppSystem.Collections.Generic.Dictionary<int, T> table, RowEdit edit, Func<T> make) where T : Il2CppObjectBase
     {
         if (edit.CopyFrom is { } source) return Copy(table, edit, source, make);
@@ -114,21 +132,24 @@ internal sealed class RewardTables
     }
 
     /// <summary>
-    /// Makes the row as a copy of <paramref name="source"/>. Undone, a row it replaced comes back; a reward it made
-    /// stays but is no longer offered.
+    /// Makes the row as a copy of <paramref name="source"/>. Undone, a game row it replaced comes back; a row it made
+    /// stays, and a reward it made is no longer offered. A row made by an earlier write is made again from scratch.
     /// </summary>
     private string? Copy<T>(Il2CppSystem.Collections.Generic.Dictionary<int, T> table, RowEdit edit, int source, Func<T> make) where T : Il2CppObjectBase
     {
         if (!table.ContainsKey(source)) return $"{edit.Table} {edit.Id}: copyFrom {source} is gone";
 
-        var replaced = table.ContainsKey(edit.Id) ? table[edit.Id] : null;
+        var isOurs = _made.Contains((edit.Table, edit.Id));
+        var replaced = !isOurs && table.ContainsKey(edit.Id) ? table[edit.Id] : null;
         var row = make();
 
         RowFields.CopyAll(table[source], row);
         table[edit.Id] = row;
 
         if (replaced != null) _undo.Add(() => table[edit.Id] = replaced);
-        else if (row is Config_Talent reward) _undo.Add(() => reward._Available_k__BackingField = 0);
+        else _made.Add((edit.Table, edit.Id));
+
+        if (replaced == null && row is Config_Talent reward) _undo.Add(() => reward._Available_k__BackingField = 0);
 
         return Set(row, edit, isOwnRow: true);
     }
@@ -212,7 +233,10 @@ internal sealed class RewardTables
         foreach (var problem in problems) _log("rewards file: " + problem);
     }
 
-    /// <summary>What the plan needs to know of the game's tables, read once per write, before it.</summary>
+    /// <summary>
+    /// What the plan needs to know of the game's tables, read once per write, before it. Rows an earlier write made
+    /// are left in the tables, so they are not counted as the game's.
+    /// </summary>
     private sealed class GameTables : IRewardTables
     {
         private readonly Il2CppSystem.Collections.Generic.Dictionary<int, Config_Talent> _talents;
@@ -220,6 +244,7 @@ internal sealed class RewardTables
         private readonly Il2CppSystem.Collections.Generic.Dictionary<int, Config_Effect> _effects;
         private readonly Il2CppSystem.Collections.Generic.Dictionary<int, Config_ConditionSet> _conditions;
         private readonly Il2CppSystem.Collections.Generic.Dictionary<int, Config_RandomGroup> _pools;
+        private readonly HashSet<(Table, int)> _made;
         private Dictionary<string, int>? _effectByScript;
 
         public GameTables(
@@ -227,25 +252,36 @@ internal sealed class RewardTables
             Il2CppSystem.Collections.Generic.Dictionary<int, Config_Buff> buffs,
             Il2CppSystem.Collections.Generic.Dictionary<int, Config_Effect> effects,
             Il2CppSystem.Collections.Generic.Dictionary<int, Config_ConditionSet> conditions,
-            Il2CppSystem.Collections.Generic.Dictionary<int, Config_RandomGroup> pools)
+            Il2CppSystem.Collections.Generic.Dictionary<int, Config_RandomGroup> pools,
+            HashSet<(Table, int)> made)
         {
             _talents = talents;
             _buffs = buffs;
             _effects = effects;
             _conditions = conditions;
             _pools = pools;
+            _made = made;
         }
 
         public bool IsReward(int id) =>
             Talent(id) is { } row && row._Type_k__BackingField == RewardCatalog.PlanType && row._TalentID_k__BackingField == id;
 
-        public bool HasTalent(int id) => _talents.ContainsKey(id);
+        public bool HasTalent(int id) => Talent(id) != null;
 
-        public bool HasBuff(int id) => _buffs.ContainsKey(id);
+        public bool HasBuff(int id) => !_made.Contains((Table.Buff, id)) && _buffs.ContainsKey(id);
 
-        public bool HasEffect(int id) => _effects.ContainsKey(id);
+        public bool HasEffect(int id) => !_made.Contains((Table.Effect, id)) && _effects.ContainsKey(id);
 
-        public bool HasCondition(int id) => _conditions.ContainsKey(id);
+        public bool HasCondition(int id) => !_made.Contains((Table.Condition, id)) && _conditions.ContainsKey(id);
+
+        public int NextTier(int id)
+        {
+            var next = id + 1;
+            var condition = RewardCondition(next);
+            var needs = condition == 0 ? null : _conditions[condition]._TalentNeed_k__BackingField;
+
+            return IsReward(next) && needs != null && needs.Contains(id) ? next : 0;
+        }
 
         public bool HasPool(int id) => _pools.ContainsKey(id);
 
@@ -265,13 +301,15 @@ internal sealed class RewardTables
                 {
                     var name = effect?._ConfigName_k__BackingField;
 
-                    if (effect != null && name != null && (!_effectByScript.TryGetValue(name, out var first) || effect._ID_k__BackingField < first)) _effectByScript[name] = effect._ID_k__BackingField;
+                    if (effect == null || name == null || _made.Contains((Table.Effect, effect._ID_k__BackingField))) continue;
+
+                    if (!_effectByScript.TryGetValue(name, out var first) || effect._ID_k__BackingField < first) _effectByScript[name] = effect._ID_k__BackingField;
                 }
             }
 
             return _effectByScript.TryGetValue(script, out var id) ? id : null;
         }
 
-        private Config_Talent? Talent(int id) => _talents.ContainsKey(id) ? _talents[id] : null;
+        private Config_Talent? Talent(int id) => !_made.Contains((Table.Reward, id)) && _talents.ContainsKey(id) ? _talents[id] : null;
     }
 }

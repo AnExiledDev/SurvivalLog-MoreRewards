@@ -11,10 +11,12 @@
     <ToolkitSrc>$([System.IO.Path]::GetDirectoryName($([System.IO.Path]::GetDirectoryName($([System.IO.Path]::GetDirectoryName('$(ToolkitDll)'))))))</ToolkitSrc>
   </PropertyGroup>
 
-  <!-- The pure core is compiled straight in, with the Toolkit's plain helper it uses, so the tests need none of the game or BepInEx assemblies. -->
+  <!-- The pure core is compiled straight in, with the Toolkit's plain helpers it uses, so the tests need none of the game or BepInEx assemblies. -->
   <ItemGroup>
     <Compile Include="..\..\src\MoreRewards\Core\*.cs" Link="Core\%(Filename)%(Extension)" />
     <Compile Include="$(ToolkitSrc)\Core\SlicedJob.cs" Link="Toolkit\SlicedJob.cs" />
+    <Compile Include="$(ToolkitSrc)\Core\JsText.cs" Link="Toolkit\JsText.cs" />
+    <Compile Include="$(ToolkitSrc)\Core\Phrase.cs" Link="Toolkit\Phrase.cs" />
   </ItemGroup>
 
   <!-- The page script, as the plugin ships it, run in Jint with the Toolkit's page API against a fake Root.html. -->

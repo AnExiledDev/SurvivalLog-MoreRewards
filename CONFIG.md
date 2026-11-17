@@ -18,7 +18,6 @@ With the defaults you get the game's 3 rewards, its refresh cost and its interes
 | --- | --- | --- |
 | `OptionCount` | `3` | How many rewards you can choose from at the end of a day and after each refresh. `3` is the game's number, and you can set any number from 3 to 20. |
 | `RefreshCost` | `-1` | How many survival points a refresh costs. `-1` is automatic: the cost goes up with `OptionCount` (see below). `0` makes every refresh free, and any number from 1 to 99 is the cost of every refresh, whatever `OptionCount` is. |
-| `WindCards` | `false` | Adds three rewards for the Wind Power mod (0.9.3 or newer): Wind Collection I, II and III. They work like the game's Sunlight Collection. Each one makes wind turbines produce 15% more power, they cost 10, 16 and 24 survival points, and they show up once you can build a wind turbine. Does nothing without Wind Power. |
 
 ### The automatic refresh cost
 

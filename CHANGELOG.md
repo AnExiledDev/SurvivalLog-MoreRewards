@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.9.0
+
+- Rewards tab: with the Mod Manager 0.7.0 or newer, More Rewards' page gets a Rewards tab that edits the rewards file for you. Change what any reward costs, its levels, its numbers, its pools and its text, or build your own. SAVE writes the file and the changes apply at once.
+- A reward in the rewards file can now have several levels, and each level can give more than one effect.
+- The wind rewards are always there when Wind Power 0.9.3 or newer is installed. The `WindCards` setting is gone.
+- The wind rewards now show a wind turbine icon.
+- Made for Survival Log 1.1.21271.
+
 ## 0.8.0
 
 - Your own rewards: `BepInEx\config\MoreRewards.Rewards.json` adds new end-of-day rewards or changes the game's (cost, name, description, needs, pools and what they give). It is written the first time the game starts, with notes and one example that is switched off, so nothing changes until you edit it.

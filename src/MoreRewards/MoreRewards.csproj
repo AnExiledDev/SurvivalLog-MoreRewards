@@ -38,6 +38,7 @@
     <EmbeddedResource Include="page.js" LogicalName="MoreRewards.page.js" />
     <EmbeddedResource Include="rewards.default.json" LogicalName="MoreRewards.rewards.default.json" />
     <EmbeddedResource Include="wind-rewards.json" LogicalName="MoreRewards.wind-rewards.json" />
+    <EmbeddedResource Include="rewards-tab.js" LogicalName="MoreRewards.rewards-tab.js" />
   </ItemGroup>
 
   <!-- What the Mod Manager's Mods screen shows about this mod. -->
