@@ -4,7 +4,7 @@ Choose from more rewards at the end of each day, lock more than one, ban the one
 
 Out of the box the mod changes nothing about the game's balance. You get the game's 3 rewards, its refresh cost and its interest. Set `OptionCount` for more rewards, and `InterestRate` and `MaxInterest` for more interest.
 
-At the end of each day, Survival Log offers 3 rewards you can buy with survival points, and a refresh for 2 points draws 3 new ones. More Rewards lets you raise that to any number up to 20, from the same reward pool the game draws from. By default the refresh cost goes up with the number of rewards, or you can make it free or set any cost you like. You can also raise the interest your survival points earn each day, and the most it can pay, above the game's 5% and 10.
+At the end of each day, Survival Log offers 3 rewards you can buy with survival points, and a refresh for 2 points draws 3 new ones. More Rewards lets you raise that to any number up to 20, from the same reward pool the game draws from. By default the refresh cost goes up with the number of rewards, or you can make it free or set any cost you like. You can also raise the interest your survival points earn each day, and the most it can pay, above the game's 5% and 10. On the Mod Manager's Rewards tab you can change any reward or build your own, and the `ExtraRewards` setting adds 39 more.
 
 ## Features
 

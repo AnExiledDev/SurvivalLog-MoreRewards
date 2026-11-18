@@ -1,10 +1,10 @@
 Name: More Rewards
-Summary: Choose from up to 20 rewards at the end of each day instead of 3, lock several, and ban the cards you do not want. Set your own daily interest on survival points, change every setting right on the rewards screen, and turn on an optional shop to search and buy any reward you can get. With more cards, they shrink into extra rows so they all fit.
+Summary: Choose from up to 20 rewards at the end of each day instead of 3, lock several, ban the ones you do not want, and change any reward or make your own on the Rewards tab. Turn on 39 extra rewards, set your own daily interest, and open an optional shop to buy any reward you can get. Every setting changes right on the rewards screen.
 
 Description (BBCode):
 [center][img]https://sldb.core-directive.com/media/save/3-remove-with-care.png[/img][/center]
 
-At the end of each day, Survival Log offers 3 rewards you can buy with survival points, and a refresh for 2 points draws 3 new ones. More Rewards lets you raise that to any number up to 20, from the same reward pool the game draws from. You can also lock several, ban the ones you do not want, and open an optional shop. By default the refresh cost goes up with the number of rewards, or you can make it free or set any cost you like. And you can raise the interest your survival points earn each day, and the most it can pay, above the game's 5% and 10.
+At the end of each day, Survival Log offers 3 rewards you can buy with survival points, and a refresh for 2 points draws 3 new ones. More Rewards lets you raise that to any number up to 20, from the same reward pool the game draws from. You can also lock several, ban the ones you do not want, and open an optional shop. By default the refresh cost goes up with the number of rewards, or you can make it free or set any cost you like. And you can raise the interest your survival points earn each day, and the most it can pay, above the game's 5% and 10. On the Mod Manager's Rewards tab you can change any reward or build your own, and the ExtraRewards setting adds 39 more.
 
 Out of the box the mod changes nothing about the game's balance. You get the game's 3 rewards, its refresh cost and its interest. Set OptionCount for more rewards, and InterestRate and MaxInterest for more interest.
 
@@ -97,7 +97,7 @@ Open source under MIT: [url=https://github.com/AnExiledDev/SurvivalLog-MoreRewar
 [line]
 [size=5]简体中文[/size]
 
-每天结束时，Survival Log 会提供 3 张可以用生存点购买的规划卡，花 2 点刷新可以换 3 张新的。More Rewards 让你把数量提高到最多 20 张，全部来自游戏本身抽卡的卡池，还能锁定多张、禁用不想要的卡，并可开启商店。默认情况下刷新花费会随规划卡数量上涨，你也可以让刷新免费，或者自定任意花费。你还可以把生存点的每日回息比例和上限提高到游戏原本的 5% 和 10 以上。
+每天结束时，Survival Log 会提供 3 张可以用生存点购买的规划卡，花 2 点刷新可以换 3 张新的。More Rewards 让你把数量提高到最多 20 张，全部来自游戏本身抽卡的卡池，还能锁定多张、禁用不想要的卡，并可开启商店。默认情况下刷新花费会随规划卡数量上涨，你也可以让刷新免费，或者自定任意花费。你还可以把生存点的每日回息比例和上限提高到游戏原本的 5% 和 10 以上。在 Mod Manager 的「奖励」页可以修改任何规划卡，或自己做新的。开启 ExtraRewards 设置还能多出 39 张。
 
 默认设置下，本模组不改变游戏的任何平衡：仍是游戏原本的 3 张规划卡、刷新花费和回息。设置 OptionCount 可以获得更多规划卡，设置 InterestRate 和 MaxInterest 可以获得更多回息。
 
