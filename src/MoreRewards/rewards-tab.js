@@ -17,7 +17,8 @@
     levelCount, listIds, markChanged, match, matchesQuery, nameOf, nameOptions, nextStep, normText, numText, numsOf,
     onDocDown, onInput, onPickerDouble, onPickerKey, paramRow, pct, pickHtml, picksOf, range, rawCache, rawFx,
     readsHtml, renderPicker, resetOrDelete, round2, roundTrips, saved, scriptOfGive, select, send, setPick, setText,
-    showIconGroup, stepper, tag, talentIcons, talentName, textIn, toRaw, unitOf, winEl, writeText, editorCss
+    showIconGroup, stepper, tag, talentIcons, talentName, textIn, toRaw, unitOf, winEl, writeText, editorCss,
+    searchHtml, noMatchHtml, clearSearch, onSearchKey, showSelectedRow, fitHeight, watchHeight
   } = window.ExiledEditor.make(T);
 
   const PREFIX = 'slmod|morerewards|rewards|';
@@ -33,14 +34,15 @@
 
   // ===== Style =====
 
-  // Each line starts with who it is for: N the tab, P the effect picker, B both, I the icon picker, T the toast.
-  // "&" is the element itself; anything else sits inside it.
+  // Each line starts with who it is for: N the tab, P the effect picker, B both, I the icon picker, T the toast, D the
+  // pool picker. "&" is the element itself; anything else sits inside it.
   const SCOPES = {
     N: ['#slmm .mr'],
     P: ['#slmm .mr-fxp'],
     B: ['#slmm .mr', '#slmm .mr-fxp'],
     I: ['#slmm .mr-icons'],
-    T: ['#slmm .mr-toast']
+    T: ['#slmm .mr-toast'],
+    D: ['#slmm .mr-pools']
   };
 
   const CSS = editorCss("mr", [
@@ -48,8 +50,12 @@
     'N .pl-row{display:grid;grid-template-columns:minmax(0,1fr) auto 24px;gap:12px;align-items:center;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.05)}',
     'N .pl-id{color:#ddd;font-size:.92rem}',
     'N .pl-id .tg{margin-left:8px}',
+    'N .pl-id{min-width:0}',
+    'N .pl-id small{display:block;color:var(--td);font-size:.8rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
     'N .pl-row .x{cursor:pointer;color:var(--td)}',
-    'N .pl-add{display:flex;gap:12px;align-items:center;padding:8px 0 4px}',
+    'N .pl-add{display:flex;flex-wrap:wrap;gap:12px;align-items:center;padding:8px 0 4px}',
+    'N .pk-btn{padding:6px 12px;border:1px dashed var(--hl);color:var(--hl);cursor:pointer;letter-spacing:2px;font-size:.82rem;font-weight:700;white-space:nowrap}',
+    'N .pk-btn:hover,.pk-btn.is-open{background:rgba(255,200,58,0.12);color:#fff}',
     'N .chs{margin:0;flex-wrap:wrap}',
     'N .chs span{min-width:0;padding:6px 12px;font-family:var(--body)}',
     'N .ro{color:var(--td);font-size:.85rem;line-height:1.4}',
@@ -59,14 +65,41 @@
     'N .dy small{color:var(--td);font-family:var(--mono)}',
     'N .dpl{grid-template-columns:minmax(0,1fr) 54px auto 24px}',
     'N .dpl .pl-id{cursor:pointer}',
-    'N .dpl .pl-id small{color:var(--td);margin-left:6px}',
+    'N .dpl .pl-id small{display:inline;margin-left:8px}',
     'N .mv b{display:inline-block;width:24px;text-align:center;color:var(--hl);cursor:pointer;user-select:none}',
     'N .pm{margin:2px 0 8px 18px;border-left:1px solid var(--bd2);padding-left:10px}',
     'N .pm div{display:grid;grid-template-columns:minmax(0,1fr) 70px 60px;gap:10px;padding:3px 0;font-size:.86rem;color:var(--tm)}',
     'N .pm span{text-align:right;font-family:var(--mono);color:var(--td)}',
     'N .drw.is-cut{opacity:.5}',
     'N .drw .nm2{text-align:right}',
-    'N .nm2{color:var(--td);font-size:.82rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}'
+    'N .drw-n{display:flex;align-items:center;gap:8px;min-width:0}',
+    'N .drw-n img{width:28px;height:28px;object-fit:contain;flex:none}',
+    'N .nm2{color:var(--td);font-size:.82rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+    'N .tx{grid-template-columns:180px minmax(0,1fr) minmax(0,1fr)}',
+    'N .chw{grid-column:span 2;display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px}',
+    'N .tx-n{grid-column:span 2;margin-top:-4px;color:var(--td);font-size:.8rem}',
+    'D &{' + VARS + 'position:absolute;z-index:60;width:500px;max-width:calc(100% - 20px);box-sizing:border-box;background:#1a1611;border:1px solid rgba(255,200,58,0.4);box-shadow:0 20px 60px rgba(0,0,0,0.85);color:var(--tm)}',
+    'D ::-webkit-scrollbar{width:6px}',
+    'D ::-webkit-scrollbar-thumb{background:rgba(255,200,58,0.3)}',
+    'D .pq{display:flex;align-items:center;gap:8px;margin:10px;padding:0 10px;border:1px solid var(--bl);background:rgba(0,0,0,0.45);color:var(--tmeta)}',
+    'D .pq:focus-within{border-color:var(--hl)}',
+    'D .pq input{flex:1;min-width:0;background:transparent;border:0;outline:none;color:#fff;font:400 .95rem var(--body);padding:7px 0;user-select:text}',
+    'D .pq input::placeholder{color:#6d6253}',
+    'D .po-list{max-height:390px;overflow-y:auto;border-top:1px solid var(--bd2)}',
+    'D .po-sec{position:sticky;top:0;z-index:1;padding:7px 14px;font-size:.7rem;letter-spacing:2px;color:var(--hl);background:#1d1813;border-bottom:1px solid var(--bd2)}',
+    'D .po-sec small{display:block;letter-spacing:0;color:var(--tmeta);font-size:.75rem}',
+    'D .po{padding:8px 14px;cursor:pointer;border-left:3px solid transparent;border-bottom:1px solid rgba(255,255,255,0.04)}',
+    'D .po:hover{background:rgba(255,200,58,0.05)}',
+    'D .po.is-at{background:rgba(255,200,58,0.11);border-left-color:var(--hl)}',
+    'D .po-h{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 12px}',
+    'D .po-h b{color:#fff;font-size:.98rem}',
+    'D .po-h span{color:var(--td);font-size:.8rem}',
+    'D .po.is-empty .po-h b{color:var(--td)}',
+    'D .po-r{display:flex;align-items:center;gap:6px;margin-top:5px;font-size:.8rem;color:var(--td);min-width:0}',
+    'D .po-r img{width:24px;height:24px;object-fit:contain;flex:none}',
+    'D .po-r span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
+    'D .po-none{padding:18px;text-align:center;color:var(--td)}',
+    'D .po-ft{padding:7px 14px;font-size:.75rem;color:var(--tmeta);border-top:1px solid var(--bd2)}'
   ]);
 
   // ===== State =====
@@ -107,7 +140,10 @@
     dayEdits: {},
     day: 0,
     peek: 0,
-    drawn: null
+    drawn: null,
+    q: '',
+    menu: null,
+    menuEl: null
   };
 
   // ===== Small helpers =====
@@ -652,18 +688,12 @@
     return own ? null : ghostOf(id);
   }
 
-  function levelLabel(look, i) {
-    const l = look.levels[i];
-    const own = l.name || l.gameName;
+  // A level by the name the player sees on its card.
+  const levelLabel = (look, i) => levelNameOf(look, i, st.lang);
 
-    if (own) return textIn(own, st.lang);
-
-    return nameOf(look, st.lang) + (look.levels.length > 1 ? ' Lv.' + (i + 1) : '');
-  }
-
-  // Every reward level in a pool, with its weight.
-  function poolMembers(pool) {
-    const members = [];
+  // Every pool's reward levels with their weights, in one pass over the rewards.
+  function poolIndex() {
+    const index = {};
 
     allIds().forEach(id => {
       const look = liveReward(id);
@@ -671,14 +701,63 @@
       if (!look) return;
 
       look.levels.forEach((l, i) => {
-        const weight = poolsOf(l)[pool];
+        const pools = poolsOf(l);
 
-        if (weight > 0) members.push({ id: id + i, name: levelLabel(look, i), weight });
+        Object.keys(pools).forEach(pool => {
+          if (pools[pool] > 0) (index[pool] = index[pool] || []).push({ id: id + i, name: levelLabel(look, i), icon: look.icon, weight: pools[pool] });
+        });
       });
     });
 
-    return members.sort((a, b) => b.weight - a.weight || a.id - b.id);
+    return index;
   }
+
+  const byWeight = (a, b) => b.weight - a.weight || a.id - b.id;
+
+  const poolMembers = (pool, index) => ((index || poolIndex())[pool] || []).slice().sort(byWeight);
+
+  // The days whose draw uses a pool, as runs of days in a row: [[1, 4], [7, 7]].
+  function poolDayRuns(pool) {
+    const runs = [];
+
+    st.gameDays.forEach((x, k) => {
+      if (!dayPools(x.day).some(p => p.pool === pool)) return;
+
+      const run = runs[runs.length - 1];
+
+      if (run && run.k === k - 1) {
+        run.to = x.day;
+        run.k = k;
+        run.days++;
+      } else runs.push({ from: x.day, to: x.day, k, days: 1 });
+    });
+
+    return runs;
+  }
+
+  // "Days 1-4, 7". The game keeps using the last day after it, so a run that reaches it reads "12+". A long list is cut
+  // to its first few runs and a count.
+  function daysText(runs) {
+    const first = st.gameDays.length ? st.gameDays[0].day : 0;
+    const last = st.gameDays.length ? st.gameDays[st.gameDays.length - 1].day : -1;
+    const runText = r => r.to === last ? r.from + '+' : r.from === r.to ? String(r.from) : r.from + '-' + r.to;
+
+    if (runs.length === 1 && runs[0].from === first && runs[0].to === last) return L('Every day', '每天');
+
+    if (runs.length > 4) {
+      const total = runs.reduce((n, r) => n + r.days, 0);
+      const from = runs[0].from;
+      const to = runs[runs.length - 1].to;
+
+      return L(total + ' days in ' + from + '-' + to, '第' + from + '-' + to + '天中的' + total + '天');
+    }
+
+    const isOneDay = runs.length === 1 && runs[0].from === runs[0].to && runs[0].to !== last;
+
+    return L((isOneDay ? 'Day ' : 'Days ') + runs.map(runText).join(', '), '第' + runs.map(runText).join('、') + '天');
+  }
+
+  const rewardCount = n => st.lang === 'zh' ? n + '个奖励' : n + (n === 1 ? ' reward' : ' rewards');
 
   // One end-of-day draw done the way the game does it: each pool in order draws its amount by weight, never the same
   // reward twice, and only the first 3 are shown. It does not know what the player owns or can get, as the game does.
@@ -695,7 +774,7 @@
         const pick = left.find(m => (roll -= m.weight) <= 0) || left[left.length - 1];
 
         taken.add(pick.id);
-        picks.push({ pool: p.pool, name: pick.name, isShown: picks.length < 3 });
+        picks.push({ pool: p.pool, name: pick.name, icon: pick.icon, isShown: picks.length < 3 });
         left = left.filter(m => m !== pick);
       }
     });
@@ -721,21 +800,21 @@
 
   function dayHtml(day) {
     const pools = dayPools(day);
+    const index = poolIndex();
     const free = st.allPools.filter(id => !pools.some(p => p.pool === id));
     const rows = pools.map((p, i) => {
-      const count = poolMembers(p.pool).length;
+      const count = poolMembers(p.pool, index).length;
       const up = i > 0 ? '<b data-a="dpup" data-v="' + p.pool + '" title="' + L('Draw earlier', '提前抽取') + '">&#9650;</b>' : '<b></b>';
       const down = i < pools.length - 1 ? '<b data-a="dpdn" data-v="' + p.pool + '" title="' + L('Draw later', '推后抽取') + '">&#9660;</b>' : '';
 
       return '<div class="pl-row dpl"><span class="pl-id" data-a="peek" data-v="' + p.pool + '">' + (st.peek === p.pool ? '&#9660; ' : '&#9654; ') +
-        L('Pool', '卡池') + ' ' + p.pool + '<small>' + count + ' ' + L('rewards', '个奖励') + '</small></span>' +
+        L('Pool', '卡池') + ' ' + p.pool + '<small>' + (count ? rewardCount(count) : L('empty', '空')) + '</small></span>' +
         '<span class="mv">' + up + down + '</span>' +
         stepper('d:' + p.pool, p.amount, L('drawn', '个'), false) +
         '<span class="x" data-a="rmdpool" data-v="' + p.pool + '" title="' + L('Remove', '移除') + '">&#x2715;</span></div>' +
         (st.peek === p.pool ? membersHtml(p.pool) : '');
     }).join('');
-    const add = free.length ? '<select class="nsel" data-a="adddpool"><option value="">+ ' + L('ADD A POOL', '添加卡池') + '</option>' +
-      free.map(id => '<option value="' + id + '">' + L('Pool', '卡池') + ' ' + id + '</option>').join('') + '</select>' : '';
+    const add = free.length ? poolButton('day', L('ADD A POOL', '添加卡池')) : '';
     const reset = st.dayEdits[day] ? '<span class="gbtn dim" data-a="dayreset">' + L('BACK TO THE GAME\'S', '恢复游戏原设') + '</span>' : '';
     const none = pools.length ? '' : '<div class="nnote">' + L('No pools, so this day offers nothing.', '没有卡池，这一天什么都不会出现。') + '</div>';
 
@@ -762,7 +841,7 @@
 
     if (!st.drawn.length) return '<div class="nnote">' + L('Nothing came up: these pools are empty.', '什么都没抽到：这些卡池是空的。') + '</div>';
 
-    return '<div class="pl">' + st.drawn.map(p => '<div class="pl-row drw' + (p.isShown ? '' : ' is-cut') + '"><span>' + esc(p.name) + '</span>' +
+    return '<div class="pl">' + st.drawn.map(p => '<div class="pl-row drw' + (p.isShown ? '' : ' is-cut') + '"><span class="drw-n"><img src="' + esc(p.icon) + '" alt=""><span>' + esc(p.name) + '</span></span>' +
       '<span class="nm2">' + L('Pool', '卡池') + ' ' + p.pool + '</span><span class="nm2">' + (p.isShown ? '' : L('not shown', '不显示')) + '</span></div>').join('') + '</div>';
   }
 
@@ -941,11 +1020,14 @@
 
     const list = root.querySelector('.mr-list');
     const ed = root.querySelector('.ed');
-    const edScroll = ed ? ed.scrollTop : 0;
+    const open = st.view === 'days' ? 'd' + st.day : 'r' + st.sel;
+    const edScroll = ed && open === st.edOpen ? ed.scrollTop : 0;
 
     if (list) st.listScroll = list.scrollTop;
 
+    st.edOpen = open;
     root.innerHTML = topHtml() + bannersHtml() + (st.data ? mainHtml() : '<div class="mr-wait">' + L('Reading the rewards...', '正在读取奖励...') + '</div>');
+    fitHeight();
 
     const newList = root.querySelector('.mr-list');
     const newEd = root.querySelector('.ed');
@@ -963,13 +1045,15 @@
     const chip = (v, en, zh, n) => '<span data-a="view" data-v="' + v + '"' + (st.view === v ? ' class="is-on"' : '') + '>' + L(en, zh) + ' ' + n + '</span>';
 
     return '<div class="mr-top">' +
-      '<div><div class="mr-title">' + L('END-OF-DAY REWARDS', '每日奖励') + '</div>' +
+      '<div class="mr-head"><div class="mr-title">' + L('END-OF-DAY REWARDS', '每日奖励') + '</div>' +
       '<div class="mr-sub">' + L('What each reward costs, its levels, what it gives and the pools it comes from. Saving applies at once.', '每个奖励的消耗、等级、效果和所在卡池。保存后立即生效。') + '</div></div>' +
-      '<span class="sp"></span>' +
-      '<span class="new-btn" data-a="new">+ ' + L('NEW REWARD', '新建奖励') + '</span>' +
-      '<div class="mr-chips">' + chip('file', 'CHANGED', '已修改', fileCount) + chip('all', 'ALL REWARDS', '全部奖励', allCount) + chip('days', 'DAY DRAW', '每日抽取', st.gameDays.length) + '</div>' +
       '<span class="key-btn" data-a="discard">' + L('DISCARD', '放弃') + '</span>' +
-      '<span class="key-btn" data-a="save">' + L('SAVE', '保存') + '</span>' +
+      '<span class="key-btn' + (st.dirty ? ' is-due' : '') + '" data-a="save">' + L('SAVE', '保存') + '</span>' +
+      '</div>' +
+      '<div class="mr-bar">' +
+      '<div class="mr-chips">' + chip('file', 'CHANGED', '已修改', fileCount) + chip('all', 'ALL REWARDS', '全部奖励', allCount) + chip('days', 'DAY DRAW', '每日抽取', st.gameDays.length) + '</div>' +
+      (st.view === 'days' ? '<span class="sp"></span>' : searchHtml()) +
+      '<span class="new-btn" data-a="new">+ ' + L('NEW REWARD', '新建奖励') + '</span>' +
       '</div>';
   }
 
@@ -1000,14 +1084,27 @@
   function mainHtml() {
     if (st.view === 'days') return daysHtml();
 
-    const ids = listIds();
     const sel = entryOrGhost(st.sel);
-    const empty = ids.length ? '' : '<div class="nnote">' + L('You have not changed any rewards yet. Pick ALL REWARDS to see the game\'s.', '还没有改过任何奖励。点「全部奖励」查看游戏的奖励。') + '</div>';
 
     return '<div class="mr-main">' +
-      '<div class="mr-list"><div class="col-h">' + L(st.view === 'all' ? 'ALL REWARDS' : 'CHANGED', st.view === 'all' ? '全部奖励' : '已修改') + '<small>' + ids.length + '</small></div>' + empty + ids.map(rowHtml).join('') + '</div>' +
+      '<div class="mr-list" data-list="">' + rowsHtml() + '</div>' +
       '<div class="ed">' + (sel ? editorHtml(sel) : '') + '</div>' +
       '</div>';
+  }
+
+  // The list's inside, which the search redraws on its own.
+  function rowsHtml() {
+    const ids = listIds();
+    const isAll = st.view === 'all';
+    let empty = '';
+
+    if (!ids.length && st.q.trim()) empty = noMatchHtml();
+    else if (!ids.length) {
+      empty = '<div class="nomatch">' + L('You have not changed any rewards yet.', '还没有改过任何奖励。') +
+        '<br><span class="gbtn dim" data-a="view" data-v="all">' + L('SHOW ALL REWARDS', '查看全部奖励') + '</span></div>';
+    }
+
+    return '<div class="col-h">' + L(isAll ? 'ALL REWARDS' : 'CHANGED', isAll ? '全部奖励' : '已修改') + '<small>' + ids.length + '</small></div>' + empty + ids.map(rowHtml).join('');
   }
 
   function rowTag(e, id) {
@@ -1025,6 +1122,7 @@
     const name = look ? nameOf(look, st.lang) : '#' + id;
     const icon = look ? look.icon : '';
     const count = look ? look.levels.length : 0;
+    const desc = look && count ? descOf(look, 0, st.lang) : '';
     const cls = ['ab'];
 
     if (id === st.sel) cls.push('is-sel');
@@ -1038,31 +1136,26 @@
 
     return '<div class="' + cls.join(' ') + '" data-a="sel" data-v="' + id + '">' +
       '<img src="' + esc(icon) + '" alt="">' +
-      '<div><div class="nm">' + esc(name) + '</div><div class="mt">' + rowTag(e, id) + '<span class="lvn">' + (st.lang === 'zh' ? count + '级' : count + (count === 1 ? ' level' : ' levels')) + '</span></div></div>' +
+      '<div><div class="nm">' + esc(name) + '</div>' + (desc ? '<div class="ds">' + esc(desc) + '</div>' : '') + '<div class="mt">' + rowTag(e, id) + '<span class="lvn">' + (st.lang === 'zh' ? count + '级' : count + (count === 1 ? ' level' : ' levels')) + '</span></div></div>' +
       toggle + '</div>';
   }
 
   // ---- The editor ----
 
+  // The selected level's card. In the game every level is a reward of its own, so the card shows only that level.
   function previewHtml(e) {
     const lang = st.pvLang;
     const Lp = (en, zh) => lang === 'zh' ? zh : en;
     const n = e.levels.length;
     const i = Math.max(0, Math.min(st.lv, n - 1));
-    const line = levelLineOf(e, lang);
-    const parts = line.split(/\s*\/\s*/);
-    const lineHtml = n > 1 && parts.length === n ? parts.map((p, k) => k === i ? '<b>' + esc(p) + '</b>' : esc(p)).join(' / ') : esc(line);
     const desc = descOf(e, i, lang);
     const cost = n ? e.levels[i].cost : 0;
-    const mini = (v, label) => '<span data-a="pvl" data-v="' + v + '"' + (lang === v ? ' class="is-on"' : '') + '>' + label + '</span>';
 
     return '<div class="pv">' +
       '<img src="' + esc(e.icon) + '" alt="">' +
-      '<div><div class="pv-name">' + esc(levelNameOf(e, i, lang)) + '<span class="lvb">Lv.' + (i + 1) + ' / ' + n + '</span></div>' +
-      '<div class="pv-lt">' + lineHtml + '</div>' +
-      (desc ? '<div class="pv-desc">' + esc(desc) + '</div>' : '<div class="pv-desc is-empty">' + Lp('Choose what it gives and the description writes itself here.', '选择效果后，这里会写出描述。') + '</div>') +
+      '<div><div class="pv-name">' + esc(levelNameOf(e, i, lang)) + '</div>' +
+      (desc ? '<div class="pv-desc">' + esc(desc) + '</div>' : '<div class="pv-desc is-empty">' + Lp('Pick what it gives and its description shows up here.', '选好效果后，描述会显示在这里。') + '</div>') +
       '<div class="pv-cost">' + Lp('Cost', '消耗') + ' <b>' + numText(cost) + '</b> ' + Lp('survival points', '生存点') + '</div></div>' +
-      '<div class="pv-tag">' + L('As the game shows it', '游戏内显示') + '<span class="mini">' + mini('en', 'EN') + mini('zh', '中文') + '</span></div>' +
       '</div>';
   }
 
@@ -1074,7 +1167,7 @@
     else if (ghost && e.kind === 'builtIn') html = note(L('More Rewards adds this reward while Wind Power is installed. Change it here and your version replaces it.', '安装Wind Power时，更多奖励会加入此奖励。在这里修改后，你的版本会替换它。'));
     else if (ghost) html = note(L('This is one of the game\'s rewards, and it hasn\'t been changed.', '这是游戏中的奖励，没有改动过。'));
     else if (e.kind === 'builtIn') html = note(L('Your version of a reward More Rewards adds. Reset puts back the mod\'s.', '你修改过的更多奖励自带奖励。重置可恢复模组的版本。'));
-    else if (e.fresh) html = note(L('A reward of your own. Pick an icon, a name, what it gives and its pools. The text writes itself from the numbers.', '你自己的奖励。选图标、名称、效果和卡池。文字会根据数字自动生成。'));
+    else if (e.fresh) html = note(L('A reward of your own. Pick its icon, name, effects and pools. The description is made from the numbers.', '你自己的奖励。选图标、名称、效果和卡池。描述会根据数字生成。'));
     else if (e.kind === 'new') html = note(L('A new reward, copied from', '一个新奖励，复制自') + ' <b>' + esc(e.copySrc ? textIn(e.copySrc.name, st.lang) : '#' + e.copyFrom) + '</b>');
     else html = note(L('You can change what it gives, its cost, levels and text here.', '这里可以改效果、消耗、等级和文字。'));
 
@@ -1150,7 +1243,13 @@
     return '<div class="lvs">' + chips +
       (canAdd ? '<span class="is-add" data-a="addlv">+ ' + L('LEVEL', '等级') + '</span>' : '') +
       '<span class="total">' + L('To max level', '升满共需') + ' <b>' + numText(total) + '</b> ' + L('points', '点') + '</span></div>' +
-      '<table class="lt">' + head + rows + '</table>' + switchedOffHtml(e) + poolsHtml(e) + offeredHtml(e);
+      '<table class="lt">' + head + rows + '</table>' + chainHtml(e) + switchedOffHtml(e) + poolsHtml(e) + offeredHtml(e);
+  }
+
+  function chainHtml(e) {
+    if (e.levels.length < 2) return '';
+
+    return '<div class="nnote">' + L('In the game each level is a reward of its own, with its own name, text and cost. A level only comes up once the player owns the one below it.', '游戏里每一级都是单独的奖励，有自己的名称、描述和消耗。玩家拥有前一级后，才会出现下一级。') + '</div>';
   }
 
   function switchedOffHtml(e) {
@@ -1168,17 +1267,22 @@
     const pools = poolsOf(l);
     const ids = Object.keys(pools).map(Number).sort((a, b) => a - b);
     const free = st.allPools.filter(id => !(id in pools));
-    const rows = ids.map(id => '<div class="pl-row"><span class="pl-id">' + L('Pool', '卡池') + ' ' + id + (id in l.gamePools ? tag('src-game', 'GAME', '游戏') : '') + '</span>' +
+    const index = poolIndex();
+    const about = id => {
+      const runs = poolDayRuns(id);
+
+      return '<small>' + rewardCount(poolMembers(id, index).length) + L(', ', '，') + (runs.length ? daysText(runs) : L('not in the day draw', '不在每日抽取中')) + '</small>';
+    };
+    const rows = ids.map(id => '<div class="pl-row"><span class="pl-id">' + L('Pool', '卡池') + ' ' + id + (id in l.gamePools ? tag('src-game', 'GAME', '游戏') : '') + about(id) + '</span>' +
       stepper('p:' + id + ':' + i, pools[id], L('weight', '权重'), false) +
       (id in l.gamePools ? '<span></span>' : '<span class="x" data-a="rmpool" data-v="' + id + '" title="' + L('Remove', '移除') + '">&#x2715;</span>') + '</div>').join('');
-    const add = free.length ? '<select class="nsel" data-a="addpool"><option value="">+ ' + L('ADD TO A POOL', '加入卡池') + '</option>' +
-      free.map(id => '<option value="' + id + '">' + L('Pool', '卡池') + ' ' + id + '</option>').join('') + '</select>' : '';
+    const add = free.length ? poolButton('reward', L('ADD TO A POOL', '加入卡池')) : '';
     const same = e.levels.length > 1 ? '<span class="gbtn dim" data-a="poolsall">' + L('USE THESE POOLS FOR EVERY LEVEL', '所有等级使用这些卡池') + '</span>' : '';
     const none = ids.length ? '' : '<div class="nnote">' + L('Not in any pool, so the game never offers this level.', '不在任何卡池中，游戏永远不会提供这一级。') + '</div>';
 
     return '<div class="sec-h">' + L('POOLS', '卡池') + ' (Lv.' + (i + 1) + ')<small>' + L('Where the game draws it from. A higher weight comes up more often.', '游戏从哪些卡池抽取它。权重越高越常出现。') + '</small></div>' +
       '<div class="pl">' + rows + none + '<div class="pl-add">' + add + same + '</div></div>' +
-      (Object.keys(l.gamePools).length ? '<div class="nnote">' + L('The game\'s pools stay; you can change their weight.', '游戏原有的卡池会保留，可以改权重。') + '</div>' : '');
+      (Object.keys(l.gamePools).length ? '<div class="nnote">' + L('You can\'t remove the game\'s pools, only change their weight.', '游戏原有的卡池不能移除，只能改权重。') + '</div>' : '');
   }
 
   // The rules on level 1: when it can come up, for which runs and characters, what it needs first, and buying it again.
@@ -1192,13 +1296,15 @@
     const also = base && base.also.length ? '<span class="k">' + L('Also needs', '还需要') + '</span><span class="ro">' + esc(base.also.join('; ')) + '</span>' +
       '<span class="nm2">' + L('Set by the game', '游戏设定') + '</span>' : '';
 
-    return '<div class="sec-h">' + L('WHEN IT IS OFFERED', '出现条件') + '<small>' + L('Reward IDs and furniture IDs, split by commas. Empty uses the game\'s.', '奖励和家具填ID，用逗号分隔。留空则用游戏的。') + '</small></div>' +
+    return '<div class="sec-h">' + L('WHEN IT IS OFFERED', '出现条件') + '<small>' + L('When the game can offer it, and to whom.', '游戏什么时候、给谁提供它。') + '</small></div>' +
       '<div class="tx">' +
-      '<span class="k">' + L('From day', '从第几天') + '</span>' + stepper('r:fromDay', r.fromDay, L('day', '天'), false) + '<span class="nm2">' + fromDay + '</span>' +
+      '<span class="k">' + L('From day', '从第几天') + '</span>' + stepper('r:fromDay', r.fromDay, '', false) + '<span class="nm2">' + fromDay + '</span>' +
       '<span class="k">' + L('Runs', '模式') + '</span>' + runsHtml(r.endless, e.gameRules.endless) + '<span></span>' +
-      '<span class="k">' + L('Characters', '角色') + '</span>' + charsHtml(r.chars) + '<span class="nm2">' + (r.chars.length ? '' : L('None picked, so every character gets it', '未选，所有角色都能拿到')) + '</span>' +
+      '<span class="k">' + L('Characters', '角色') + '</span><div class="chw">' + charsHtml(r.chars) +
+      (r.chars.length ? '' : '<span class="nm2">' + L('None picked, so every character gets it', '未选，所有角色都能拿到') + '</span>') + '</div>' +
       row('needs', 'Rewards you need first', '需要先拥有的奖励', e.needs, base ? base.needs : []) +
       row('furniture', 'Furniture you can build', '可以建造的家具', e.furniture, base ? base.furniture : []) +
+      '<span></span><span class="tx-n">' + L('Type IDs split by commas. Leave a box empty to keep the game\'s list.', '填ID，用逗号分隔。留空则用游戏原有的。') + '</span>' +
       also +
       '</div>' + buyAgainHtml(e);
   }
@@ -1382,6 +1488,198 @@
     return html + chooseButton(e, f) + '</div>';
   }
 
+  // ===== The pool picker =====
+
+  // kind is 'day' for the day draw and 'reward' for the selected reward level's pools.
+  const poolButton = (kind, label) => '<span class="pk-btn' + (st.menu && st.menu.kind === kind ? ' is-open' : '') + '" data-a="poolmenu" data-v="' + kind + '">+ ' + label + '</span>';
+
+  const selectedLevel = e => e.levels[Math.min(st.lv, e.levels.length - 1)];
+
+  function openPoolMenu(anchor, kind) {
+    const win = winEl();
+
+    if (!win) return;
+
+    closeOverlays();
+    st.menu = { kind, q: '', at: 0, index: poolIndex(), runs: {} };
+    st.menuEl = h('<div class="mr-pools" data-own="">' +
+      '<div class="pq"><input data-a="pmq" placeholder="' + esc(L('Search by pool number or a reward in it', '按卡池编号或其中的奖励搜索')) + '" spellcheck="false" autocomplete="off"></div>' +
+      '<div class="po-list">' + menuListHtml() + '</div>' +
+      '<div class="po-ft">' + L('Up and Down to move, Enter to add, Esc to close', '上下键移动，回车添加，Esc 关闭') + '</div></div>');
+    st.menuEl.addEventListener('click', onClick);
+    st.menuEl.addEventListener('input', onMenuInput);
+    st.menuEl.addEventListener('keydown', onMenuKey);
+    win.appendChild(st.menuEl);
+    placeMenu(st.menuEl, anchor, win);
+    anchor.classList.add('is-open');
+    document.addEventListener('mousedown', onMenuDown, true);
+    document.addEventListener('scroll', onMenuScroll, true);
+    st.menuEl.querySelector('input').focus();
+  }
+
+  // Under the button when a few options fit there, else on whichever side has more room, with the list cut to fit. Above
+  // the button the menu hangs from its bottom edge, so a search that shortens the list keeps it next to the button.
+  function placeMenu(el, anchor, win) {
+    const w = win.getBoundingClientRect();
+    const a = anchor.getBoundingClientRect();
+    const scale = win.offsetWidth ? w.width / win.offsetWidth : 1;
+    const top = (a.top - w.top) / scale;
+    const bottom = (a.bottom - w.top) / scale;
+    const roomBelow = win.offsetHeight - bottom - 14;
+    const roomAbove = top - 14;
+    const isBelow = roomBelow >= Math.min(el.offsetHeight, 300) || roomBelow >= roomAbove;
+    const room = isBelow ? roomBelow : roomAbove;
+    const list = el.querySelector('.po-list');
+
+    if (el.offsetHeight > room) list.style.maxHeight = Math.max(120, list.offsetHeight - (el.offsetHeight - room)) + 'px';
+
+    el.style.left = Math.max(10, Math.min((a.left - w.left) / scale, win.offsetWidth - el.offsetWidth - 10)) + 'px';
+
+    if (isBelow) el.style.top = bottom + 4 + 'px';
+    else el.style.bottom = win.offsetHeight - top + 4 + 'px';
+  }
+
+  function closeMenus() {
+    if (!st.menuEl) return false;
+
+    if (st.menuEl.parentNode) st.menuEl.parentNode.removeChild(st.menuEl);
+
+    st.menuEl = null;
+    st.menu = null;
+    document.removeEventListener('mousedown', onMenuDown, true);
+    document.removeEventListener('scroll', onMenuScroll, true);
+
+    const open = st.root ? st.root.querySelector('.pk-btn.is-open') : null;
+
+    if (open) open.classList.remove('is-open');
+
+    return true;
+  }
+
+  // The button toggles the picker itself, so a press on it is left to the click.
+  function onMenuDown(ev) {
+    const t = ev.target;
+
+    if (!st.menuEl || st.menuEl.contains(t) || (t.closest && t.closest('[data-a="poolmenu"]'))) return;
+
+    closeMenus();
+  }
+
+  // The menu sits where the button was, so scrolling the page under it closes it.
+  function onMenuScroll(ev) {
+    if (st.menuEl && !st.menuEl.contains(ev.target)) closeMenus();
+  }
+
+  const menuRuns = pool => st.menu.runs[pool] || (st.menu.runs[pool] = poolDayRuns(pool));
+
+  // The pools that can still be added, split into the ones worth picking and the rest.
+  function menuGroups() {
+    const m = st.menu;
+    const e = entryOf(st.sel);
+    const taken = m.kind === 'day' ? dayPools(st.day).map(p => p.pool) : e ? Object.keys(poolsOf(selectedLevel(e))).map(Number) : [];
+    const words = m.q.toLowerCase().split(/\s+/).filter(w => w);
+    const text = pool => ('pool ' + L('', '卡池 ') + pool + ' ' + (m.index[pool] || []).map(x => x.name).join(' ')).toLowerCase();
+    const pools = st.allPools.filter(pool => taken.indexOf(pool) < 0 && words.every(w => text(pool).indexOf(w) >= 0));
+    const isUseful = m.kind === 'day' ? pool => !!m.index[pool] : pool => menuRuns(pool).length > 0;
+
+    return { useful: pools.filter(isUseful), rest: pools.filter(pool => !isUseful(pool)) };
+  }
+
+  function menuOrder() {
+    const g = menuGroups();
+
+    return g.useful.concat(g.rest);
+  }
+
+  function menuListHtml() {
+    const m = st.menu;
+    const g = menuGroups();
+    const count = g.useful.length + g.rest.length;
+
+    m.at = Math.max(0, Math.min(m.at, count - 1));
+
+    if (!count) return '<div class="po-none">' + L('No pool matches.', '没有匹配的卡池。') + '</div>';
+
+    const isDay = m.kind === 'day';
+    const head = (en, zh, noteEn, noteZh) => '<div class="po-sec">' + L(en, zh) + (noteEn ? '<small>' + L(noteEn, noteZh) + '</small>' : '') + '</div>';
+    const useful = g.useful.map((pool, k) => poolOptionHtml(pool, k === m.at)).join('');
+    const rest = g.rest.map((pool, k) => poolOptionHtml(pool, g.useful.length + k === m.at)).join('');
+    const usefulHead = isDay ? head('POOLS WITH REWARDS', '有奖励的卡池') : head('IN THE DAY DRAW', '在每日抽取中');
+    const restHead = isDay ? head('EMPTY POOLS', '空卡池', 'These have no rewards in them yet.', '这些卡池里还没有奖励。') :
+      head('NOT IN THE DAY DRAW', '不在每日抽取中', 'A reward that is only in these never shows up.', '只在这些卡池里的奖励永远不会出现。');
+
+    return (useful ? usefulHead + useful : '') + (rest ? restHead + rest : '');
+  }
+
+  function poolOptionHtml(pool, isAt) {
+    const members = poolMembers(pool, st.menu.index);
+    const runs = menuRuns(pool);
+    const shown = members.slice(0, 3);
+    const more = members.length > shown.length ? L(' and ' + (members.length - shown.length) + ' more', ' 等' + members.length + '个') : '';
+    const peek = members.length ? '<div class="po-r">' + shown.map(x => '<img src="' + esc(x.icon) + '" alt="">').join('') + '<span>' + esc(shown.map(x => x.name).join(', ') + more) + '</span></div>' : '';
+
+    return '<div class="po' + (isAt ? ' is-at' : '') + (members.length ? '' : ' is-empty') + '" data-a="pmpick" data-v="' + pool + '">' +
+      '<div class="po-h"><b>' + L('Pool', '卡池') + ' ' + pool + '</b><span>' + (members.length ? rewardCount(members.length) : L('Empty', '空')) + '</span>' +
+      (runs.length ? '<span>' + daysText(runs) + '</span>' : '') + '</div>' + peek + '</div>';
+  }
+
+  function renderMenuList() {
+    const list = st.menuEl ? st.menuEl.querySelector('.po-list') : null;
+
+    if (!list) return;
+
+    list.innerHTML = menuListHtml();
+
+    const at = list.querySelector('.is-at');
+
+    if (!at) return;
+
+    const head = at.previousElementSibling && at.previousElementSibling.classList.contains('po-sec') ? at.previousElementSibling.offsetHeight : 0;
+
+    if (at.offsetTop - head < list.scrollTop) list.scrollTop = at.offsetTop - head;
+    else if (at.offsetTop + at.offsetHeight > list.scrollTop + list.clientHeight) list.scrollTop = at.offsetTop + at.offsetHeight - list.clientHeight;
+  }
+
+  function onMenuInput(ev) {
+    if (ev.target.getAttribute('data-a') !== 'pmq' || !st.menu) return;
+
+    st.menu.q = ev.target.value;
+    st.menu.at = 0;
+    renderMenuList();
+    st.menuEl.querySelector('.po-list').scrollTop = 0;
+  }
+
+  function onMenuKey(ev) {
+    if (!st.menu) return;
+
+    if (ev.key === 'ArrowDown' || ev.key === 'ArrowUp') {
+      ev.preventDefault();
+      st.menu.at += ev.key === 'ArrowDown' ? 1 : -1;
+      renderMenuList();
+    } else if (ev.key === 'Enter') {
+      ev.preventDefault();
+
+      const pool = menuOrder()[st.menu.at];
+
+      if (pool) addPool(pool);
+    }
+  }
+
+  function addPool(pool) {
+    const kind = st.menu ? st.menu.kind : '';
+    const e = entryOf(st.sel);
+
+    closeMenus();
+
+    if (kind === 'day') setDayPools(st.day, dayPools(st.day).concat([{ pool, amount: 1 }]));
+    else if (kind === 'reward' && e) {
+      setPool(selectedLevel(e), pool, 1);
+      markChanged(e);
+    }
+
+    render();
+  }
+
   // ===== The icon picker =====
 
   function openIcons(anchor) {
@@ -1547,6 +1845,17 @@
 
   // ===== Events =====
 
+  // A reward just made: open it in a list that shows it, and scroll the list to it.
+  function showMade(made) {
+    if (st.view === 'days') st.view = 'file';
+
+    st.q = '';
+
+    select(made.id);
+    render();
+    showSelectedRow();
+  }
+
   function onClick(ev) {
     const t = ev.target.closest('[data-a]');
 
@@ -1559,7 +1868,10 @@
     const e = entryOf(st.sel);
 
     switch (a) {
-      case 'view': st.view = v === 'all' || v === 'days' ? v : 'file'; break;
+      case 'view': st.view = v === 'all' || v === 'days' ? v : 'file'; closeMenus(); break;
+      case 'rqx': clearSearch(); return;
+      case 'poolmenu': if (st.menu && st.menu.kind === v) closeMenus(); else openPoolMenu(t, v === 'day' ? 'day' : 'reward'); return;
+      case 'pmpick': addPool(Number(v)); return;
       case 'day': st.day = Number(v); st.peek = 0; st.drawn = null; break;
       case 'peek': st.peek = st.peek === Number(v) ? 0 : Number(v); break;
       case 'dpup': case 'dpdn': moveDayPool(st.day, Number(v), a === 'dpup' ? -1 : 1); break;
@@ -1570,8 +1882,9 @@
       case 'new': {
         const made = newReward();
 
-        if (made) select(made.id);
-        else toast(esc(L('There is no free reward number left.', '没有可用的奖励编号了。')));
+        if (made) { showMade(made); return; }
+
+        toast(esc(L('There is no free reward number left.', '没有可用的奖励编号了。')));
 
         break;
       }
@@ -1581,7 +1894,7 @@
       case 'lv': st.lv = Number(v); clampLevel(); break;
       case 'addlv': if (e && e.levels.length < MAX_LEVELS) { addLevel(e); st.lv = e.levels.length - 1; } break;
       case 'rmlv': if (e) { removeLevel(e); clampLevel(); } break;
-      case 'rmpool': if (e) { removePool(e.levels[Math.min(st.lv, e.levels.length - 1)], Number(v)); markChanged(e); } break;
+      case 'rmpool': if (e) { removePool(selectedLevel(e), Number(v)); markChanged(e); } break;
       case 'poolsall': if (e) { poolsForAll(e); markChanged(e); } break;
       case 'pvl': st.pvLang = v === 'zh' ? 'zh' : 'en'; st.pvChosen = true; break;
       case 'fold': st.textOpen = !st.textOpen; break;
@@ -1607,8 +1920,9 @@
       case 'copy': {
         const made = copyInto(st.sel);
 
-        if (made) select(made.id);
-        else toast(esc(L('There is no free reward number left.', '没有可用的奖励编号了。')));
+        if (made) { showMade(made); return; }
+
+        toast(esc(L('There is no free reward number left.', '没有可用的奖励编号了。')));
 
         break;
       }
@@ -1648,7 +1962,6 @@
 
       if (g) setPick(e, g, t.getAttribute('data-k'), value);
     } else if (a === 'val' && String(t.getAttribute('data-k')).indexOf('d:') === 0) setDayAmount(st.day, Number(t.getAttribute('data-k').slice(2)), parseFloat(t.value));
-    else if (a === 'adddpool' && t.value) setDayPools(st.day, dayPools(st.day).concat([{ pool: Number(t.value), amount: 1 }]));
     else if (a === 'reget' && e) {
       e.rules.isReget = t.checked;
       markChanged(e);
@@ -1661,10 +1974,7 @@
 
       if (target && isFinite(value)) writeValue(e, target, value);
     } else if (a === 'auto' && e) setAuto(e, t.checked);
-    else if (a === 'addpool' && e && t.value) {
-      setPool(e.levels[Math.min(st.lv, e.levels.length - 1)], Number(t.value), 1);
-      markChanged(e);
-    } else if (a === 'ids' && e) {
+    else if (a === 'ids' && e) {
       setIds(e, t.getAttribute('data-k') === 'furniture' ? 'furniture' : 'needs', t.value);
       markChanged(e);
     } else return;
@@ -1696,12 +2006,14 @@
       st.root.addEventListener('click', onClick);
       st.root.addEventListener('change', onChange);
       st.root.addEventListener('input', onInput);
+      st.root.addEventListener('keydown', onSearchKey);
     }
 
     if (st.root.parentNode !== el) el.appendChild(st.root);
 
     load();
     render();
+    watchHeight();
   }
 
   function data(d) {
@@ -1772,10 +2084,13 @@
     };
   }
 
+  // Level names are searched too, since a level's card can carry its own name.
+  const searchExtra = e => range(e.levels.length).map(i => levelNameOf(e, i, 'en') + ' ' + levelNameOf(e, i, 'zh')).join(' ');
+
   Object.assign(T, {
-    CSS, PREFIX, SCOPES, STYLE_ID, actionsHtml, allIds, buildEntries, canEditGives, detailHtml, editText,
+    CSS, PREFIX, SCOPES, STYLE_ID, actionsHtml, allIds, buildEntries, canEditGives, closeMenus, detailHtml, editText,
     effectValues, firstTpl, footer, ghostOf, givesHtml, isAvailable, levelsHtml, lookHtml, makeGive, pickerHead,
-    previewHtml, render, srcTag, st, textHtml, toast, tplValues, whyHtml, writeGive
+    previewHtml, render, rowsHtml, searchExtra, srcTag, st, textHtml, toast, tplValues, whyHtml, writeGive
   });
 
   window.__slmrRewards = { data, saved };

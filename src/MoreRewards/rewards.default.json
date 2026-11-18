@@ -41,20 +41,20 @@
 //
 // With Wind Power 0.9.3 or newer installed, the mod adds Wind Collection I, II and III (39001 to 39003).
 // An entry here with one of those IDs replaces them, so you can change them or switch them off.
+//
+// An example: a cheaper copy of Sunlight Collection I that gives 10% more solar power. To use it, copy it into the
+// "rewards" list below without the // at the start of each line.
+//    {
+//      "id": 39101,
+//      "copyFrom": 31271,
+//      "name": { "en": "Small Solar Boost", "zh": "小型太阳能增益" },
+//      "description": { "en": "Increases solar panel power generation efficiency by 10%.", "zh": "太阳能板产电效率 +10%" },
+//      "cost": 5,
+//      "pools": { "1013": 1 },
+//      "gives": [{ "effect": "game:AE_PowerSolarEfficiency", "fields": { "FloatValue0": 0.1 } }]
+//    }
 {
-  "rewards": [
-    // An example, switched off: a cheaper copy of Sunlight Collection I that gives 10% more solar power.
-    {
-      "id": 39101,
-      "enabled": false,
-      "copyFrom": 31271,
-      "name": { "en": "Small Solar Boost", "zh": "小型太阳能增益" },
-      "description": { "en": "Increases solar panel power generation efficiency by 10%.", "zh": "太阳能板产电效率 +10%" },
-      "cost": 5,
-      "pools": { "1013": 1 },
-      "gives": [{ "effect": "game:AE_PowerSolarEfficiency", "fields": { "FloatValue0": 0.1 } }]
-    }
-  ],
+  "rewards": [],
   "buffs": [],
   "effects": []
 }

@@ -28,7 +28,8 @@ internal static class GameReader
 
         foreach (var row in talents.Values)
         {
-            if (row == null || row._Type_k__BackingField != RewardCatalog.PlanType || row._TalentID_k__BackingField != row._ID_k__BackingField || isMade(Table.Reward, row._ID_k__BackingField)) continue;
+            // The row ID is the reward. 75 of the game's rewards have a TalentID of ID / 10, which the game never reads.
+            if (row == null || row._Type_k__BackingField != RewardCatalog.PlanType || isMade(Table.Reward, row._ID_k__BackingField)) continue;
 
             rewards[row._ID_k__BackingField] = row;
         }

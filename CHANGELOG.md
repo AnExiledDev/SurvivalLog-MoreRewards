@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.11.0
+
+- Rewards tab: a search box finds rewards by name, description or number, in English or Chinese. Enter opens the first one found, Up and Down move through the list and Esc clears the search.
+- Rewards tab: ADD TO A POOL opens a list you can search by pool number or by a reward in it, and it shows what each pool holds. Up and Down move, Enter adds the pool and Esc closes the list.
+- Rewards tab: the card shows the level you are editing the way the game shows it, and a reward with levels says that each level is its own reward in the game.
+- Rewards tab: the list and the editor fit the window, so nothing hides under the Mod Manager's buttons. A new or copied reward opens with the list scrolled to it, and the editor starts at the top when you pick another reward.
+- Rewards tab: the rules and pools are easier to read. The ID boxes say how to fill them, and each pool says how many rewards it holds and which days draw from it.
+- Fixed: 75 of the game's rewards were missing from the Rewards tab, and the rewards file got their levels wrong.
+- Fixed: the example in the rewards file showed Small Solar Boost as changed in the Rewards tab. The example is now a comment. An older file keeps the old example until you remove the example or delete the file.
+- Now needs Exiled's Toolkit 0.26.0 or newer.
+- Made for Survival Log 1.1.21271.
+
 ## 0.10.2
 
 - Fixed: the Rewards tab never showed up on the mod's page in the Mod Manager, and the log filled with "rewards tab: ...noscript" lines.

@@ -7,7 +7,10 @@ namespace MoreRewards.Core;
 /// <summary>Which rows the game's tables hold, as far as building a plan needs to know.</summary>
 public interface IRewardTables
 {
-    /// <summary>True for an end-of-day reward (a Type 2 talent row whose ID is its TalentID).</summary>
+    /// <summary>
+    /// True for an end-of-day reward: a Type 2 talent row. The game knows these by row ID alone
+    /// (SurvivalPlanningComponent.HasActivated), so the row's TalentID does not matter; for 75 of them it is ID / 10.
+    /// </summary>
     bool IsReward(int id);
 
     /// <summary>True for any talent row, reward or not, so a new reward never takes a talent's ID.</summary>

@@ -142,8 +142,9 @@ public class RewardFileTests
     {
         var file = RewardFile.Parse(Resource("MoreRewards.rewards.default.json"));
 
+        // No entries at all, so the Rewards tab shows no reward as changed on a fresh install. The example is a comment.
         Assert.Empty(file.Problems);
-        Assert.All(file.Rewards, reward => Assert.False(reward.Enabled));
+        Assert.Empty(file.Rewards);
         Assert.Empty(file.Buffs);
         Assert.Empty(file.Effects);
     }

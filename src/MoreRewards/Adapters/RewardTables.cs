@@ -292,7 +292,7 @@ internal sealed class RewardTables
         }
 
         public bool IsReward(int id) =>
-            Talent(id) is { } row && row._Type_k__BackingField == RewardCatalog.PlanType && row._TalentID_k__BackingField == id;
+            Talent(id) is { } row && row._Type_k__BackingField == RewardCatalog.PlanType;
 
         public bool HasTalent(int id) => Talent(id) != null;
 

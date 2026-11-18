@@ -119,7 +119,7 @@ There are no keys to set. The buttons on the rewards screen are set with the set
 
 ## Your own rewards
 
-`BepInEx\config\MoreRewards.Rewards.json` adds your own end-of-day rewards or changes the game's. It is written the first time the game starts with the mod, with notes on every part and one example that is switched off. Edit it while the game is closed. Changes apply the next time the game starts. Delete it to get the default back.
+`BepInEx\config\MoreRewards.Rewards.json` adds your own end-of-day rewards or changes the game's. It is written the first time the game starts with the mod, with notes on every part and an example to copy, written as a comment so it changes nothing. Edit it while the game is closed. Changes apply the next time the game starts. Delete it to get the default back.
 
 A reward can set its cost, name and description (in English and Chinese), the rewards it needs first, the furniture you must be able to build, the pools it is drawn from and how often, and what it gives. A new reward copies a game reward (`copyFrom`) for its icon and look, then changes what you set. It can give any effect the game has, such as more solar power, or more wind turbine power with Wind Power installed.
 
