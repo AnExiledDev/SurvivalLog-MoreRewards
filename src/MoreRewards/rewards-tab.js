@@ -176,6 +176,14 @@
 
   const isAvailable = f => f.needs ? !!(st.data && st.data[f.needs]) : !!f.mr || f.scripts.some(s => st.scripts.has(s));
 
+  // Scripts that only do something before the disaster: money, shopping, the loan, the countdown and food in the cupboards.
+  // End-of-day rewards come after the disaster, when there is no money, so NEW REWARD leaves them out. A reward in the
+  // file that already uses one still shows and saves as it is.
+  const BEFORE_DISASTER = ['PreDisaster_AddCountDownTime', 'PreDisaster_AddGold', 'PreDisaster_AddWeight', 'PreDisaster_AddDiscount',
+    'PreDisaster_AddRandomItem', 'BigVolume_Discount', 'VehicleTimeReduce', 'LoanMaxBonus', 'AE_FurnitureDiscount'];
+
+  const isBeforeDisaster = f => f.scripts.length > 0 && f.scripts.every(s => BEFORE_DISASTER.indexOf(s) >= 0);
+
   // ---- Which effect a script and its numbers are. ----
 
   // ---- The whole catalogue, built once the game's data is in. ----
@@ -201,7 +209,8 @@
     FX.filter(f => f.pickable && isAvailable(f)).forEach(f => f.scripts.forEach(s => covered.add(s)));
     st.scripts.forEach(s => { if (NO_SCRIPT.indexOf(s) < 0 && !covered.has(s)) rawFx(s); });
 
-    cat.list = FX.filter(f => f.pickable && isAvailable(f)).concat(Object.keys(rawCache).sort().map(k => rawCache[k]).filter(f => !covered.has(f.script)));
+    cat.list = FX.filter(f => f.pickable && isAvailable(f)).concat(Object.keys(rawCache).sort().map(k => rawCache[k]).filter(f => !covered.has(f.script)))
+      .filter(f => !isBeforeDisaster(f));
   }
 
   // ===== Gives: one effect of a reward, with its picks and a number per level =====

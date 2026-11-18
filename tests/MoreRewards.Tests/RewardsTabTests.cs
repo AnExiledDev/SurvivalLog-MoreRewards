@@ -98,6 +98,16 @@ public class RewardsTabTests
         Assert.False(Bool("T.st.entries[0].autoText"));
     }
 
+    // End-of-day rewards come after the disaster, when there is no money, so NEW REWARD leaves out the effects that only
+    // work before it: money, shopping, the loan, the countdown. Every other effect is still there, named or raw.
+    [Fact]
+    public void New_reward_leaves_out_effects_that_only_work_before_the_disaster()
+    {
+        Load("""{ "rewards": [] }""", templates: "{ Savings_Plan: {}, AE_HomePackageMax: {}, PreDisaster_AddGold: {}, PreDisaster_AddWeight: {}, LoanMaxBonus: {}, AE_FurnitureDiscount: {}, VehicleTimeReduce: {} }");
+
+        Assert.Equal("game:savings,raw:AE_HomePackageMax", Text("ed.cat.list.map(function (f) { return f.id; }).sort().join(',')"));
+    }
+
     // The three day rules go into the file only when they are set, and read back as they were written.
     [Fact]
     public void The_day_rules_are_saved_only_when_set_and_read_back()
@@ -182,7 +192,7 @@ public class RewardsTabTests
 
     // Day 1 draws two from 9102 and one from 1005; day 7 one each from 9103 and 9121. Twelve game rewards fill the pools.
     // Loading closes any open menu, which lets go of its page listeners, so the page gets a stand-in for that.
-    private void Load(string file, int cards = 5)
+    private void Load(string file, int cards = 5, string templates = "{}")
     {
         _engine.Execute($$"""
             window.document = window.document || { addEventListener: function () {}, removeEventListener: function () {} };
@@ -199,6 +209,7 @@ public class RewardsTabTests
                 game: game, pools: [1005, 9102, 9103, 9121], cards: {{cards}},
                 days: [{ day: 1, pools: [[9102, 2], [1005, 1]] }, { day: 7, pools: [[9103, 1], [9121, 1]] }],
                 poolSizes: { 1005: 4, 9102: 30, 9103: 72, 9121: 14 },
+                templates: {{templates}},
                 file: {{file}}
               });
             })();

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.11.6
+
+- Removed the `CashOut` setting. After the disaster there is no money to spend, so turning survival points into cash did nothing useful. A value you set before is ignored.
+- Rewards tab: NEW REWARD no longer offers effects that only work before the disaster, such as starting money, a higher loan limit, discounts when shopping and more time before the disaster. A reward in your file that already uses one keeps it.
+- Made for Survival Log 1.1.21271.
+
 ## 0.11.5
 
 - New in the rewards file and the Rewards tab: "toDay", the last day a reward can be offered. 0 or left out is no last day.

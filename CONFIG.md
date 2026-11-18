@@ -87,9 +87,8 @@ With `MaxLocked` above 1, the footer shows how many locks are in use (for exampl
 | `BanWholeLine` | `false` | `true` makes a ban also ban every level of the same reward. |
 | `UnbanRefund` | `50` | How much of what a ban cost, in percent, comes back when you remove it from the 「Bans」 list, 0 to 100. |
 | `Labels` | `true` | Shows on each card whether its reward is permanent, one-time, or lasts for a time (for example 3 DAYS). |
-| `CashOut` | `0` | Cash for each survival point you still hold when you leave the rewards screen, 0 to 1000. The points are spent. `0` is off and keeps your points. |
 
-The buttons show only on cards you can still act on: not bought and not locked. The footer also shows the interest you will get tomorrow, and with `CashOut` on, how much cash you get for leaving the screen. With `BanButton` on, a 「Bans」 button in the footer lists this run's bans. Removing one lets its rewards come back. A ban made with `BanWholeLine` is removed as a whole, and its refund is a share of what it cost when you made it.
+The buttons show only on cards you can still act on: not bought and not locked. The footer also shows the interest you will get tomorrow. With `BanButton` on, a 「Bans」 button in the footer lists this run's bans. Removing one lets its rewards come back. A ban made with `BanWholeLine` is removed as a whole, and its refund is a share of what it cost when you made it.
 
 ## Shop
 

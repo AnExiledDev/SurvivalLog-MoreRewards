@@ -19,7 +19,6 @@ At the end of each day, Survival Log offers 3 rewards you can buy with survival 
 - **How long a reward lasts**: each card says whether its reward is permanent, one-time, or lasts for a time, such as 「3 DAYS」.
 - **No repeats on refresh** (off by default): a refresh shows rewards you have not seen yet that day.
 - **Tomorrow's interest**: the footer shows the interest you will get when the day ends.
-- **Cash out** (off by default): survival points left when you leave the rewards screen turn into cash.
 - **The shop** (off by default): a 「Shop」 button opens a searchable list of every reward you can get, by category and by permanent, one-time or temporary. You set the prices and limits. By default shop prices are 25% above card prices and go up 15% with each purchase until the next day, you can buy 2 rewards a day, and you can buy a reward before the one it needs at double the price. Rewards you cannot buy now are greyed out with the reason, or hidden.
 - **UI size**: Exiled's Toolkit's UI size setting (`UiScale`) draws the shop, the ban list and the settings bigger or smaller, as far as each still fits on the screen. The buttons on the cards and in the footer keep the game's size. More Rewards also has a `UiScale` setting under Interface that sets a size for this mod alone. At 0, the default, it follows the Toolkit's.
 - **Room for every card**: up to 5 rewards sit in one row. More are spread over even rows with smaller cards, and the area scrolls if they still do not fit.

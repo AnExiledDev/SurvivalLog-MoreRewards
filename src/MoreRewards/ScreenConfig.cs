@@ -4,7 +4,7 @@ using MoreRewards.Core;
 
 namespace MoreRewards;
 
-/// <summary>The config keys for the end-of-day screen's locks, card buttons, cash out and shop, read together into a <see cref="ScreenInput"/>.</summary>
+/// <summary>The config keys for the end-of-day screen's locks, card buttons and shop, read together into a <see cref="ScreenInput"/>.</summary>
 internal sealed class ScreenConfig
 {
     private const string Shown = "ModManager.ShowWhen=General.Enabled";
@@ -18,7 +18,6 @@ internal sealed class ScreenConfig
     private readonly ConfigEntry<bool> _banWholeLine;
     private readonly ConfigEntry<int> _unbanRefund;
     private readonly ConfigEntry<bool> _labels;
-    private readonly ConfigEntry<int> _cashOut;
     private readonly ConfigEntry<bool> _shopEnabled;
     private readonly ConfigEntry<ShopUnavailable> _shopUnavailable;
     private readonly ConfigEntry<int> _shopMarkup;
@@ -54,10 +53,6 @@ internal sealed class ScreenConfig
         _labels = config.Bind("Cards", "Labels", true, new ConfigDescription(
             "Shows on each card whether its reward is permanent, one-time, or lasts for a time (for example 3 DAYS).\n" +
             "在每张卡上显示该生存规划是永久、一次性，还是持续一段时间（例如持续3天）。", null, Shown));
-        _cashOut = config.Bind("Cards", "CashOut", 0, new ConfigDescription(
-            "Cash you get for each survival point you still hold when you leave the rewards screen. The points are spent. 0 is off and keeps your points.\n" +
-            "离开生存规划界面时，每个剩余生存点可换得的现金，生存点会被用掉。0 为关闭，保留生存点。",
-            new AcceptableValueRange<int>(0, ScreenSettings.MostCashOut), Shown, WorldRule.Tag));
         _shopEnabled = config.Bind("Shop", "ShopEnabled", false, new ConfigDescription(
             "Adds a 「Shop」 button to the rewards screen: a searchable list of every reward you can get, bought with survival points at a higher price than a card.\n" +
             "在生存规划界面加一个「商店」按钮：可搜索所有能获得的生存规划，用生存点购买，价格比卡片更高。", null, Shown, WorldRule.Tag));
@@ -86,7 +81,7 @@ internal sealed class ScreenConfig
 
     public ConfigEntryBase[] Entries => new ConfigEntryBase[]
     {
-        _optionCount, _maxLocked, _noRepeatOnRefresh, _banButton, _banCost, _banWholeLine, _unbanRefund, _labels, _cashOut,
+        _optionCount, _maxLocked, _noRepeatOnRefresh, _banButton, _banCost, _banWholeLine, _unbanRefund, _labels,
         _shopEnabled, _shopUnavailable, _shopMarkup, _shopIncrease, _shopReset, _shopPerDay, _shopLocked,
     };
 
@@ -100,7 +95,9 @@ internal sealed class ScreenConfig
         BanWholeLine = _banWholeLine.Value,
         UnbanRefund = _unbanRefund.Value,
         Labels = _labels.Value,
-        CashOut = _cashOut.Value,
+        // Cash out is off for now: after the disaster there is no money to spend, so cash is useless. The code behind
+        // it stays, so the setting can come back if money comes back after the disaster.
+        CashOut = 0,
         ShopEnabled = _shopEnabled.Value,
         ShopHidesUnavailable = _shopUnavailable.Value == ShopUnavailable.Hide,
         ShopMarkup = _shopMarkup.Value,
