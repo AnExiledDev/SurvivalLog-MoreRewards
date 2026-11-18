@@ -52,7 +52,7 @@ More Rewards does not edit game files. Extra locks, bans and shop purchases are 
 
 - Survival Log 1.1.21271. It is built for this version, so a game update can break it until the mod is updated.
 - The [BepInEx Pack for Survival Log](https://www.nexusmods.com/survivallog/mods/12), the BepInEx 6 (IL2CPP) build for the game, version `6.0.0-be.788`.
-- [Exiled's Toolkit](https://github.com/AnExiledDev/SurvivalLog-ExiledToolkit) 0.27.0 or newer. More Rewards does not load without it. It applies settings changed on the Mod Manager's Mods screen without restarting the game, lets each world keep its own settings, and its UI size setting sizes the shop, the ban list and the settings.
+- [Exiled's Toolkit](https://github.com/AnExiledDev/SurvivalLog-ExiledToolkit) 0.28.1 or newer. More Rewards does not load without it. It applies settings changed on the Mod Manager's Mods screen without restarting the game, lets each world keep its own settings, and its UI size setting sizes the shop, the ban list and the settings.
 - Optional: Wind Power 0.9.3 or newer, for the wind rewards.
 - Optional: [Mod Manager](https://www.nexusmods.com/survivallog/mods/73). With it, you can change every setting in game on its Mods screen and see what each one does, without opening the config file. Version 0.7.0 or newer also gives you the Rewards tab.
 
@@ -109,7 +109,7 @@ This is a BepInEx 6 IL2CPP plugin. It compiles against BepInEx, the game's IL2CP
 dotnet build src/MoreRewards -c Release -p:GameDir="C:\path\to\Survival Log" -p:ToolkitDll="C:\path\to\ExiledToolkit.dll"
 ```
 
-`GameDir` is the game folder and `ToolkitDll` is a built `ExiledToolkit.dll` (0.27.0 or newer), in the `bin\Release` folder of a copy of Exiled's Toolkit's source. The tests read the Toolkit's page script and one helper from that copy. The defaults in the project file are local paths you will almost certainly need to override. The output DLL is at `src\MoreRewards\bin\Release\MoreRewards.dll`.
+`GameDir` is the game folder and `ToolkitDll` is a built `ExiledToolkit.dll` (0.28.1 or newer), in the `bin\Release` folder of a copy of Exiled's Toolkit's source. The tests read the Toolkit's page script and one helper from that copy. The defaults in the project file are local paths you will almost certainly need to override. The output DLL is at `src\MoreRewards\bin\Release\MoreRewards.dll`.
 
 The unit tests cover the pure rules (the settings, the refresh cost, how extra rewards are drawn, the interest rate and limit, locks, bans, shop prices and the rewards file) and the page script that lays out the cards and draws the buttons and the shop, and need nothing from the game:
 

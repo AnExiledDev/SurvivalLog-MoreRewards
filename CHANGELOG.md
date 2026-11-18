@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.11.2
+
+- Rewards tab: the levels table shows what each level gives in total. Each level of a reward adds to the ones before it, and many of the game's cards only say what that one level adds. Sunlight Collection read 15% on every level, when all three together give 45%.
+- Rewards tab: the Better wind turbines effect now starts at 15% on every level, like the wind rewards, so level III gives 45% in total. It started at 15%, 30% and 45%, which added up to 90%.
+- Now needs Exiled's Toolkit 0.28.1 or newer.
+- Made for Survival Log 1.1.21271.
+
 ## 0.11.1
 
 - Rewards tab: a reward you have not changed shows each of its levels, with what it costs and what it does. Click a level to see its card.
