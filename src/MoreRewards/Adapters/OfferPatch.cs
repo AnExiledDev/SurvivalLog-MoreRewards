@@ -78,6 +78,8 @@ internal static class OfferPatch
     /// </summary>
     public static OfferAsk Ask(SurvivalPlanningComponent planning, int day, int pinnedId, int pinnedSlot)
     {
+        PerkWatch.Refresh();
+
         var settings = LiveScreen.Settings;
         var book = LiveScreen.Book;
         var extras = book.Locks();
@@ -115,6 +117,9 @@ internal static class OfferPatch
         {
             if (!LiveScreen.IsOn || __instance == null || __result == null) return;
 
+            // The game reads the refresh cost it shows after this draw, so a free refresh is in place by then.
+            LiveScreen.NewDay();
+
             RewardDraw draw = (group, offered) => First(__instance.GetRandomIdsFromGroup(group, 1, day, ToGame(offered), cooldownIds));
             var gameOffer = FromGame(__result);
 
@@ -147,6 +152,7 @@ internal static class OfferPatch
 
             ListPatch.KeepScreen(keep);
             Replace(__result, gameOffer, offer, $"day {day} refresh");
+            UseFreeRefresh(pinnedId, __result.Count);
 
             // The game's message when a refresh with its lock held finds nothing new.
             if (keep) Ac_PopText_AddPopText.SendAction(GameKey.Text_LogicAdapter_1);
@@ -155,6 +161,17 @@ internal static class OfferPatch
         {
             _hooks?.Fail(DoingRefresh, ex);
         }
+    }
+
+    /// <summary>
+    /// The game read the cost before this draw and charges it after, unless the draw came back empty or held only its
+    /// locked card (SurvivalResultsManager.OnRefreshSurvivalPlans). A free refresh that was charged its 0 is used up.
+    /// </summary>
+    private static void UseFreeRefresh(int pinnedId, int drawn)
+    {
+        var isCharged = drawn > 0 && !(pinnedId > 0 && drawn <= 1);
+
+        if (isCharged && LiveScreen.IsFreeRefreshReady && GameKey._GlobalSetting_RefreshSurvivalCost == 0) LiveScreen.UseFreeRefresh();
     }
 
     private static void Replace(Il2CppInts result, IReadOnlyList<int> gameOffer, IReadOnlyList<int> offer, string when)

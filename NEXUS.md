@@ -27,6 +27,7 @@ Out of the box the mod changes nothing about the game's balance. You get the gam
 [*][b]Your own rewards[/b]: the file [font=Courier New]BepInEx\config\MoreRewards.Rewards.json[/font] adds new end-of-day rewards or changes the game's. You can set a reward's cost, name and description, its levels, what each level gives, what it needs, which pools it comes from and how often, the first and last day it can show up, which runs and characters get it, and whether it can be bought again. A reward can also go in the biggest pool of every day, or take a card every day until you buy it. You can also change which pools each day draws from. The file explains each part and has an example to copy, written as a comment so it changes nothing.[/*]
 [*][b]Rewards tab[/b]: with the Mod Manager 0.7.0 or newer, More Rewards' page gets a Rewards tab that edits the rewards file for you. Change what any reward costs, how many levels it has, its numbers, its pools, its text and when it is offered, switch the file's rewards on or off, change each day's pools on the DAY DRAW view and try a test draw, or click NEW REWARD to build your own from the effects the game's rewards use and the mod's own, with any reward or item image. SAVE writes the file and the changes apply at once.[/*]
 [*][b]Wind rewards[/b]: with Wind Power 0.9.3 or newer installed, you get Wind Collection I, II and III. They work like the game's Sunlight Collection. Each one makes wind turbines produce 15% more power, they cost 10, 16 and 24 survival points, and they show up once you can build a wind turbine. Change them on the Rewards tab if you like.[/*]
+[*][b]Extra rewards[/b] (off by default): turn on ExtraRewards for 39 more end-of-day rewards. Some are higher levels of the game's rewards, such as Day Planner II and III or Sunlight Collection IV. Others are airdrops, Second Wind (30 Life), Winter Kit, Night Owl and Siege Prep, and a free airdrop on days 30, 60 and 100. Seven do things the game's rewards can't: Investor I to III raise the interest rate and limit, Wider Net I to III add a card each, Pin Board adds a lock, Second Opinion makes the first refresh each day free, Ban Tokens gives 3 free bans, Supply Crate gives Tempered Glass and other parts right away, and Lottery Ticket pays 0 to 15 survival points. It also lets Scavenger Drone I and II and the drone part blueprints show up, which the game has but never offers. Change or turn off any of them on the Rewards tab.[/*]
 [*][b]Nothing changes until you set it[/b]: with the default settings you get the game's 3 rewards, its refresh cost and its interest.[/*]
 [/list]
 There are no new keys. The new buttons are Ban on each card, and Shop, Bans and Settings in the footer. Settings is always there, and each of the others has a setting that turns it on or off. More Rewards does not edit game files. Extra locks, bans and shop purchases are saved with the run. Your save keeps the game's interest rate. You can remove the mod at any time.
@@ -69,10 +70,10 @@ Works in English and Chinese.
 [/list]
 
 [size=5]Uninstall[/size]
-Delete [font=Courier New]MoreRewards.dll[/font] from the [font=Courier New]BepInEx\plugins[/font] folder. New rewards from the rewards file and the wind rewards that a save already owns are dropped when the save loads without the mod. The rest of the save is fine.
+Delete [font=Courier New]MoreRewards.dll[/font] from the [font=Courier New]BepInEx\plugins[/font] folder. New rewards from the rewards file, the wind rewards and the extra rewards that a save already owns are dropped when the save loads without the mod. The rest of the save is fine.
 
 [size=5]Configuration[/size]
-Edit [font=Courier New]BepInEx\config\com.dev.survivallog.morerewards.cfg[/font] while the game is closed, or do it in game with the Settings button on the rewards screen or on the Mod Manager's Mods screen (see [url=https://github.com/AnExiledDev/SurvivalLog-MoreRewards/blob/main/CONFIG.md]CONFIG.md[/url] for every setting and the full cost table). Changed in game, every setting takes effect at once. Each world can keep its own reward count, refresh cost, interest, locks, bans, cash out and shop rules. Pick them for a new world in Customizable Difficulty, or change them for the world you are playing on the Mods screen. Enabled, Labels, ShopUnavailable and UiScale are always the same for every world.
+Edit [font=Courier New]BepInEx\config\com.dev.survivallog.morerewards.cfg[/font] while the game is closed, or do it in game with the Settings button on the rewards screen or on the Mod Manager's Mods screen (see [url=https://github.com/AnExiledDev/SurvivalLog-MoreRewards/blob/main/CONFIG.md]CONFIG.md[/url] for every setting and the full cost table). Changed in game, every setting takes effect at once. Each world can keep its own reward count, refresh cost, interest, locks, bans, extra rewards and shop rules. Pick them for a new world in Customizable Difficulty, or change them for the world you are playing on the Mods screen. Enabled, Labels, ShopUnavailable and UiScale are always the same for every world.
 [list]
 [*][b]OptionCount[/b] (default 3): how many rewards to choose from, 3 to 20.[/*]
 [*][b]RefreshCost[/b] (default -1): -1 scales the cost with OptionCount, 0 makes every refresh free, and 1 to 99 is the cost of every refresh.[/*]
@@ -80,6 +81,7 @@ Edit [font=Courier New]BepInEx\config\com.dev.survivallog.morerewards.cfg[/font]
 [*][b]MaxInterest[/b] (default 0): the most interest your survival points earn in a day. 0 keeps the game's limit of 10, and 1 to 100 sets a new limit.[/*]
 [*][b]MaxLocked[/b] (default 1): how many rewards you can lock at once.[/*]
 [*][b]BanButton[/b] and [b]Labels[/b] (default true): the Ban button and the labels on the cards. [b]BanCost[/b] (default 2) is what a ban costs, and [b]BanWholeLine[/b] (default false) bans every level of a reward. [b]UnbanRefund[/b] (default 50) is the percent of the cost you get back when you remove a ban.[/*]
+[*][b]ExtraRewards[/b] (default false): true adds 39 new rewards to the cards, and lets 11 the game never offers show up.[/*]
 [*][b]NoRepeatOnRefresh[/b] (default false): true makes a refresh show only rewards you have not seen yet that day.[/*]
 [*][b]ShopEnabled[/b] (default false) turns the shop on. [b]ShopMarkup[/b] (25), [b]ShopIncrease[/b] (15), [b]ShopReset[/b] (Day), [b]ShopPerDay[/b] (2), [b]ShopUnavailable[/b] (Grey) and [b]ShopLocked[/b] (true) set its prices and rules.[/*]
 [*][b]Enabled[/b] (default true): false turns the whole mod off at once, and takes its buttons off the rewards screen.[/*]
@@ -118,6 +120,7 @@ Open source under MIT: [url=https://github.com/AnExiledDev/SurvivalLog-MoreRewar
 [*][b]自定义规划卡[/b]：[font=Courier New]BepInEx\config\MoreRewards.Rewards.json[/font] 可以新增每天结束时的规划卡，或修改游戏原有的卡。花费、名称、说明、前置条件、出现在哪些卡池和出现的概率，以及卡的效果都可以设置。还可以设置等级和每一级的效果、从第几天到第几天出现、哪些模式和角色能拿到，以及能否重复购买。规划卡还可以加入每天最大的卡池，或在你买下之前每天都占一张卡。每天从哪些卡池抽取也可以改。文件里有每一项的说明，还有一个可以照抄的示例，它写成注释，不会改动任何东西。[/*]
 [*][b]奖励页[/b]：装了 Mod Manager 0.7.0 或更新版本后，More Rewards 的页面会多出「奖励」页，替你编辑奖励文件。可以修改任意规划卡的消耗、等级数、数值、卡池、文字和出现条件，开关文件中的规划卡，在「每日抽取」中修改每天的卡池并试抽，也可以点击「新建奖励」，用游戏规划卡中已有的效果和模组自己的效果做出你自己的规划卡，并可选用任意规划卡或物品的图标。点击「保存」写入文件，改动立即生效。[/*]
 [*][b]风力规划卡[/b]：装有 Wind Power 0.9.3 或更新版本时，可以获得「风力收集」Lv1、Lv2、Lv3。它们与游戏的「阳光收集」相同：每张让风力发电机产电 +15%，花费 10、16、24 点生存点，能建造风力发电机后才会出现。也可以在「奖励」页修改它们。[/*]
+[*][b]额外规划卡[/b]（默认关闭）：开启 ExtraRewards 后，每天结束时多出 39 张规划卡。有些是游戏规划卡的更高等级，例如「日结计划」Lv2、Lv3 和「阳光收集」Lv4。还有物资空投、「重振精神」（恢复30点生命值）、「过冬套装」、「夜猫子」、「备战守城」，以及第 30、60、100 天的免费空投。其中 7 种是游戏规划卡做不到的：「投资人」Lv1 到 Lv3 提高回息比例和上限，「广撒网」Lv1 到 Lv3 每级多一张卡，「图钉板」多一个锁定，「再看一眼」让每天第一次刷新免费，「禁用券」给 3 次免费禁用，「补给箱」立即给钢化玻璃等零件，「彩票」随机给 0 到 15 点生存点。另外，游戏里有但从不提供的「拾荒无人机」Lv1、Lv2 和无人机零件图纸也能出现。可以在「奖励」页逐个修改或关闭。[/*]
 [*][b]不改设置就保持原样[/b]：默认设置下，仍是游戏原本的 3 张规划卡、刷新花费和回息。[/*]
 [/list]
 没有新增按键。新增的按钮是每张卡上的「禁用」，以及底栏的「商店」、「禁用列表」和「设置」。「设置」始终显示，其他按钮由对应设置开关。More Rewards 不会修改游戏文件。额外的锁定、禁用和商店购买记录随本局存档保存。存档里保存的仍是游戏原本的回息比例。随时可以移除本模组。
@@ -159,10 +162,10 @@ Open source under MIT: [url=https://github.com/AnExiledDev/SurvivalLog-MoreRewar
 [/list]
 
 [size=5]卸载[/size]
-从 [font=Courier New]BepInEx\plugins[/font] 文件夹中删除 [font=Courier New]MoreRewards.dll[/font]。存档已拥有的自定义规划卡或风力规划卡，在没有本模组时载入存档会被移除，存档的其他部分不受影响。
+从 [font=Courier New]BepInEx\plugins[/font] 文件夹中删除 [font=Courier New]MoreRewards.dll[/font]。存档已拥有的自定义规划卡、风力规划卡或额外规划卡，在没有本模组时载入存档会被移除，存档的其他部分不受影响。
 
 [size=5]配置[/size]
-可以在游戏内奖励界面的「设置」按钮或 Mod Manager 的「模组」界面修改，也可以在游戏关闭时编辑 [font=Courier New]BepInEx\config\com.dev.survivallog.morerewards.cfg[/font]。配置文件中每项设置都有中文说明，所有设置和完整的刷新花费表见 [url=https://github.com/AnExiledDev/SurvivalLog-MoreRewards/blob/main/CONFIG.md]CONFIG.md[/url]（英文）。在游戏内修改时，所有设置都立即生效。每个存档都可以有自己的奖励数量、刷新花费、回息、锁定、禁用、兑现和商店规则：新存档可以在「自定义难度」里选，游戏中也可以在「模组」界面只为当前存档修改。Enabled、Labels、ShopUnavailable 和 UiScale 对所有存档都一样。
+可以在游戏内奖励界面的「设置」按钮或 Mod Manager 的「模组」界面修改，也可以在游戏关闭时编辑 [font=Courier New]BepInEx\config\com.dev.survivallog.morerewards.cfg[/font]。配置文件中每项设置都有中文说明，所有设置和完整的刷新花费表见 [url=https://github.com/AnExiledDev/SurvivalLog-MoreRewards/blob/main/CONFIG.md]CONFIG.md[/url]（英文）。在游戏内修改时，所有设置都立即生效。每个存档都可以有自己的奖励数量、刷新花费、回息、锁定、禁用、额外规划卡和商店规则：新存档可以在「自定义难度」里选，游戏中也可以在「模组」界面只为当前存档修改。Enabled、Labels、ShopUnavailable 和 UiScale 对所有存档都一样。
 [list]
 [*][b]OptionCount[/b]（默认 3）：可供选择的规划卡数量，3 到 20。[/*]
 [*][b]RefreshCost[/b]（默认 -1）：-1 表示刷新花费随 OptionCount 自动调整，0 表示每次刷新免费，1 到 99 则是每次刷新的固定花费。[/*]
@@ -170,6 +173,7 @@ Open source under MIT: [url=https://github.com/AnExiledDev/SurvivalLog-MoreRewar
 [*][b]MaxInterest[/b]（默认 0）：生存点每天最多能得到的回息。0 保持游戏原本的上限 10，1 到 100 设定新的上限。[/*]
 [*][b]MaxLocked[/b]（默认 1）：可同时锁定的卡数。[/*]
 [*][b]BanButton[/b]、[b]Labels[/b]（默认 true）：「禁用」按钮和卡上的标签。[b]BanCost[/b]（默认 2）是禁用的花费，[b]BanWholeLine[/b]（默认 false）会禁用同一系列的所有等级。[b]UnbanRefund[/b]（默认 50）是解除禁用时退还花费的百分比。[/*]
+[*][b]ExtraRewards[/b]（默认 false）：设为 true 时加入 39 张新规划卡，并让游戏从不提供的 11 张也能出现。[/*]
 [*][b]NoRepeatOnRefresh[/b]（默认 false）：设为 true 时，刷新只给出当天还没出现过的卡。[/*]
 [*][b]ShopEnabled[/b]（默认 false）开启商店。[b]ShopMarkup[/b]（25）、[b]ShopIncrease[/b]（15）、[b]ShopReset[/b]（Day）、[b]ShopPerDay[/b]（2）、[b]ShopUnavailable[/b]（Grey）和 [b]ShopLocked[/b]（true）设置价格和规则。[/*]
 [*][b]Enabled[/b]（默认 true）：设为 false 则立即关闭整个模组，奖励界面上也不再显示它的按钮。[/*]

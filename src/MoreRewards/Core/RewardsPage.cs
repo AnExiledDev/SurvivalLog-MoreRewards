@@ -58,6 +58,15 @@ public abstract record SaveCheck
 }
 
 /// <summary>What the plugin sends the Rewards tab, and what it makes of a save.</summary>
+/// <summary>
+/// The rewards the mod adds itself, as file text: the wind rewards while Wind Power is installed, and the extra rewards
+/// while ExtraRewards is on. Null where it adds none.
+/// </summary>
+public sealed record BuiltInRewards(string? Wind, string? Extra)
+{
+    public static readonly BuiltInRewards None = new(null, null);
+}
+
 public static class RewardsPage
 {
     public const string Prefix = "slmod|morerewards|rewards|";
@@ -80,15 +89,15 @@ public static class RewardsPage
     /// <summary>
     /// The script that hands the tab its data. The rewards file goes as plain JSON, comments dropped, or as null when it
     /// is not JSON at all, which the tab takes as "do not save over it". Every non-ASCII character is escaped, so the
-    /// data can never end the script early. <paramref name="builtInText"/> is the rewards the mod adds itself (the wind
-    /// rewards, while Wind Power is installed), or null; the tab shows them next to the game's and offers the wind effect.
+    /// data can never end the script early. <paramref name="builtIn"/> is the rewards the mod adds itself; the tab shows
+    /// them next to the game's, and offers the wind effect only while Wind Power is installed.
     /// <paramref name="cards"/> is how many cards the end of the day shows (Rewards/OptionCount), for the day view.
     /// </summary>
-    public static string DataCall(GameSnapshot game, string? fileText, IReadOnlyList<string> startProblems, string? builtInText, int cards = RewardSettings.GameOptionCount)
+    public static string DataCall(GameSnapshot game, string? fileText, IReadOnlyList<string> startProblems, BuiltInRewards builtIn, int cards = RewardSettings.GameOptionCount)
     {
         var problems = (fileText == null ? new[] { "the rewards file could not be read" } : RewardFile.Parse(fileText).Problems).Concat(startProblems).Distinct().ToList();
 
-        return "window.__slmrRewards&&window.__slmrRewards.data(" + Json(writer => WriteData(writer, game, fileText, problems, builtInText, cards)) + ")";
+        return "window.__slmrRewards&&window.__slmrRewards.data(" + Json(writer => WriteData(writer, game, fileText, problems, builtIn, cards)) + ")";
     }
 
     /// <summary>A reply to a save, shown in the tab's status line.</summary>
@@ -123,13 +132,12 @@ public static class RewardsPage
         return path;
     }
 
-    private static void WriteData(Utf8JsonWriter writer, GameSnapshot game, string? fileText, IReadOnlyList<string> problems, string? builtInText, int cards)
+    private static void WriteData(Utf8JsonWriter writer, GameSnapshot game, string? fileText, IReadOnlyList<string> problems, BuiltInRewards builtIn, int cards)
     {
         writer.WriteStartObject();
-        writer.WriteBoolean("windPower", builtInText != null);
+        writer.WriteBoolean("windPower", builtIn.Wind != null);
         writer.WriteNumber("cards", cards);
-        writer.WritePropertyName("builtIn");
-        WriteFile(writer, builtInText);
+        WriteBuiltIn(writer, builtIn);
         writer.WriteStartArray("game");
 
         foreach (var reward in game.Rewards.OrderBy(reward => reward.Id)) WriteReward(writer, reward);
@@ -204,6 +212,57 @@ public static class RewardsPage
         writer.WriteString("unityIcon", icon.Icon);
         writer.WriteString("group", group);
         writer.WriteEndObject();
+    }
+
+    /// <summary>
+    /// The wind and extra rewards as one file's rewards, or null when the mod adds none, and the IDs of the extra ones,
+    /// so the tab can say which setting adds them.
+    /// </summary>
+    private static void WriteBuiltIn(Utf8JsonWriter writer, BuiltInRewards builtIn)
+    {
+        var wind = RewardsOf(builtIn.Wind);
+        var extra = RewardsOf(builtIn.Extra);
+
+        writer.WritePropertyName("builtIn");
+
+        if (builtIn.Wind == null && builtIn.Extra == null) writer.WriteNullValue();
+        else
+        {
+            writer.WriteStartObject();
+            writer.WriteStartArray("rewards");
+
+            foreach (var reward in wind.Concat(extra)) reward.WriteTo(writer);
+
+            writer.WriteEndArray();
+            writer.WriteEndObject();
+        }
+
+        writer.WriteStartArray("extraIds");
+
+        foreach (var reward in extra)
+        {
+            if (reward.TryGetProperty("id", out var id) && id.TryGetInt32(out var number)) writer.WriteNumberValue(number);
+        }
+
+        writer.WriteEndArray();
+    }
+
+    private static IReadOnlyList<JsonElement> RewardsOf(string? text)
+    {
+        if (text == null) return Array.Empty<JsonElement>();
+
+        try
+        {
+            using var document = JsonDocument.Parse(text, Forgiving);
+
+            return document.RootElement.TryGetProperty("rewards", out var rewards) && rewards.ValueKind == JsonValueKind.Array
+                ? rewards.EnumerateArray().Select(reward => reward.Clone()).ToList()
+                : Array.Empty<JsonElement>();
+        }
+        catch (JsonException)
+        {
+            return Array.Empty<JsonElement>();
+        }
     }
 
     private static void WriteFile(Utf8JsonWriter writer, string? fileText)

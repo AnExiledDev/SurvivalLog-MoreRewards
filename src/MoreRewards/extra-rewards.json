@@ -1,0 +1,1221 @@
+// The extra rewards, added while ExtraRewards is on: 39 new rewards, plus 11 rewards the game has but
+// never offers (Scavenger Drone I and II and the drone part blueprints), now in its pools.
+// New rewards use IDs 39010 to 39099 and copy the look of the game reward named in "copyFrom". Higher levels of game
+// rewards need the level below and add the same amount again, so the totals match the game's levels.
+// The milestone airdrops are offered once, on days 30, 60 and 100, for free.
+// An entry in the player's rewards file with the same ID replaces the one here.
+{
+  "rewards": [
+    {
+      "id": 39010,
+      "copyFrom": 30201,
+      "needs": [
+        30201
+      ],
+      "gives": [
+        {
+          "effect": "game:Daily_Closing_Plan",
+          "fields": {
+            "IntValue0": 1
+          }
+        }
+      ],
+      "pools": {
+        "9105": 1,
+        "9106": 1,
+        "9107": 1,
+        "9108": 1
+      },
+      "levels": [
+        {
+          "cost": 14,
+          "name": {
+            "en": "Day Planner II",
+            "zh": "日结计划 Lv2"
+          },
+          "description": {
+            "en": "Gives you 1 more Survival Point each day. In total: +2.",
+            "zh": "每日结算时获得的生存点增加1点（累计+2）"
+          }
+        },
+        {
+          "cost": 22,
+          "name": {
+            "en": "Day Planner III",
+            "zh": "日结计划 Lv3"
+          },
+          "description": {
+            "en": "Gives you 1 more Survival Point each day. In total: +3.",
+            "zh": "每日结算时获得的生存点增加1点（累计+3）"
+          }
+        }
+      ]
+    },
+    {
+      "id": 39012,
+      "copyFrom": 30391,
+      "name": {
+        "en": "Mission Bonus II",
+        "zh": "任务奖金 Lv2"
+      },
+      "description": {
+        "en": "Gives you 1 more Survival Point each time you complete a mission. In total: +2.",
+        "zh": "每次完成任务后额外获得的生存点增加1点（累计+2）"
+      },
+      "cost": 30,
+      "needs": [
+        30391
+      ],
+      "gives": [
+        {
+          "effect": "game:Task_Bonus",
+          "fields": {
+            "IntValue0": 1
+          }
+        }
+      ],
+      "pools": {
+        "9105": 1,
+        "9106": 1,
+        "9107": 1,
+        "9108": 1
+      }
+    },
+    {
+      "id": 39013,
+      "copyFrom": 30811,
+      "name": {
+        "en": "Crisis Bonus II",
+        "zh": "危机红利 Lv2"
+      },
+      "description": {
+        "en": "During a crisis, you get 2 more Survival Points at the end of each day. In total: +5.",
+        "zh": "危机期间，每日结算再额外获得2点生存点（累计+5）"
+      },
+      "cost": 36,
+      "needs": [
+        30811
+      ],
+      "gives": [
+        {
+          "effect": "game:CrisisSettlementBonus",
+          "fields": {
+            "IntValue0": 2
+          }
+        }
+      ],
+      "pools": {
+        "9105": 1,
+        "9106": 1,
+        "9107": 1,
+        "9108": 1
+      }
+    },
+    {
+      "id": 39014,
+      "copyFrom": 30821,
+      "name": {
+        "en": "Morale to Gold II",
+        "zh": "心态生金 Lv2"
+      },
+      "description": {
+        "en": "Morale turns into Survival Points faster at the end of each day (4:1 to 3:1).",
+        "zh": "每日结算时，心态转化生存点效率再提升（由 4:1 变为 3:1）"
+      },
+      "cost": 30,
+      "needs": [
+        30821
+      ],
+      "gives": [
+        {
+          "effect": "game:AE_MoraleToPointBoost",
+          "fields": {
+            "FloatValue0": 1
+          }
+        }
+      ],
+      "pools": {
+        "9105": 1,
+        "9106": 1,
+        "9107": 1,
+        "9108": 1
+      }
+    },
+    {
+      "id": 39015,
+      "copyFrom": 31388,
+      "name": {
+        "en": "Know What's What II",
+        "zh": "心中有数 Lv2"
+      },
+      "description": {
+        "en": "Your home food gives 1 Survival Point for every 300 Satiety stored, down from 500. Still up to 3 a day.",
+        "zh": "家中食物储备返还生存点改为每300点储备饱腹值返1点（原为500点），每日仍最多3点"
+      },
+      "cost": 36,
+      "needs": [
+        31388
+      ],
+      "gives": [
+        {
+          "effect": "game:AE_StockpileDailyPoints",
+          "fields": {
+            "FloatValue0": 0.001333
+          }
+        }
+      ],
+      "pools": {
+        "9106": 1,
+        "9107": 1,
+        "9108": 1
+      }
+    },
+    {
+      "id": 39016,
+      "copyFrom": 30581,
+      "name": {
+        "en": "Pay in Blood",
+        "zh": "以血换点"
+      },
+      "description": {
+        "en": "Lose 15 Life and get 4 Survival Points.",
+        "zh": "减少15点生命值，换取4点生存点"
+      },
+      "cost": 1,
+      "fromDay": 20,
+      "fields": {
+        "IsReget": true
+      },
+      "gives": [
+        {
+          "effect": "game:Buff_305810",
+          "fields": {
+            "IntValue0": 4,
+            "FloatValue0": -15,
+            "FloatValue1": -15
+          }
+        }
+      ],
+      "pools": {
+        "9105": 1,
+        "9106": 1,
+        "9107": 1,
+        "9108": 1
+      }
+    },
+    {
+      "id": 39017,
+      "copyFrom": 30242,
+      "name": {
+        "en": "Careful Budgeting III",
+        "zh": "精打细算 Lv3"
+      },
+      "description": {
+        "en": "Rewards at the end of each day cost another 10% less.",
+        "zh": "结算时购买奖励选项再减10%"
+      },
+      "cost": 30,
+      "needs": [
+        30242
+      ],
+      "gives": [
+        {
+          "effect": "game:SettlementDiscount",
+          "fields": {
+            "FloatValue0": 0.1
+          }
+        }
+      ],
+      "pools": {
+        "9105": 1,
+        "9106": 1,
+        "9107": 1,
+        "9108": 1
+      }
+    },
+    {
+      "id": 39018,
+      "copyFrom": 31643,
+      "name": {
+        "en": "Iron Defense IV",
+        "zh": "铜墙铁壁 Lv4"
+      },
+      "description": {
+        "en": "Zombies do another 10% less damage to doors, windows and defenses.",
+        "zh": "丧尸对门窗和防御装置的啃咬伤害再降低10%"
+      },
+      "cost": 36,
+      "needs": [
+        31643
+      ],
+      "fromDay": 60,
+      "gives": [
+        {
+          "effect": "game:AE_TowerBiteDamageReduce",
+          "fields": {
+            "FloatValue0": 0.1
+          }
+        }
+      ],
+      "pools": {
+        "9107": 1,
+        "9108": 1
+      }
+    },
+    {
+      "id": 39019,
+      "copyFrom": 31653,
+      "name": {
+        "en": "Deadly Traps IV",
+        "zh": "致命机关 Lv4"
+      },
+      "description": {
+        "en": "Spikes, electric traps, chainsaws and other defenses do another 15% more damage.",
+        "zh": "尖刺、电网、电锯等防御装置的攻击力再提升15%"
+      },
+      "cost": 36,
+      "needs": [
+        31653
+      ],
+      "fromDay": 60,
+      "gives": [
+        {
+          "effect": "game:AE_TowerDeviceDamageBonus",
+          "fields": {
+            "FloatValue0": 0.15
+          }
+        }
+      ],
+      "pools": {
+        "9107": 1,
+        "9108": 1
+      }
+    },
+    {
+      "id": 39020,
+      "copyFrom": 31263,
+      "name": {
+        "en": "Diesel Craftsman IV",
+        "zh": "柴油匠人 Lv4"
+      },
+      "description": {
+        "en": "Diesel generators make another 15% more power.",
+        "zh": "柴油发电机产电效率再 +15%"
+      },
+      "cost": 36,
+      "needs": [
+        31263
+      ],
+      "fromDay": 60,
+      "gives": [
+        {
+          "effect": "game:AE_PowerGeneratorEfficiency",
+          "fields": {
+            "FloatValue0": 0.15
+          }
+        }
+      ],
+      "pools": {
+        "9107": 1,
+        "9108": 1
+      }
+    },
+    {
+      "id": 39021,
+      "copyFrom": 31273,
+      "name": {
+        "en": "Sunlight Collection IV",
+        "zh": "阳光收集 Lv4"
+      },
+      "description": {
+        "en": "Solar panels make another 15% more power.",
+        "zh": "太阳能板产电效率再 +15%"
+      },
+      "cost": 36,
+      "needs": [
+        31273
+      ],
+      "fromDay": 60,
+      "gives": [
+        {
+          "effect": "game:AE_PowerSolarEfficiency",
+          "fields": {
+            "FloatValue0": 0.15
+          }
+        }
+      ],
+      "pools": {
+        "9107": 1,
+        "9108": 1
+      }
+    },
+    {
+      "id": 39022,
+      "copyFrom": 31383,
+      "name": {
+        "en": "Dexterous IV",
+        "zh": "心灵手巧 Lv4"
+      },
+      "description": {
+        "en": "Crafting takes another 5% less time.",
+        "zh": "制造耗时再 -5%"
+      },
+      "cost": 36,
+      "needs": [
+        31383
+      ],
+      "fromDay": 60,
+      "gives": [
+        {
+          "effect": "game:AE_ProductionSpeedMultiplier",
+          "fields": {
+            "FloatValue0": 0.05
+          }
+        }
+      ],
+      "pools": {
+        "9107": 1,
+        "9108": 1
+      }
+    },
+    {
+      "id": 39023,
+      "copyFrom": 31302,
+      "name": {
+        "en": "Endurance Drone III",
+        "zh": "续航无人机 Lv3"
+      },
+      "description": {
+        "en": "The drone can trade 1 more time a day. In total: +3.",
+        "zh": "无人机每日可交易次数再 +1（累计+3）"
+      },
+      "cost": 36,
+      "needs": [
+        31302
+      ],
+      "fromDay": 60,
+      "gives": [
+        {
+          "effect": "game:AE_StrangerTradeDroneExtraTrip",
+          "fields": {
+            "FloatValue0": 1
+          }
+        }
+      ],
+      "pools": {
+        "9107": 1,
+        "9108": 1
+      }
+    },
+    {
+      "id": 39024,
+      "copyFrom": 31591,
+      "name": {
+        "en": "Fuel Saver II",
+        "zh": "省油心得 Lv2"
+      },
+      "description": {
+        "en": "Generators use another 15% less fuel.",
+        "zh": "发电机燃料消耗再 -15%"
+      },
+      "cost": 24,
+      "needs": [
+        31591
+      ],
+      "gives": [
+        {
+          "effect": "game:AE_GeneratorFuelSaving",
+          "fields": {
+            "FloatValue0": 0.15
+          }
+        }
+      ],
+      "pools": {
+        "9106": 1,
+        "9107": 1,
+        "9108": 1
+      }
+    },
+    {
+      "id": 39025,
+      "copyFrom": 31141,
+      "name": {
+        "en": "Capacity Master II",
+        "zh": "储能大师 Lv2"
+      },
+      "description": {
+        "en": "Max Power Capacity goes up by another 50%.",
+        "zh": "储电量上限再 +50%"
+      },
+      "cost": 30,
+      "needs": [
+        31141
+      ],
+      "gives": [
+        {
+          "effect": "game:AE_PowerStorageMultiplier",
+          "fields": {
+            "FloatValue0": 0.5
+          }
+        }
+      ],
+      "pools": {
+        "9106": 1,
+        "9107": 1,
+        "9108": 1
+      }
+    },
+    {
+      "id": 39026,
+      "copyFrom": 31211,
+      "name": {
+        "en": "Cold Resistance II",
+        "zh": "御寒驯化 Lv2"
+      },
+      "description": {
+        "en": "Plant cold resistance goes up by another 1.",
+        "zh": "植物抗寒能力再 +1，更耐霜冻"
+      },
+      "cost": 56,
+      "needs": [
+        31211
+      ],
+      "gives": [
+        {
+          "effect": "game:AE_PlantColdResistanceBonus",
+          "fields": {
+            "FloatValue0": 1
+          }
+        }
+      ],
+      "pools": {
+        "9106": 1,
+        "9107": 1,
+        "9108": 1
+      }
+    },
+    {
+      "id": 39027,
+      "copyFrom": 30781,
+      "name": {
+        "en": "Fuel Airdrop",
+        "zh": "燃料空投"
+      },
+      "description": {
+        "en": "Call for supplies on the radio and get 2 random fuel items the next day.",
+        "zh": "无线电呼救请求紧急补给，第二天获得2个随机燃料"
+      },
+      "cost": 8,
+      "fields": {
+        "IsReget": true
+      },
+      "gives": [
+        {
+          "effect": "game:AddItemToBag_307510",
+          "fields": {
+            "IntValue0": 8003,
+            "IntValue1": 2
+          }
+        }
+      ],
+      "pools": {
+        "9105": 1,
+        "9106": 1,
+        "9107": 1,
+        "9108": 1
+      }
+    },
+    {
+      "id": 39028,
+      "copyFrom": 30771,
+      "name": {
+        "en": "Big Airdrop",
+        "zh": "大型空投"
+      },
+      "description": {
+        "en": "Call for supplies on the radio and get 6 random supplies the next day: food, materials or bandages.",
+        "zh": "无线电呼救请求紧急补给，第二天获得6个随机物资：食物、材料或绷带"
+      },
+      "cost": 12,
+      "fields": {
+        "IsReget": true
+      },
+      "gives": [
+        {
+          "effect": "game:AddItemToBag_307510",
+          "fields": {
+            "IntValue0": 226,
+            "IntValue1": 6
+          }
+        }
+      ],
+      "pools": {
+        "9105": 1,
+        "9106": 1,
+        "9107": 1,
+        "9108": 1
+      }
+    },
+    {
+      "id": 39029,
+      "copyFrom": 30791,
+      "name": {
+        "en": "Care Package",
+        "zh": "关怀包裹"
+      },
+      "description": {
+        "en": "Call for supplies on the radio and get 2 random meds, 2 packs of seeds and 4 crafting materials the next day.",
+        "zh": "无线电呼救请求紧急补给，第二天获得2个随机药品、2包种子和4个制作材料"
+      },
+      "cost": 20,
+      "fields": {
+        "IsReget": true
+      },
+      "gives": [
+        {
+          "effect": "game:AddItemToBag_307510",
+          "fields": {
+            "IntValue0": 224,
+            "IntValue1": 2
+          }
+        },
+        {
+          "effect": "game:AddItemToBag_307510",
+          "fields": {
+            "IntValue0": 223,
+            "IntValue1": 2
+          }
+        },
+        {
+          "effect": "game:AddItemToBag_307510",
+          "fields": {
+            "IntValue0": 222,
+            "IntValue1": 4
+          }
+        }
+      ],
+      "pools": {
+        "9105": 1,
+        "9106": 1,
+        "9107": 1,
+        "9108": 1
+      }
+    },
+    {
+      "id": 39030,
+      "copyFrom": 30401,
+      "name": {
+        "en": "Second Wind",
+        "zh": "重振精神"
+      },
+      "description": {
+        "en": "Restores 30 Life right away.",
+        "zh": "立即恢复30点生命值"
+      },
+      "cost": 5,
+      "fields": {
+        "IsReget": true
+      },
+      "gives": [
+        {
+          "effect": "game:Buff_Default_StartNotify",
+          "fields": {
+            "BuffVitalityStart": 30
+          }
+        }
+      ],
+      "pools": {
+        "9105": 1,
+        "9106": 1,
+        "9107": 1,
+        "9108": 1
+      }
+    },
+    {
+      "id": 39031,
+      "copyFrom": 31751,
+      "name": {
+        "en": "Master Gardener",
+        "zh": "园艺大师"
+      },
+      "description": {
+        "en": "Crop pests, weeds and drought are each 10% less likely.",
+        "zh": "作物出现虫害、杂草和干旱的概率各降低10%"
+      },
+      "cost": 20,
+      "gives": [
+        {
+          "effect": "game:AE_PlantPestRateReduce",
+          "fields": {
+            "FloatValue0": 0.1
+          }
+        },
+        {
+          "effect": "game:AE_PlantWeedRateReduce",
+          "fields": {
+            "FloatValue0": 0.1
+          }
+        },
+        {
+          "effect": "game:AE_PlantDroughtRateReduce",
+          "fields": {
+            "FloatValue0": 0.1
+          }
+        }
+      ],
+      "pools": {
+        "9105": 1,
+        "9106": 1,
+        "9107": 1,
+        "9108": 1
+      }
+    },
+    {
+      "id": 39032,
+      "copyFrom": 31211,
+      "name": {
+        "en": "Winter Kit",
+        "zh": "过冬套装"
+      },
+      "description": {
+        "en": "Plant cold resistance +1, each running Air Conditioning or Electric Heater gives +1 temperature, and your Thermal Comfort goes up one level.",
+        "zh": "植物抗寒能力 +1，每台运行中的空调或电暖器温度 +1，体感温度提升一级"
+      },
+      "cost": 30,
+      "gives": [
+        {
+          "effect": "game:AE_PlantColdResistanceBonus",
+          "fields": {
+            "FloatValue0": 1
+          }
+        },
+        {
+          "effect": "game:AE_DeviceHeatBonus",
+          "fields": {
+            "FloatValue0": 1
+          }
+        },
+        {
+          "effect": "game:AE_PersonalColdResist",
+          "fields": {
+            "FloatValue0": 1
+          }
+        }
+      ],
+      "pools": {
+        "9106": 1,
+        "9107": 1,
+        "9108": 1
+      }
+    },
+    {
+      "id": 39033,
+      "copyFrom": 30511,
+      "name": {
+        "en": "Night Owl",
+        "zh": "夜猫子"
+      },
+      "description": {
+        "en": "Movement Speed +30% at night, night traps catch prey 15% more often, and Satiety drops 15% slower while you sleep.",
+        "zh": "夜间移动速度 +30%，夜间陷阱捕获猎物权重 +15%，睡眠时饱腹值下降速度降低15%"
+      },
+      "cost": 25,
+      "gives": [
+        {
+          "effect": "game:DayNightMovement",
+          "fields": {
+            "FloatValue0": 0.3
+          }
+        },
+        {
+          "effect": "game:AE_TrapNightCapture",
+          "fields": {
+            "FloatValue0": 0.15
+          }
+        },
+        {
+          "effect": "game:Deep_Sleep",
+          "fields": {
+            "FloatValue0": -0.15
+          }
+        }
+      ],
+      "pools": {
+        "9105": 1,
+        "9106": 1,
+        "9107": 1,
+        "9108": 1
+      }
+    },
+    {
+      "id": 39034,
+      "copyFrom": 31711,
+      "name": {
+        "en": "Siege Prep",
+        "zh": "备战守城"
+      },
+      "description": {
+        "en": "Zombies do 10% less damage to doors, windows and defenses, and defenses do 15% more damage and have 30% more max Durability.",
+        "zh": "丧尸对门窗和防御装置的啃咬伤害降低10%，防御装置攻击力提升15%、耐久上限提升30%"
+      },
+      "cost": 35,
+      "gives": [
+        {
+          "effect": "game:AE_TowerBiteDamageReduce",
+          "fields": {
+            "FloatValue0": 0.1
+          }
+        },
+        {
+          "effect": "game:AE_TowerDeviceDamageBonus",
+          "fields": {
+            "FloatValue0": 0.15
+          }
+        },
+        {
+          "effect": "game:AE_TowerDeviceMaxDurability",
+          "fields": {
+            "FloatValue0": 0.3
+          }
+        }
+      ],
+      "pools": {
+        "1024": 1,
+        "9105": 1,
+        "9106": 1,
+        "9107": 1,
+        "9108": 1
+      }
+    },
+    {
+      "id": 39035,
+      "copyFrom": 30771,
+      "name": {
+        "en": "Day 30 Airdrop",
+        "zh": "第30天空投"
+      },
+      "description": {
+        "en": "You made it to day 30. Get 3 random supplies the next day, free.",
+        "zh": "你活到了第30天。第二天免费获得3个随机物资"
+      },
+      "cost": 0,
+      "fromDay": 30,
+      "toDay": 30,
+      "alwaysOffered": true,
+      "gives": [
+        {
+          "effect": "game:AddItemToBag_307510",
+          "fields": {
+            "IntValue0": 226,
+            "IntValue1": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": 39036,
+      "copyFrom": 30771,
+      "name": {
+        "en": "Day 60 Airdrop",
+        "zh": "第60天空投"
+      },
+      "description": {
+        "en": "You made it to day 60. Get 4 random supplies the next day, free.",
+        "zh": "你活到了第60天。第二天免费获得4个随机物资"
+      },
+      "cost": 0,
+      "fromDay": 60,
+      "toDay": 60,
+      "alwaysOffered": true,
+      "gives": [
+        {
+          "effect": "game:AddItemToBag_307510",
+          "fields": {
+            "IntValue0": 226,
+            "IntValue1": 4
+          }
+        }
+      ]
+    },
+    {
+      "id": 39037,
+      "copyFrom": 30771,
+      "name": {
+        "en": "Day 100 Airdrop",
+        "zh": "第100天空投"
+      },
+      "description": {
+        "en": "You made it to day 100. Get 5 random supplies the next day, free.",
+        "zh": "你活到了第100天。第二天免费获得5个随机物资"
+      },
+      "cost": 0,
+      "fromDay": 100,
+      "toDay": 100,
+      "alwaysOffered": true,
+      "gives": [
+        {
+          "effect": "game:AddItemToBag_307510",
+          "fields": {
+            "IntValue0": 226,
+            "IntValue1": 5
+          }
+        }
+      ]
+    },
+    {
+      "id": 39040,
+      "copyFrom": 30821,
+      "gives": [
+        {
+          "effect": "mr:investor",
+          "fields": {
+            "IntValue0": 2,
+            "IntValue1": 5
+          }
+        }
+      ],
+      "pools": {
+        "9105": 1,
+        "9106": 1,
+        "9107": 1,
+        "9108": 1
+      },
+      "levels": [
+        {
+          "cost": 15,
+          "name": {
+            "en": "Investor I",
+            "zh": "投资人 Lv1"
+          },
+          "description": {
+            "en": "Interest +2% and the interest limit +5.",
+            "zh": "回息 +2%，回息上限 +5"
+          }
+        },
+        {
+          "cost": 20,
+          "name": {
+            "en": "Investor II",
+            "zh": "投资人 Lv2"
+          },
+          "description": {
+            "en": "Interest +2% and the interest limit +5. In total: +4% and +10.",
+            "zh": "回息 +2%，回息上限 +5（累计+4%、+10）"
+          }
+        },
+        {
+          "cost": 25,
+          "name": {
+            "en": "Investor III",
+            "zh": "投资人 Lv3"
+          },
+          "description": {
+            "en": "Interest +2% and the interest limit +5. In total: +6% and +15.",
+            "zh": "回息 +2%，回息上限 +5（累计+6%、+15）"
+          }
+        }
+      ]
+    },
+    {
+      "id": 39043,
+      "copyFrom": 30242,
+      "needs": [],
+      "gives": [
+        {
+          "effect": "mr:more-cards",
+          "fields": {
+            "IntValue0": 1
+          }
+        }
+      ],
+      "pools": {
+        "9105": 1,
+        "9106": 1,
+        "9107": 1,
+        "9108": 1
+      },
+      "levels": [
+        {
+          "cost": 20,
+          "name": {
+            "en": "Wider Net I",
+            "zh": "广撒网 Lv1"
+          },
+          "description": {
+            "en": "Shows 1 more reward card at the end of each day.",
+            "zh": "每日结算时多显示1张奖励卡"
+          }
+        },
+        {
+          "cost": 30,
+          "name": {
+            "en": "Wider Net II",
+            "zh": "广撒网 Lv2"
+          },
+          "description": {
+            "en": "Shows 1 more reward card at the end of each day. In total: +2.",
+            "zh": "每日结算时多显示1张奖励卡（累计+2）"
+          }
+        },
+        {
+          "cost": 40,
+          "name": {
+            "en": "Wider Net III",
+            "zh": "广撒网 Lv3"
+          },
+          "description": {
+            "en": "Shows 1 more reward card at the end of each day. In total: +3.",
+            "zh": "每日结算时多显示1张奖励卡（累计+3）"
+          }
+        }
+      ]
+    },
+    {
+      "id": 39046,
+      "copyFrom": 30242,
+      "name": {
+        "en": "Pin Board",
+        "zh": "图钉板"
+      },
+      "description": {
+        "en": "You can lock 1 more reward card.",
+        "zh": "可多锁定1张奖励卡"
+      },
+      "cost": 20,
+      "needs": [],
+      "gives": [
+        {
+          "effect": "mr:more-locks",
+          "fields": {
+            "IntValue0": 1
+          }
+        }
+      ],
+      "pools": {
+        "9105": 1,
+        "9106": 1,
+        "9107": 1,
+        "9108": 1
+      }
+    },
+    {
+      "id": 39047,
+      "copyFrom": 30242,
+      "name": {
+        "en": "Second Opinion",
+        "zh": "再看一眼"
+      },
+      "description": {
+        "en": "Your first refresh each day is free.",
+        "zh": "每天第一次刷新免费"
+      },
+      "cost": 25,
+      "needs": [],
+      "gives": [
+        {
+          "effect": "mr:free-refresh",
+          "fields": {
+            "IntValue0": 1
+          }
+        }
+      ],
+      "pools": {
+        "9105": 1,
+        "9106": 1,
+        "9107": 1,
+        "9108": 1
+      }
+    },
+    {
+      "id": 39048,
+      "copyFrom": 30242,
+      "name": {
+        "en": "Ban Tokens",
+        "zh": "禁用券"
+      },
+      "description": {
+        "en": "Your next 3 bans are free.",
+        "zh": "接下来3次禁用免费"
+      },
+      "cost": 10,
+      "needs": [],
+      "fields": {
+        "IsReget": true
+      },
+      "gives": [
+        {
+          "effect": "mr:ban-tokens",
+          "fields": {
+            "IntValue0": 3
+          }
+        }
+      ],
+      "pools": {
+        "9105": 1,
+        "9106": 1,
+        "9107": 1,
+        "9108": 1
+      }
+    },
+    {
+      "id": 39049,
+      "copyFrom": 30771,
+      "name": {
+        "en": "Supply Crate",
+        "zh": "补给箱"
+      },
+      "description": {
+        "en": "Get 2 Tempered Glass, 4 Broken Glass, 1 Electronic Components and 2 Repair Parts right away.",
+        "zh": "立即获得钢化玻璃2个、碎玻璃4个、电器元件1个和维修零件2个"
+      },
+      "cost": 15,
+      "fields": {
+        "IsReget": true
+      },
+      "gives": [
+        {
+          "effect": "mr:supply-crate",
+          "fields": {
+            "Items": [
+              20312,
+              20002,
+              20210,
+              20302
+            ],
+            "Counts": [
+              2,
+              4,
+              1,
+              2
+            ]
+          }
+        }
+      ],
+      "pools": {
+        "9105": 1,
+        "9106": 1,
+        "9107": 1,
+        "9108": 1
+      }
+    },
+    {
+      "id": 39050,
+      "copyFrom": 30581,
+      "name": {
+        "en": "Lottery Ticket",
+        "zh": "彩票"
+      },
+      "description": {
+        "en": "Win 0 to 15 Survival Points at random.",
+        "zh": "随机获得0到15点生存点"
+      },
+      "cost": 5,
+      "fields": {
+        "IsReget": true
+      },
+      "gives": [
+        {
+          "effect": "mr:lottery",
+          "fields": {
+            "IntValue0": 0,
+            "IntValue1": 15
+          }
+        }
+      ],
+      "pools": {
+        "9105": 1,
+        "9106": 1,
+        "9107": 1,
+        "9108": 1
+      }
+    },
+    {
+      "id": 31303,
+      "pools": {
+        "1013": 1,
+        "9105": 1,
+        "9106": 1
+      }
+    },
+    {
+      "id": 31304,
+      "pools": {
+        "1013": 1,
+        "9105": 1,
+        "9106": 1
+      }
+    },
+    {
+      "id": 31442,
+      "pools": {
+        "9106": 1,
+        "9107": 1,
+        "9108": 1
+      }
+    },
+    {
+      "id": 31443,
+      "pools": {
+        "9106": 1,
+        "9107": 1,
+        "9108": 1
+      }
+    },
+    {
+      "id": 31444,
+      "pools": {
+        "9106": 1,
+        "9107": 1,
+        "9108": 1
+      }
+    },
+    {
+      "id": 31445,
+      "pools": {
+        "9106": 1,
+        "9107": 1,
+        "9108": 1
+      }
+    },
+    {
+      "id": 31446,
+      "pools": {
+        "9106": 1,
+        "9107": 1,
+        "9108": 1
+      }
+    },
+    {
+      "id": 31447,
+      "pools": {
+        "9106": 1,
+        "9107": 1,
+        "9108": 1
+      }
+    },
+    {
+      "id": 31448,
+      "pools": {
+        "9106": 1,
+        "9107": 1,
+        "9108": 1
+      }
+    },
+    {
+      "id": 31449,
+      "pools": {
+        "9106": 1,
+        "9107": 1,
+        "9108": 1
+      }
+    },
+    {
+      "id": 31450,
+      "pools": {
+        "9106": 1,
+        "9107": 1,
+        "9108": 1
+      }
+    }
+  ]
+}

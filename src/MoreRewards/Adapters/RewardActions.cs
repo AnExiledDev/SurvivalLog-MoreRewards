@@ -122,6 +122,7 @@ internal sealed class RewardActions
     {
         if (!ForgetOutsideRun() || !IsScreenOpen() || ListPatch.State is not { } state) return;
 
+        PerkWatch.Refresh();
         _watch.Sent(ListPatch.Version, LiveScreen.Version);
         SendSetup(state);
     }
@@ -193,6 +194,8 @@ internal sealed class RewardActions
     /// <summary>Keeps the card (and its line, with BanWholeLine) away for the rest of the run, then fills its slot from the day's groups.</summary>
     private void Ban(int id, int slot)
     {
+        PerkWatch.Refresh();
+
         var settings = LiveScreen.Settings;
 
         if (!settings.BanButton || !IsShown(id, slot)) return;
@@ -211,11 +214,19 @@ internal sealed class RewardActions
 
         var line = settings.BanWholeLine ? _catalog.LineOf(id) : Array.Empty<int>();
         var gone = LiveScreen.Book.Ban(id, line, settings.BanCost);
+        var isFree = LiveScreen.FreeBansLeft > 0;
+
+        if (isFree) LiveScreen.UseFreeBan();
 
         Release(results, gone);
-        Toast(Say("Banned: ", "已禁用：") + Names(gone));
+        Toast(Say("Banned: ", "已禁用：") + Names(gone) + (isFree ? FreeBansText(LiveScreen.FreeBansLeft) : ""));
         SwapOut(results, planning, state, RunGame.Day(), gone);
     }
+
+    private static string FreeBansText(int left) => Say($" (free ban, {left} left)", $"（免费禁用，剩余 {left} 次）");
+
+    /// <summary>Shows <paramref name="english"/> or <paramref name="chinese"/> on the rewards screen, for the game's language.</summary>
+    public void Tell(string english, string chinese) => Toast(Say(english, chinese));
 
     private void SendBans()
     {

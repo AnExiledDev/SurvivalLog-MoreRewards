@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.12.0
+
+- New setting `ExtraRewards`, off by default. Turn it on for 39 more end-of-day rewards. CONFIG.md lists them all. You can change or turn off each one on the Rewards tab, like the game's rewards. Applies at once.
+- The extra rewards include higher levels of the game's rewards, such as Day Planner II and III, Careful Budgeting III and Iron Defense IV. There are also airdrops, Second Wind, Master Gardener, Winter Kit, Night Owl, Siege Prep and a free airdrop on days 30, 60 and 100.
+- Seven new kinds of reward: Investor I to III (more interest and a higher limit), Wider Net I to III (1 more card each), Pin Board (1 more lock), Second Opinion (the first refresh each day is free), Ban Tokens (3 free bans), Supply Crate (Tempered Glass and other parts, right away) and Lottery Ticket (0 to 15 survival points).
+- With `ExtraRewards` on, Scavenger Drone I and II and the 9 drone part blueprints can show up on the cards. The game has them but never offers them.
+- Rewards tab: NEW REWARD has the new kinds of reward, so you can build your own with them. A reward the mod adds while `ExtraRewards` is on says so.
+- Made for Survival Log 1.1.21271.
+
 ## 0.11.6
 
 - Removed the `CashOut` setting. After the disaster there is no money to spend, so turning survival points into cash did nothing useful. A value you set before is ignored.

@@ -16,7 +16,7 @@
     closeOverlays, closePicker, closeToast, defaultAt, descOf, descTarget, discard, display, editorHtml, entryOf,
     entryOrGhost, esc, escapeTab, fieldName, fixedFrom, fmt, fromRoot, fx, fxIcon, fxName, givesChanged, h,
     hasLevelDescs, hasNoScript, hideTab, hidesOf, iconsHtml, injectStyle, isArr, isAutoOn, isEditable, isNum, isObj,
-    levelCount, listIds, markChanged, match, matchesQuery, nameOf, nameOptions, nextStep, normText, numText, numsOf,
+    levelCount, listIds, markChanged, match, matchesQuery, nameOf, nameOptions, nextStep, normText, num, numText, numsOf,
     onDocDown, onInput, onPickerDouble, onPickerKey, paramRow, pct, pickHtml, picksOf, range, rawCache, rawFx,
     readsHtml, renderPicker, resetOrDelete, round2, roundTrips, saved, scriptOfGive, select, send, setPick, setText,
     showIconGroup, stepper, tag, talentIcons, talentName, textIn, toRaw, unitOf, winEl, writeText, editorCss,
@@ -30,7 +30,7 @@
   const TITLE = { en: 'Rewards', zh: '奖励' };
   const FILE_NAME = 'MoreRewards.Rewards.json';
   const STYLE_ID = 'slmr-rewards-css';
-  // New rewards take IDs from here; 39001 to 39003 are the wind rewards.
+  // New rewards take IDs from here; 39001 to 39003 are the wind rewards, and 39010 to 39099 the extra rewards.
   const FIRST_NEW = 39100;
   const LAST_ID = 39999;
   const MR_PREFIX = 'mr:';
@@ -118,6 +118,7 @@
     templates: {},
     allPools: [],
     builtIn: {},
+    extraIds: new Set(),
     entries: [],
     ghosts: {},
     sel: 0,
@@ -169,6 +170,45 @@
     params: [pct('FloatValue0', 'More power', '产电增加', [15, 15, 15])],
     line: v => '+' + fmt(v.FloatValue0) + '%',
     desc: (v, zh) => zh ? '风力发电机产电提高' + fmt(v.FloatValue0) + '%' : 'Wind turbine output increased by ' + fmt(v.FloatValue0) + '%.' });
+
+  const n = v => fmt(isNum(v) ? v : 0);
+
+  fx({ id: 'mr:investor', src: 'mr', mr: 'investor', cat: 'money', scripts: [],
+    en: 'Higher interest', zh: '更高回息', what: ['Your survival points earn more interest each day, and the most a day can pay goes up.', '每天生存点的回息更多，单日回息上限也提高。'],
+    params: [num('IntValue0', 'More interest', '回息增加', ['%', '%'], [2, 2, 2]), num('IntValue1', 'Higher limit', '上限增加', ['points', '点'], [5, 5, 5])],
+    line: v => '+' + n(v.IntValue0) + '% / +' + n(v.IntValue1),
+    desc: (v, zh) => zh ? '生存点回息比例提高' + n(v.IntValue0) + '%，回息上限提高' + n(v.IntValue1) + '点' : 'Interest on survival points +' + n(v.IntValue0) + '%, and the most it pays a day +' + n(v.IntValue1) + '.' });
+  fx({ id: 'mr:more-cards', src: 'mr', mr: 'more-cards', cat: 'money', scripts: [],
+    en: 'More cards to pick from', zh: '更多可选卡片', what: ['The end of the day and each refresh show more cards, up to 20.', '每天结束时和每次刷新显示更多卡片，最多 20 张。'],
+    params: [num('IntValue0', 'More cards', '卡片增加', ['', ''], [1, 1, 1])],
+    line: v => '+' + n(v.IntValue0),
+    desc: (v, zh) => zh ? '生存规划多显示' + n(v.IntValue0) + '张卡片' : 'The rewards screen shows ' + n(v.IntValue0) + ' more card' + (v.IntValue0 === 1 ? '' : 's') + '.' });
+  fx({ id: 'mr:more-locks', src: 'mr', mr: 'more-locks', cat: 'money', scripts: [],
+    en: 'More locks', zh: '更多锁定', what: ['You can lock more cards on the rewards screen. One card is always left unlocked.', '生存规划界面可以锁定更多卡片。总会留一张不锁定。'],
+    params: [num('IntValue0', 'More locks', '锁定增加', ['', ''], [1])],
+    line: v => '+' + n(v.IntValue0),
+    desc: (v, zh) => zh ? '可多锁定' + n(v.IntValue0) + '张卡片' : 'Lock ' + n(v.IntValue0) + ' more card' + (v.IntValue0 === 1 ? '' : 's') + ' on the rewards screen.' });
+  fx({ id: 'mr:free-refresh', src: 'mr', mr: 'free-refresh', cat: 'money', scripts: [],
+    en: 'Free refreshes', zh: '免费刷新', what: ['The first refreshes each day cost nothing.', '每天前几次刷新不花生存点。'],
+    params: [num('IntValue0', 'Free a day', '每天免费', ['', ''], [1])],
+    line: v => n(v.IntValue0) + '/day',
+    desc: (v, zh) => zh ? '每天' + n(v.IntValue0) + '次免费刷新' : n(v.IntValue0) + ' free refresh' + (v.IntValue0 === 1 ? '' : 'es') + ' every day.' });
+  fx({ id: 'mr:ban-tokens', src: 'mr', mr: 'ban-tokens', cat: 'money', scripts: [],
+    en: 'Free bans', zh: '免费禁用', what: ['Ban cards for free, even with the ban button turned off in the settings. Each one is used up.', '可以免费禁用卡片，即使设置里关闭了禁用按钮。每次用掉一个。'],
+    params: [num('IntValue0', 'Free bans', '免费禁用', ['', ''], [3])],
+    line: v => n(v.IntValue0),
+    desc: (v, zh) => zh ? '获得' + n(v.IntValue0) + '次免费禁用' : n(v.IntValue0) + ' free ban' + (v.IntValue0 === 1 ? '' : 's') + ' of cards you never want to see.' });
+  fx({ id: 'mr:lottery', src: 'mr', mr: 'lottery', cat: 'money', scripts: [],
+    en: 'Lottery', zh: '彩票', what: ['Pays out a random number of survival points when bought.', '购买时随机获得生存点。'],
+    params: [num('IntValue0', 'Least', '最少', ['points', '点'], [0], { stack: 'each' }), num('IntValue1', 'Most', '最多', ['points', '点'], [15], { stack: 'each' })],
+    line: v => n(v.IntValue0) + '-' + n(v.IntValue1),
+    desc: (v, zh) => zh ? '随机获得' + n(v.IntValue0) + '到' + n(v.IntValue1) + '生存点' : 'Win ' + n(v.IntValue0) + ' to ' + n(v.IntValue1) + ' survival points.' });
+  // The items are a list of item IDs (Items) and how many of each (Counts); the tab keeps them as the file has them.
+  fx({ id: 'mr:supply-crate', src: 'mr', mr: 'supply-crate', cat: 'items', scripts: [],
+    en: 'Supply crate', zh: '补给箱', what: ['Puts a set list of items in your bag when bought. Change the items in MoreRewards.Rewards.json.', '购买时把固定的物品放进背包。物品在 MoreRewards.Rewards.json 中修改。'],
+    params: [],
+    line: v => (isArr(v.Items) ? v.Items.length : 0) + ' items',
+    desc: (v, zh) => zh ? '获得一箱补给' : 'A crate of supplies.' });
 
   FX.forEach(f => { FX_BY_ID[f.id] = f; });
 
@@ -1314,6 +1354,7 @@
     let html;
 
     if (e.frozen && !ghost) html = note(L('This reward uses parts of the file the tab cannot edit. Change it in MoreRewards.Rewards.json.', '此奖励使用了本页无法编辑的文件内容。请在 MoreRewards.Rewards.json 中修改。'));
+    else if (ghost && e.kind === 'builtIn' && st.extraIds.has(e.id)) html = note(L('More Rewards adds this reward while ExtraRewards is on. Change it here and your version replaces it.', '开启ExtraRewards时，更多奖励会加入此奖励。在这里修改后，你的版本会替换它。'));
     else if (ghost && e.kind === 'builtIn') html = note(L('More Rewards adds this reward while Wind Power is installed. Change it here and your version replaces it.', '安装Wind Power时，更多奖励会加入此奖励。在这里修改后，你的版本会替换它。'));
     else if (ghost) html = note(L('This is one of the game\'s rewards, and it hasn\'t been changed.', '这是游戏中的奖励，没有改动过。'));
     else if (e.kind === 'builtIn') html = note(L('Your version of a reward More Rewards adds. Reset puts back the mod\'s.', '你修改过的更多奖励自带奖励。重置可恢复模组的版本。'));
@@ -2237,6 +2278,7 @@
 
     if (!gameDay(st.day)) st.day = st.gameDays.length ? st.gameDays[0].day : 0;
     st.builtIn = {};
+    st.extraIds = new Set(isArr(d.extraIds) ? d.extraIds.filter(isNum) : []);
     (isObj(d.builtIn) && isArr(d.builtIn.rewards) ? d.builtIn.rewards : []).forEach(r => {
       if (isObj(r) && isNum(r.id) && !st.byId[r.id]) st.builtIn[r.id] = r;
     });

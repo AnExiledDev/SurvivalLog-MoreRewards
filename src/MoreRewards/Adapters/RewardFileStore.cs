@@ -5,11 +5,12 @@ using MoreRewards.Core;
 
 namespace MoreRewards.Adapters;
 
-/// <summary>Reads the rewards file from the config folder, and the wind rewards the mod carries.</summary>
+/// <summary>Reads the rewards file from the config folder, and the wind and extra rewards the mod carries.</summary>
 internal static class RewardFileStore
 {
     private const string DefaultResource = "MoreRewards.rewards.default.json";
     private const string WindResource = "MoreRewards.wind-rewards.json";
+    private const string ExtraResource = "MoreRewards.extra-rewards.json";
 
     /// <summary>The player's rewards file, written there first from the mod's default when it is missing.</summary>
     public static RewardFile Load(string path, Action<string> log)
@@ -48,6 +49,19 @@ internal static class RewardFileStore
 
     /// <summary>The wind rewards as the mod carries them, for the Rewards tab to show.</summary>
     public static string WindText() => Resource(WindResource);
+
+    /// <summary>The extra rewards, which apply while ExtraRewards is on.</summary>
+    public static RewardFile Extra(Action<string> log)
+    {
+        var file = RewardFile.Parse(Resource(ExtraResource));
+
+        foreach (var problem in file.Problems) log("extra rewards: " + problem);
+
+        return file;
+    }
+
+    /// <summary>The extra rewards as the mod carries them, for the Rewards tab to show.</summary>
+    public static string ExtraText() => Resource(ExtraResource);
 
     private static string Resource(string name)
     {

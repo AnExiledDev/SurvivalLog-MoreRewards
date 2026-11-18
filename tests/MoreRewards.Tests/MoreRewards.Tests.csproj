@@ -27,6 +27,7 @@
     <EmbeddedResource Include="$(ToolkitSrc)\editor.js" LogicalName="ExiledToolkit.editor.js" Link="Toolkit\editor.js" />
     <EmbeddedResource Include="..\..\src\MoreRewards\rewards.default.json" LogicalName="MoreRewards.rewards.default.json" Link="rewards.default.json" />
     <EmbeddedResource Include="..\..\src\MoreRewards\wind-rewards.json" LogicalName="MoreRewards.wind-rewards.json" Link="wind-rewards.json" />
+    <EmbeddedResource Include="..\..\src\MoreRewards\extra-rewards.json" LogicalName="MoreRewards.extra-rewards.json" Link="extra-rewards.json" />
     <EmbeddedResource Include="FakePage.js" LogicalName="MoreRewards.Tests.FakePage.js" />
   </ItemGroup>
 

@@ -26,6 +26,7 @@ At the end of each day, Survival Log offers 3 rewards you can buy with survival 
 - **Your own rewards**: the file `BepInEx\config\MoreRewards.Rewards.json` adds new end-of-day rewards or changes the game's. You can set a reward's cost, name and description, its levels, what each level gives, what it needs, which pools it comes from and how often, the first and last day it can show up, which runs and characters get it, and whether it can be bought again. A reward can also go in the biggest pool of every day, or take a card every day until you buy it. You can also change which pools each day draws from. The file explains each part and has an example to copy, written as a comment so it changes nothing. Changes made in the file apply the next time the game starts.
 - **Rewards tab**: with the Mod Manager 0.7.0 or newer, More Rewards' page gets a Rewards tab that edits the rewards file for you. Change what any reward costs, how many levels it has, its numbers, its pools, its text and when it is offered, switch the file's rewards on or off, change each day's pools on the DAY DRAW view and try a test draw, or click NEW REWARD to build your own from the effects the game's rewards use and the mod's own, with any reward or item image. SAVE writes the file and the changes apply at once.
 - **Wind rewards**: with Wind Power 0.9.3 or newer installed, you get Wind Collection I, II and III. They work like the game's Sunlight Collection. Each one makes wind turbines produce 15% more power, they cost 10, 16 and 24 survival points, and they show up once you can build a wind turbine. Change them on the Rewards tab if you like.
+- **Extra rewards** (off by default): turn on `ExtraRewards` for 39 more end-of-day rewards. Some are higher levels of the game's rewards, such as Day Planner II and III or Sunlight Collection IV. Others are airdrops, Second Wind (30 Life), Winter Kit, Night Owl and Siege Prep, and a free airdrop on days 30, 60 and 100. Seven do things the game's rewards can't: Investor I to III raise the interest rate and limit, Wider Net I to III add a card each, Pin Board adds a lock, Second Opinion makes the first refresh each day free, Ban Tokens gives 3 free bans, Supply Crate gives Tempered Glass and other parts right away, and Lottery Ticket pays 0 to 15 survival points. It also lets Scavenger Drone I and II and the drone part blueprints show up, which the game has but never offers. CONFIG.md lists them all. Change or turn off any of them on the Rewards tab.
 - **A log file**: what the mod did is written to `BepInEx\more-rewards.log`.
 
 There are no new keys. The new buttons are 「Ban」 on each card, and 「Shop」, 「Bans」 and 「Settings」 in the footer. 「Settings」 is always there, and each of the others has a setting that turns it on or off.
@@ -45,6 +46,8 @@ More Rewards does not edit game files. Extra locks, bans and shop purchases are 
 - The shop leaves out rewards the game has no name for and rewards it never offers.
 - The test draw on the DAY DRAW view uses the pools, the weights and each reward's first and last day. It does not know what you own, your character or a reward's needs, so in game some of what it shows can be skipped.
 - Saving from the Rewards tab drops the comments in the rewards file. The file as it was is kept next to it as `MoreRewards.Rewards.json.bak`.
+- Wider Net adds cards, but the automatic refresh cost only counts `OptionCount`.
+- Know What's What II still pays at most 3 survival points a day, like level I. The game has that limit built in.
 - The tip on the end-of-day page still says interest is 5% and at most 10. The interest you are paid follows `InterestRate` and `MaxInterest`.
 
 ## Requirements
@@ -68,7 +71,7 @@ More Rewards does not edit game files. Extra locks, bans and shop purchases are 
 
 Delete `MoreRewards.dll` from the `BepInEx\plugins` folder. For a clean slate, also delete `BepInEx\config\com.dev.survivallog.morerewards.cfg`, `BepInEx\config\MoreRewards.Rewards.json` and `BepInEx\more-rewards.log`.
 
-New rewards from the rewards file and the wind rewards that a save already owns are dropped when the save loads without the mod. The rest of the save is fine, so there is nothing to do before you remove it.
+New rewards from the rewards file, the wind rewards and the extra rewards that a save already owns are dropped when the save loads without the mod. The rest of the save is fine, so there is nothing to do before you remove it.
 
 ## Configuration
 

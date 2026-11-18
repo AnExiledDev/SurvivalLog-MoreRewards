@@ -1,3 +1,5 @@
+using System;
+
 namespace MoreRewards.Core;
 
 /// <summary>
@@ -26,6 +28,20 @@ public sealed class RateKeeper
     /// <summary>The rate to keep, in percent, or null for the character's own.</summary>
     public int? Rate { get; private set; }
 
+    /// <summary>Percent the player's rewards add on top of the rate.</summary>
+    public int Bonus { get; private set; }
+
+    /// <summary>A change of the rewards' bonus; the next check writes it.</summary>
+    public void UseBonus(int percent)
+    {
+        percent = Math.Max(percent, 0);
+
+        if (percent == Bonus) return;
+
+        _hasWritten = false;
+        Bonus = percent;
+    }
+
     /// <summary>
     /// A change of the setting. The next write is a fresh one, not a put-back. With no rate, a strengthening the mod
     /// wrote is taken off once, and from then on the attribute is left alone.
@@ -42,9 +58,9 @@ public sealed class RateKeeper
     /// <returns>The strengthening to write, or null when the attribute already totals the rate.</returns>
     public RateWrite? Next(int baseUnits, int strengthening, float scaling)
     {
-        if (Rate is not { } rate) return Release(baseUnits, strengthening);
+        if (Rate == null && Bonus == 0) return Release(baseUnits, strengthening);
 
-        var wanted = InterestRate.Units(rate, scaling) - baseUnits;
+        var wanted = (Rate is { } rate ? InterestRate.Units(rate, scaling) - baseUnits : 0) + InterestRate.Units(Bonus, scaling);
 
         if (wanted == strengthening) return null;
 

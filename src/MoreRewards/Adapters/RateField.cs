@@ -34,6 +34,7 @@ internal sealed class RateField
         if (now < _nextCheckAt) return;
 
         _nextCheckAt = now + CheckSeconds;
+        _keeper.UseBonus(LiveScreen.Perks.RatePercent);
 
         var attributes = CharacterAttributes();
         var table = attributes?.AttrDict;
@@ -61,7 +62,7 @@ internal sealed class RateField
     /// <summary>The first write happens once; writing it again comes with every character made or loaded, so it is reported once.</summary>
     private void Report(RateWrite write, float scaling)
     {
-        if (_keeper.Rate == null)
+        if (_keeper.Rate == null && _keeper.Bonus == 0)
         {
             _log(FormattableString.Invariant($"interest rate is back to the character's own, {write.BaseUnits * 100f / scaling:0.#}%"));
 
@@ -70,13 +71,20 @@ internal sealed class RateField
 
         if (!write.IsPutBack)
         {
-            _log(FormattableString.Invariant($"interest rate is now {_keeper.Rate}% (the character's own is {write.BaseUnits * 100f / scaling:0.#}%)"));
+            _log(FormattableString.Invariant($"interest rate is now {RateText()} (the character's own is {write.BaseUnits * 100f / scaling:0.#}%)"));
 
             return;
         }
 
-        if (!_hasLoggedPutBack) _log($"interest rate set to {_keeper.Rate}% again, for a new or loaded character or after something else changed it (reported once)");
+        if (!_hasLoggedPutBack) _log($"interest rate set to {RateText()} again, for a new or loaded character or after something else changed it (reported once)");
 
         _hasLoggedPutBack = true;
+    }
+
+    private string RateText()
+    {
+        var rate = _keeper.Rate is { } kept ? $"{kept}%" : "the character's own";
+
+        return _keeper.Bonus == 0 ? rate : $"{rate} + {_keeper.Bonus}% from rewards";
     }
 }

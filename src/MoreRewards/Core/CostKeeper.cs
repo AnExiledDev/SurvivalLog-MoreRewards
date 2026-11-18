@@ -15,6 +15,7 @@ public sealed class CostKeeper
     private int? _gameCost;
     private int? _written;
     private bool _isChanged;
+    private bool _isFree;
 
     public CostKeeper(RewardSettings settings)
     {
@@ -25,6 +26,15 @@ public sealed class CostKeeper
     public void Use(RewardSettings settings)
     {
         _settings = settings;
+        _isChanged = true;
+    }
+
+    /// <summary>Whether the next refresh is free, from a free refresh the player's rewards give: the cost is 0 until it is used.</summary>
+    public void UseFree(bool isFree)
+    {
+        if (isFree == _isFree) return;
+
+        _isFree = isFree;
         _isChanged = true;
     }
 
@@ -41,7 +51,7 @@ public sealed class CostKeeper
         if (!isChange && (current <= 0 || current == _written)) return null;
 
         var gameCost = _gameCost ??= current;
-        var target = RefreshCost.Target(gameCost, _settings);
+        var target = _isFree ? 0 : RefreshCost.Target(gameCost, _settings);
         var isPutBack = _written != null && !isChange;
         _written = target;
         _isChanged = false;

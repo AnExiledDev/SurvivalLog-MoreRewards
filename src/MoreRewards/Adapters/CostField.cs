@@ -38,6 +38,16 @@ internal sealed class CostField
         if (now < _nextCheckAt) return;
 
         _nextCheckAt = now + CheckSeconds;
+        Check();
+    }
+
+    /// <summary>
+    /// Checks at once, for a free refresh that came or went: a day's draw reads the cost right after, and a refresh
+    /// that used the last free one must not leave the next at 0.
+    /// </summary>
+    public void Check()
+    {
+        _keeper.UseFree(LiveScreen.IsFreeRefreshReady);
 
         var current = GameKey._GlobalSetting_RefreshSurvivalCost;
 
@@ -52,11 +62,20 @@ internal sealed class CostField
     private static void Write(CostWrite write)
     {
         GameKey._GlobalSetting_RefreshSurvivalCost = write.Cost;
+        ShowCost(write.Cost);
 
         if (TableEntry() is not { } entry) return;
 
         entry._Params1_k__BackingField = write.Cost;
         ClaimEntry(write);
+    }
+
+    /// <summary>Tells the rewards screen the new cost, the way the game does when a day ends; outside a run there is no screen.</summary>
+    private static void ShowCost(int cost)
+    {
+        if (RunGame.Results() == null) return;
+
+        EventDispatcherTools.NotifyGlobal<int>(EnumNotify_Common.Player_UpdateRefreshCost, cost);
     }
 
     /// <summary>Tells Mod Manager about the table entry. Writing the game's cost back counts as putting the entry back.</summary>

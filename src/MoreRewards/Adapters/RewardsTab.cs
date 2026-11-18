@@ -23,15 +23,15 @@ internal sealed class RewardsTab
 
     private readonly string _path;
     private readonly RewardTables _tables;
-    private readonly string? _builtIn;
+    private readonly Func<BuiltInRewards> _builtIn;
     private readonly Action _reload;
     private readonly Action<string> _log;
     private readonly ToolkitPage _page;
     private readonly PageMailbox _inbox = PageInbox.Listen(RewardsPage.Prefix);
 
     /// <param name="reload">Reads the rewards file again after a save, so what it holds now applies.</param>
-    /// <param name="builtIn">The rewards the mod adds itself, as file text, or null when it adds none.</param>
-    public RewardsTab(string path, RewardTables tables, string? builtIn, Action reload, Action<string> log)
+    /// <param name="builtIn">The rewards the mod adds itself now; ExtraRewards can change while the game runs.</param>
+    public RewardsTab(string path, RewardTables tables, Func<BuiltInRewards> builtIn, Action reload, Action<string> log)
     {
         _path = path;
         _tables = tables;
@@ -72,7 +72,7 @@ internal sealed class RewardsTab
             _log("rewards tab: could not read the rewards file: " + ex.Message);
         }
 
-        _page.Run(RewardsPage.DataCall(_tables.Game, text, _tables.Problems, _builtIn, LiveScreen.IsOn ? LiveScreen.Settings.OptionCount : RewardSettings.GameOptionCount));
+        _page.Run(RewardsPage.DataCall(_tables.Game, text, _tables.Problems, _builtIn(), LiveScreen.IsOn ? LiveScreen.Settings.OptionCount : RewardSettings.GameOptionCount));
     }
 
     private void Save(string json)

@@ -45,6 +45,8 @@ public sealed class RunBook
     private const string ShopStartKey = "slmr.shop.reset";
     private const string ShopTodayKey = "slmr.shop.today";
     private const string ShopDayKey = "slmr.shop.day";
+    private const string FreeBansUsedKey = "slmr.freebans.used";
+    private const string FreeRefreshesUsedKey = "slmr.freerefresh.used";
 
     /// <summary>The lock counters' names, made once: the screen's every rebuild reads them.</summary>
     private static readonly string[] LockKeys = Keys(LockKey, MostLocks);
@@ -180,6 +182,18 @@ public sealed class RunBook
     private int HeadOf(int id) => _counters.Get(BanByKey + id) is var head && head > 0 ? head : id;
 
     private int? PaidFor(int head) => _counters.Get(BanPaidKey + head) is var paid && paid > 0 ? paid - 1 : null;
+
+    /// <summary>Free bans used this run.</summary>
+    public int FreeBansUsed => _counters.Get(FreeBansUsedKey);
+
+    public void UseFreeBan() => _counters.Set(FreeBansUsedKey, FreeBansUsed + 1);
+
+    /// <summary>Free refreshes used since the day's rewards were drawn.</summary>
+    public int FreeRefreshesUsed => _counters.Get(FreeRefreshesUsedKey);
+
+    public void UseFreeRefresh() => _counters.Set(FreeRefreshesUsedKey, FreeRefreshesUsed + 1);
+
+    public void NewDayOfRefreshes() => _counters.Set(FreeRefreshesUsedKey, 0);
 
     public ShopTally Shop(int day, ShopReset reset)
     {

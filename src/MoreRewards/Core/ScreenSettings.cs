@@ -64,6 +64,23 @@ public sealed record ScreenSettings
 
     public bool LocksMore => MaxLocked > GameMaxLocked;
 
+    /// <summary>
+    /// These settings with what the player's rewards add: more cards (up to the most the screen shows), more locks
+    /// (still leaving one card unlocked), and the ban button at no cost while free bans are left.
+    /// </summary>
+    public ScreenSettings With(Perks perks, int freeBansLeft)
+    {
+        var optionCount = Math.Min(OptionCount + Math.Max(perks.MoreCards, 0), RewardSettings.MostOptions);
+
+        return this with
+        {
+            OptionCount = optionCount,
+            MaxLocked = Math.Clamp(MaxLocked + Math.Max(perks.MoreLocks, 0), GameMaxLocked, optionCount - 1),
+            BanButton = BanButton || freeBansLeft > 0,
+            BanCost = freeBansLeft > 0 ? 0 : BanCost,
+        };
+    }
+
     public static ScreenSettings From(ScreenInput input)
     {
         var optionCount = Math.Clamp(input.OptionCount, RewardSettings.GameOptionCount, RewardSettings.MostOptions);

@@ -101,8 +101,37 @@ public sealed record RewardPlan(
 
     public const string WindShare = "FloatValue0";
 
+    /// <summary>Raises the interest: IntValue0 is percent more on the rate, IntValue1 is more on the most a day pays.</summary>
+    public const string Investor = "investor";
+
+    /// <summary>IntValue0 more cards on the rewards screen.</summary>
+    public const string MoreCards = "more-cards";
+
+    /// <summary>IntValue0 more locks on the rewards screen.</summary>
+    public const string MoreLocks = "more-locks";
+
+    /// <summary>IntValue0 free refreshes each day.</summary>
+    public const string FreeRefresh = "free-refresh";
+
+    /// <summary>IntValue0 free bans, used up one at a time.</summary>
+    public const string BanTokens = "ban-tokens";
+
+    /// <summary>Puts items in the bag when bought: Items is the item IDs and Counts how many of each (1 when left out).</summary>
+    public const string SupplyCrate = "supply-crate";
+
+    /// <summary>Pays out a random number of survival points when bought, from IntValue0 to IntValue1.</summary>
+    public const string Lottery = "lottery";
+
+    public const string CountField = "IntValue0";
+    public const string RateField = "IntValue0";
+    public const string CapField = "IntValue1";
+    public const string LeastField = "IntValue0";
+    public const string MostField = "IntValue1";
+    public const string ItemsField = "Items";
+    public const string CountsField = "Counts";
+
     /// <summary>The effects More Rewards runs itself.</summary>
-    public static readonly IReadOnlyList<string> MrEffects = new[] { WindPower };
+    public static readonly IReadOnlyList<string> MrEffects = new[] { WindPower, Investor, MoreCards, MoreLocks, FreeRefresh, BanTokens, SupplyCrate, Lottery };
 
     /// <summary>The script an mr give's effect runs: a marker that does nothing, so the game only records the reward as owned.</summary>
     public const string MarkerScript = "Buff_Empty";

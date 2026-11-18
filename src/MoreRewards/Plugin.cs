@@ -20,7 +20,7 @@ namespace MoreRewards;
 public sealed class Plugin : BasePlugin
 {
     internal const string Guid = "com.dev.survivallog.morerewards";
-    private const string Version = "0.11.6";
+    private const string Version = "0.12.0";
     private const long MaxLogBytes = 1024 * 1024;
     private const string RewardsFileName = "MoreRewards.Rewards.json";
 
@@ -47,6 +47,10 @@ public sealed class Plugin : BasePlugin
             "The most interest your survival points can earn when a day ends. 0 keeps the game's limit of 10, and any number from 1 to 100 sets a new limit. The interest is the points you hold times InterestRate, rounded down, and at least 1 while you hold any points.\n" +
             "每天结算时生存点回息的上限。设为 0 保持游戏原本的上限 10，设为 1 到 100 则以该数作为新的上限。回息为持有生存点乘以 InterestRate 的比例，向下取整，只要持有生存点就至少 1 点。",
             new AcceptableValueRange<int>(0, InterestCap.MostCap), "ModManager.ShowWhen=General.Enabled", WorldRule.Tag));
+        var extraRewards = Config.Bind("Rewards", "ExtraRewards", false, new ConfigDescription(
+            "Adds 39 new rewards to the end-of-day cards: higher levels of the game's rewards, airdrops, more cards, more locks, free refreshes, free bans, more interest, supply crates with glass in them and lottery tickets. It also lets 11 rewards the game never offers show up on the cards: Scavenger Drone and the drone part blueprints. You can change or turn off each one in the Rewards tab. Applies at once.\n" +
+            "在每天结束时的生存规划中加入 39 个新奖励：游戏奖励的更高等级、物资空投、更多卡片、更多锁定、免费刷新、免费禁用、更高回息、含玻璃的补给箱和彩票。另外让游戏从不提供的 11 个奖励也能出现：拾荒无人机和无人机零件图纸。可以在奖励页逐个修改或关闭。立即生效。",
+            null, "ModManager.ShowWhen=General.Enabled", WorldRule.Tag));
         var log = new ModLog(Log, "more-rewards.log") { MaxFileBytes = MaxLogBytes };
 
         log.Write($"===== More Rewards {Version} started: {(enabled.Value ? "on" : "off")}, interest {InterestText(enabled.Value ? InterestCap.From(maxInterest.Value) : null)}");
@@ -56,29 +60,37 @@ public sealed class Plugin : BasePlugin
         var capKeeper = WatchCap(enabled, maxInterest, log, log.WriteError);
         var rateKeeper = WatchRate(enabled, interestRate, log);
         var screen = new ScreenConfig(Config, optionCount);
-        var board = new SettingsBoard(new ConfigEntryBase[] { enabled, optionCount, refreshCost, interestRate, maxInterest }.Concat(screen.Entries).Distinct().ToList());
-        var tables = WatchRewardsFile(enabled, log);
+        var board = new SettingsBoard(new ConfigEntryBase[] { enabled, optionCount, refreshCost, interestRate, maxInterest, extraRewards }.Concat(screen.Entries).Distinct().ToList());
+        var tables = WatchRewardsFile(enabled, extraRewards, log);
 
+        PerkWatch.Grants = () => tables.Grants;
+        RewardsTicker.Checks.Add(PerkWatch.Tick);
         WatchRewards(enabled, optionCount, refreshCost, screen, log);
         RewardsTicker.Log = log.Write;
         AddComponent<RewardsTicker>();
-        WatchEnabled(enabled, () => new InterestTerms((rateKeeper.Rate ?? InterestRate.GameRate) / 100f, capKeeper()), board, () => tables.Edits, log);
+        WatchEnabled(enabled, () => new InterestTerms(((rateKeeper.Rate ?? InterestRate.GameRate) + rateKeeper.Bonus) / 100f, capKeeper()), board, () => tables.Edits, () => tables.Grants, log);
     }
 
     /// <summary>
-    /// Writes the player's rewards file into the game's tables, with the wind rewards under it when Wind Power is
-    /// installed. An entry in the player's file that uses a wind reward's ID replaces it. Without Wind Power, no reward
-    /// that gives it more power applies. With the mod off, nothing applies. A save from the Rewards tab reads the file
-    /// again and writes it into the tables at once.
+    /// Writes the player's rewards file into the game's tables, with the extra rewards under it while ExtraRewards is on
+    /// and the wind rewards under it when Wind Power is installed. An entry in the player's file that uses one of their
+    /// IDs replaces it. Without Wind Power, no reward that gives it more power applies. With the mod off, nothing
+    /// applies. A save from the Rewards tab reads the file again and writes it into the tables at once.
     /// </summary>
-    private static RewardTables WatchRewardsFile(ConfigEntry<bool> enabled, ModLog log)
+    private static RewardTables WatchRewardsFile(ConfigEntry<bool> enabled, ConfigEntry<bool> extraRewards, ModLog log)
     {
         RewardTables? tables = null;
         var hasWindPower = LinkWind(() => tables?.Grants ?? Array.Empty<MrGrant>(), log);
         var windEffect = RewardPlan.MrPrefix + RewardPlan.WindPower;
         var path = Path.Combine(Paths.ConfigPath, RewardsFileName);
         var wind = hasWindPower ? RewardFileStore.Wind(log.Write) : RewardFile.Empty;
-        RewardFile Read() => hasWindPower ? RewardFileStore.Load(path, log.Write).Over(wind) : RewardFileStore.Load(path, log.Write).Without(windEffect);
+        var extra = RewardFileStore.Extra(log.Write);
+        RewardFile Read()
+        {
+            var file = RewardFileStore.Load(path, log.Write).Over(extraRewards.Value ? extra : RewardFile.Empty).Over(wind);
+
+            return hasWindPower ? file : file.Without(windEffect);
+        }
         var applies = Read();
         var fileHooks = new PatchKit(new Harmony(Guid), log.Write);
 
@@ -87,8 +99,16 @@ public sealed class Plugin : BasePlugin
         tables = new RewardTables(() => enabled.Value ? applies : RewardFile.Empty, log.Write);
         RewardsTicker.Checks.Add(tables.Tick);
         LiveSettings.Watch(() => tables.Changed(), enabled);
+        LiveSettings.Watch(() =>
+        {
+            applies = Read();
+            tables.Changed();
+            log.Write(extraRewards.Value ? "extra rewards on" : "extra rewards off");
+        }, extraRewards);
 
-        var tab = new RewardsTab(path, tables, hasWindPower ? RewardFileStore.WindText() : null, () =>
+        var windText = hasWindPower ? RewardFileStore.WindText() : null;
+        var extraText = RewardFileStore.ExtraText();
+        var tab = new RewardsTab(path, tables, () => new BuiltInRewards(windText, extraRewards.Value ? extraText : null), () =>
         {
             applies = Read();
             tables.Changed();
@@ -125,7 +145,7 @@ public sealed class Plugin : BasePlugin
     /// the game's rewards alone and the page takes the mod's buttons away; the hooks stay, so turning it back on needs no
     /// restart. With the mod off from the start the rewards screen is never hooked.
     /// </summary>
-    private static void WatchEnabled(ConfigEntry<bool> enabled, Func<InterestTerms> interest, SettingsBoard board, Func<int> edits, ModLog log)
+    private static void WatchEnabled(ConfigEntry<bool> enabled, Func<InterestTerms> interest, SettingsBoard board, Func<int> edits, Func<System.Collections.Generic.IReadOnlyList<MrGrant>> grants, ModLog log)
     {
         RewardPage? page = null;
         var isLoading = true;
@@ -136,10 +156,11 @@ public sealed class Plugin : BasePlugin
 
             LiveScreen.IsOn = on;
             LiveScreen.Changed();
+            PerkWatch.Refresh();
 
             if (on && page == null)
             {
-                page = WatchScreen(interest, board, edits, log);
+                page = WatchScreen(interest, board, edits, grants, log);
                 WarmUpOnWorker(log);
             }
 
@@ -172,8 +193,10 @@ public sealed class Plugin : BasePlugin
         RewardSettings SettingsNow() => enabled.Value ? RewardSettings.From(optionCount.Value, refreshCost.Value) : RewardSettings.Game;
 
         var costKeeper = new CostKeeper(SettingsNow());
+        var costField = new CostField(costKeeper, log.Write);
 
-        RewardsTicker.Checks.Add(new CostField(costKeeper, log.Write).Tick);
+        RewardsTicker.Checks.Add(costField.Tick);
+        LiveScreen.PerksChanged += costField.Check;
 
         LiveSettings.Watch(() =>
         {
@@ -184,15 +207,14 @@ public sealed class Plugin : BasePlugin
         }, enabled, optionCount, refreshCost);
         LiveSettings.Watch(() =>
         {
-            LiveScreen.Settings = enabled.Value ? screen.Read() : ScreenSettings.Game;
-            LiveScreen.Changed();
+            LiveScreen.UseConfig(enabled.Value ? screen.Read() : ScreenSettings.Game);
             log.Write("rewards screen: " + LiveScreen.Settings);
         }, screen.Entries.Append(enabled).ToArray());
     }
 
     /// <summary>Hooks the rewards screen and wires the page's buttons to the actions that carry them out.</summary>
     /// <returns>The page, which the mod tells when it is turned off.</returns>
-    private static RewardPage WatchScreen(Func<InterestTerms> interest, SettingsBoard board, Func<int> edits, ModLog log)
+    private static RewardPage WatchScreen(Func<InterestTerms> interest, SettingsBoard board, Func<int> edits, Func<System.Collections.Generic.IReadOnlyList<MrGrant>> grants, ModLog log)
     {
         var hooks = new PatchKit(new Harmony(Guid), log.Write);
         RewardActions? actions = null;
@@ -203,6 +225,7 @@ public sealed class Plugin : BasePlugin
         actions = new RewardActions(page, catalog, interest, board, budget, log.Write);
         OfferPatch.Apply(hooks, log.Write);
         ListPatch.Apply(hooks, log.Write);
+        BuyPatch.Apply(hooks, grants, actions.Tell, log.Write);
         RewardsTicker.Checks.Add(page.Tick);
         RewardsTicker.Checks.Add(actions.Tick);
         RewardsTicker.Checks.Add(catalog.Tick);
@@ -232,18 +255,19 @@ public sealed class Plugin : BasePlugin
     }
 
     /// <summary>
-    /// Writes MaxInterest into the game's code now and after each change, and puts the game's cap back when it, or
-    /// the mod, is turned off. The code is only written once the cap differs from the game's, so with MaxInterest or
-    /// the mod off from the start the game's code is never touched.
+    /// Writes MaxInterest, plus what the player's rewards add, into the game's code now and after each change, and puts
+    /// the game's cap back when it, or the mod, is turned off. The code is only written once the cap differs from the
+    /// game's, so with MaxInterest or the mod off from the start, and no such reward owned, the game's code is never touched.
     /// </summary>
     /// <returns>The cap in force now.</returns>
     private static Func<int> WatchCap(ConfigEntry<bool> enabled, ConfigEntry<int> maxInterest, ModLog log, Action<string> logError)
     {
         var written = InterestCap.GameCap;
 
-        LiveSettings.Watch(() =>
+        void Apply()
         {
-            var cap = (enabled.Value ? InterestCap.From(maxInterest.Value) : null) ?? InterestCap.GameCap;
+            var fromConfig = (enabled.Value ? InterestCap.From(maxInterest.Value) : null) ?? InterestCap.GameCap;
+            var cap = Math.Min(fromConfig + LiveScreen.Perks.CapAdd, InterestCap.MostCap);
 
             if (cap == written) return;
 
@@ -251,7 +275,10 @@ public sealed class Plugin : BasePlugin
 
             written = cap;
             LiveScreen.Changed();
-        }, enabled, maxInterest);
+        }
+
+        LiveSettings.Watch(Apply, enabled, maxInterest);
+        LiveScreen.PerksChanged += Apply;
 
         return () => written;
     }

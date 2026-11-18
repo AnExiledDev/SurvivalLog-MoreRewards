@@ -18,6 +18,59 @@ With the defaults you get the game's 3 rewards, its refresh cost and its interes
 | --- | --- | --- |
 | `OptionCount` | `3` | How many rewards you can choose from at the end of a day and after each refresh. `3` is the game's number, and you can set any number from 3 to 20. |
 | `RefreshCost` | `-1` | How many survival points a refresh costs. `-1` is automatic: the cost goes up with `OptionCount` (see below). `0` makes every refresh free, and any number from 1 to 99 is the cost of every refresh, whatever `OptionCount` is. |
+| `ExtraRewards` | `false` | Adds 39 new rewards to the end-of-day cards, and lets 11 rewards the game never offers show up. They are listed below. Change or turn off any of them on the Rewards tab. |
+
+### The extra rewards
+
+With `ExtraRewards` on, these rewards come up on the end-of-day cards. "From" is the first day they can show up. A level above I needs the level before it. A reward that needs another, such as Sunlight Collection IV after level III, only shows up once you have it.
+
+| Reward | Cost | From | What it does |
+| --- | --- | --- | --- |
+| Day Planner II | 14 | day 20 | Gives you 1 more Survival Point each day. In total: +2. |
+| Day Planner III | 22 | day 20 | Gives you 1 more Survival Point each day. In total: +3. |
+| Mission Bonus II | 30 | day 20 | Gives you 1 more Survival Point each time you complete a mission. In total: +2. |
+| Crisis Bonus II | 36 | day 20 | During a crisis, you get 2 more Survival Points at the end of each day. In total: +5. |
+| Morale to Gold II | 30 | day 20 | Morale turns into Survival Points faster at the end of each day (4:1 to 3:1). |
+| Know What's What II | 36 | day 24 | Your home food gives 1 Survival Point for every 300 Satiety stored, down from 500. Still up to 3 a day. |
+| Pay in Blood | 1 | day 20 | Lose 15 Life and get 4 Survival Points. |
+| Careful Budgeting III | 30 | day 20 | Rewards at the end of each day cost another 10% less. |
+| Iron Defense IV | 36 | day 60 | Zombies do another 10% less damage to doors, windows and defenses. |
+| Deadly Traps IV | 36 | day 60 | Spikes, electric traps, chainsaws and other defenses do another 15% more damage. |
+| Diesel Craftsman IV | 36 | day 60 | Diesel generators make another 15% more power. |
+| Sunlight Collection IV | 36 | day 60 | Solar panels make another 15% more power. |
+| Dexterous IV | 36 | day 60 | Crafting takes another 5% less time. |
+| Endurance Drone III | 36 | day 60 | The drone can trade 1 more time a day. In total: +3. |
+| Fuel Saver II | 24 | day 24 | Generators use another 15% less fuel. |
+| Capacity Master II | 30 | day 24 | Max Power Capacity goes up by another 50%. |
+| Cold Resistance II | 56 | day 24 | Plant cold resistance goes up by another 1. |
+| Fuel Airdrop | 8 | day 20 | Call for supplies on the radio and get 2 random fuel items the next day. |
+| Big Airdrop | 12 | day 20 | Call for supplies on the radio and get 6 random supplies the next day: food, materials or bandages. |
+| Care Package | 20 | day 20 | Call for supplies on the radio and get 2 random meds, 2 packs of seeds and 4 crafting materials the next day. |
+| Second Wind | 5 | day 20 | Restores 30 Life right away. |
+| Master Gardener | 20 | day 20 | Crop pests, weeds and drought are each 10% less likely. |
+| Winter Kit | 30 | day 24 | Plant cold resistance +1, each running Air Conditioning or Electric Heater gives +1 temperature, and your Thermal Comfort goes up one level. |
+| Night Owl | 25 | day 20 | Movement Speed +30% at night, night traps catch prey 15% more often, and Satiety drops 15% slower while you sleep. |
+| Siege Prep | 35 | day 20 | Zombies do 10% less damage to doors, windows and defenses, and defenses do 15% more damage and have 30% more max Durability. |
+| Day 30 Airdrop | 0 | day 30 only | You made it to day 30. Get 3 random supplies the next day, free. |
+| Day 60 Airdrop | 0 | day 60 only | You made it to day 60. Get 4 random supplies the next day, free. |
+| Day 100 Airdrop | 0 | day 100 only | You made it to day 100. Get 5 random supplies the next day, free. |
+| Investor I | 15 | day 20 | Interest +2% and the interest limit +5. |
+| Investor II | 20 | day 20 | Interest +2% and the interest limit +5. In total: +4% and +10. |
+| Investor III | 25 | day 20 | Interest +2% and the interest limit +5. In total: +6% and +15. |
+| Wider Net I | 20 | day 20 | Shows 1 more reward card at the end of each day. |
+| Wider Net II | 30 | day 20 | Shows 1 more reward card at the end of each day. In total: +2. |
+| Wider Net III | 40 | day 20 | Shows 1 more reward card at the end of each day. In total: +3. |
+| Pin Board | 20 | day 20 | You can lock 1 more reward card. |
+| Second Opinion | 25 | day 20 | Your first refresh each day is free. |
+| Ban Tokens | 10 | day 20 | Your next 3 bans are free. |
+| Supply Crate | 15 | day 20 | Get 2 Tempered Glass, 4 Broken Glass, 1 Electronic Components and 2 Repair Parts right away. |
+| Lottery Ticket | 5 | day 20 | Win 0 to 15 Survival Points at random. |
+
+The day 30, 60 and 100 airdrops take a card on their day, for free.
+
+`ExtraRewards` also puts Scavenger Drone I and II and the 9 drone part blueprints in the draw from about day 20. The game has them but never offers them. They keep the game's costs.
+
+A reward in your rewards file with the same ID replaces the one from the mod. That is what the Rewards tab saves when you change one.
 
 ### The automatic refresh cost
 

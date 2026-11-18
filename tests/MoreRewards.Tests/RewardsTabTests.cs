@@ -99,13 +99,14 @@ public class RewardsTabTests
     }
 
     // End-of-day rewards come after the disaster, when there is no money, so NEW REWARD leaves out the effects that only
-    // work before it: money, shopping, the loan, the countdown. Every other effect is still there, named or raw.
+    // work before it: money, shopping, the loan, the countdown. Every other effect is still there, named or raw, and so
+    // are the effects More Rewards runs itself.
     [Fact]
     public void New_reward_leaves_out_effects_that_only_work_before_the_disaster()
     {
         Load("""{ "rewards": [] }""", templates: "{ Savings_Plan: {}, AE_HomePackageMax: {}, PreDisaster_AddGold: {}, PreDisaster_AddWeight: {}, LoanMaxBonus: {}, AE_FurnitureDiscount: {}, VehicleTimeReduce: {} }");
 
-        Assert.Equal("game:savings,raw:AE_HomePackageMax", Text("ed.cat.list.map(function (f) { return f.id; }).sort().join(',')"));
+        Assert.Equal("game:savings,mr:ban-tokens,mr:free-refresh,mr:investor,mr:lottery,mr:more-cards,mr:more-locks,mr:supply-crate,raw:AE_HomePackageMax", Text("ed.cat.list.map(function (f) { return f.id; }).sort().join(',')"));
     }
 
     // The three day rules go into the file only when they are set, and read back as they were written.

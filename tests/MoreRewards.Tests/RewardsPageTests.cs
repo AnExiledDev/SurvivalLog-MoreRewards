@@ -42,7 +42,7 @@ public class RewardsPageTests
     [Fact]
     public void Game_rewards_go_with_every_level_and_its_pools()
     {
-        var data = Data(RewardsPage.DataCall(Game, """{ "rewards": [] }""", Array.Empty<string>(), null));
+        var data = Data(RewardsPage.DataCall(Game, """{ "rewards": [] }""", Array.Empty<string>(), BuiltInRewards.None));
         var reward = Assert.Single(data.GetProperty("game").EnumerateArray());
 
         Assert.Equal(31271, reward.GetProperty("id").GetInt32());
@@ -67,7 +67,7 @@ public class RewardsPageTests
     [Fact]
     public void Values_hold_only_the_fields_an_effect_sets()
     {
-        var data = Data(RewardsPage.DataCall(Game, "{}", Array.Empty<string>(), null));
+        var data = Data(RewardsPage.DataCall(Game, "{}", Array.Empty<string>(), BuiltInRewards.None));
         var values = data.GetProperty("game")[0].GetProperty("levels")[0].GetProperty("values");
 
         Assert.Equal(new[] { "FloatValue0" }, values.EnumerateObject().Select(p => p.Name));
@@ -78,7 +78,7 @@ public class RewardsPageTests
     [Fact]
     public void Templates_drop_the_script_folder_and_the_name_field()
     {
-        var templates = Data(RewardsPage.DataCall(Game, "{}", Array.Empty<string>(), null)).GetProperty("templates");
+        var templates = Data(RewardsPage.DataCall(Game, "{}", Array.Empty<string>(), BuiltInRewards.None)).GetProperty("templates");
         var template = Assert.Single(templates.EnumerateObject());
 
         Assert.Equal("AE_PowerSolarEfficiency", template.Name);
@@ -88,7 +88,7 @@ public class RewardsPageTests
     [Fact]
     public void A_game_reward_sends_its_rules_and_other_needs()
     {
-        var reward = Data(RewardsPage.DataCall(Game, "{}", Array.Empty<string>(), null)).GetProperty("game")[0];
+        var reward = Data(RewardsPage.DataCall(Game, "{}", Array.Empty<string>(), BuiltInRewards.None)).GetProperty("game")[0];
 
         Assert.True(reward.GetProperty("isReget").GetBoolean());
         Assert.Equal(6, reward.GetProperty("endless").GetInt32());
@@ -101,7 +101,7 @@ public class RewardsPageTests
     [Fact]
     public void Characters_come_by_ID_with_both_names()
     {
-        var characters = Data(RewardsPage.DataCall(Game, "{}", Array.Empty<string>(), null)).GetProperty("characters");
+        var characters = Data(RewardsPage.DataCall(Game, "{}", Array.Empty<string>(), BuiltInRewards.None)).GetProperty("characters");
 
         Assert.Equal(new[] { 1, 2 }, characters.EnumerateArray().Select(c => c.GetProperty("id").GetInt32()));
         Assert.Equal("Student", characters[1].GetProperty("name").GetProperty("en").GetString());
@@ -110,7 +110,7 @@ public class RewardsPageTests
     [Fact]
     public void Days_come_in_order_with_their_pools_in_draw_order()
     {
-        var days = Data(RewardsPage.DataCall(Game, "{}", Array.Empty<string>(), null)).GetProperty("days");
+        var days = Data(RewardsPage.DataCall(Game, "{}", Array.Empty<string>(), BuiltInRewards.None)).GetProperty("days");
 
         Assert.Equal(new[] { 1, 57 }, days.EnumerateArray().Select(d => d.GetProperty("day").GetInt32()));
         Assert.Equal(new[] { 9107, 3, 1005, 3 }, days[1].GetProperty("pools").EnumerateArray().SelectMany(p => p.EnumerateArray()).Select(n => n.GetInt32()));
@@ -119,18 +119,18 @@ public class RewardsPageTests
     [Fact]
     public void The_tab_gets_each_pool_size_and_how_many_cards_a_day_shows()
     {
-        var data = Data(RewardsPage.DataCall(Game, "{}", Array.Empty<string>(), null, 20));
+        var data = Data(RewardsPage.DataCall(Game, "{}", Array.Empty<string>(), BuiltInRewards.None, 20));
 
         Assert.Equal(20, data.GetProperty("cards").GetInt32());
         Assert.Equal(375, data.GetProperty("poolSizes").GetProperty("9107").GetInt32());
         Assert.Equal(new[] { "1005", "9107", "9114" }, data.GetProperty("poolSizes").EnumerateObject().Select(p => p.Name));
-        Assert.Equal(3, Data(RewardsPage.DataCall(Game, "{}", Array.Empty<string>(), null)).GetProperty("cards").GetInt32());
+        Assert.Equal(3, Data(RewardsPage.DataCall(Game, "{}", Array.Empty<string>(), BuiltInRewards.None)).GetProperty("cards").GetInt32());
     }
 
     [Fact]
     public void Pools_come_once_each_in_order()
     {
-        var pools = Data(RewardsPage.DataCall(Game, "{}", Array.Empty<string>(), null)).GetProperty("pools");
+        var pools = Data(RewardsPage.DataCall(Game, "{}", Array.Empty<string>(), BuiltInRewards.None)).GetProperty("pools");
 
         Assert.Equal(new[] { 1013, 1020 }, pools.EnumerateArray().Select(p => p.GetInt32()));
     }
@@ -138,7 +138,7 @@ public class RewardsPageTests
     [Fact]
     public void Icons_list_the_rewards_first_then_the_items_by_folder_each_once()
     {
-        var icons = Data(RewardsPage.DataCall(Game, "{}", Array.Empty<string>(), null)).GetProperty("icons").EnumerateArray().ToList();
+        var icons = Data(RewardsPage.DataCall(Game, "{}", Array.Empty<string>(), BuiltInRewards.None)).GetProperty("icons").EnumerateArray().ToList();
 
         Assert.Equal(2, icons.Count);
         Assert.Equal("rewards", icons[0].GetProperty("group").GetString());
@@ -150,7 +150,7 @@ public class RewardsPageTests
     [Fact]
     public void The_file_goes_as_plain_json_without_comments()
     {
-        var data = Data(RewardsPage.DataCall(Game, "// note\n{ \"rewards\": [ { \"id\": 31271, \"cost\": 2 }, ] }", Array.Empty<string>(), null));
+        var data = Data(RewardsPage.DataCall(Game, "// note\n{ \"rewards\": [ { \"id\": 31271, \"cost\": 2 }, ] }", Array.Empty<string>(), BuiltInRewards.None));
 
         Assert.Equal(2, data.GetProperty("file").GetProperty("rewards")[0].GetProperty("cost").GetInt32());
     }
@@ -160,7 +160,7 @@ public class RewardsPageTests
     [InlineData(null)]
     public void A_file_that_is_not_json_goes_as_null(string? text)
     {
-        var data = Data(RewardsPage.DataCall(Game, text, Array.Empty<string>(), null));
+        var data = Data(RewardsPage.DataCall(Game, text, Array.Empty<string>(), BuiltInRewards.None));
 
         Assert.Equal(JsonValueKind.Null, data.GetProperty("file").ValueKind);
         Assert.NotEmpty(data.GetProperty("problems").EnumerateArray());
@@ -169,7 +169,7 @@ public class RewardsPageTests
     [Fact]
     public void Problems_come_once_each()
     {
-        var data = Data(RewardsPage.DataCall(Game, """{ "rewards": [ { "id": 1, "levels": [] } ] }""", new[] { "late", "late" }, null));
+        var data = Data(RewardsPage.DataCall(Game, """{ "rewards": [ { "id": 1, "levels": [] } ] }""", new[] { "late", "late" }, BuiltInRewards.None));
         var problems = data.GetProperty("problems").EnumerateArray().Select(p => p.GetString()).ToList();
 
         Assert.Equal(problems.Distinct().Count(), problems.Count);
@@ -180,7 +180,7 @@ public class RewardsPageTests
     [Fact]
     public void Without_wind_power_there_are_no_built_in_rewards()
     {
-        var data = Data(RewardsPage.DataCall(Game, "{}", Array.Empty<string>(), null));
+        var data = Data(RewardsPage.DataCall(Game, "{}", Array.Empty<string>(), BuiltInRewards.None));
 
         Assert.False(data.GetProperty("windPower").GetBoolean());
         Assert.Equal(JsonValueKind.Null, data.GetProperty("builtIn").ValueKind);
@@ -190,12 +190,36 @@ public class RewardsPageTests
     public void With_wind_power_the_wind_rewards_go_as_built_in()
     {
         var wind = RewardFileTests.Resource("MoreRewards.wind-rewards.json");
-        var data = Data(RewardsPage.DataCall(Game, "{}", Array.Empty<string>(), wind));
+        var data = Data(RewardsPage.DataCall(Game, "{}", Array.Empty<string>(), new BuiltInRewards(wind, null)));
         var reward = Assert.Single(data.GetProperty("builtIn").GetProperty("rewards").EnumerateArray());
 
         Assert.True(data.GetProperty("windPower").GetBoolean());
         Assert.Equal(39001, reward.GetProperty("id").GetInt32());
         Assert.Equal(3, reward.GetProperty("levels").GetArrayLength());
+    }
+
+    /// <summary>The tab names ExtraRewards on the extra ones, so it has to know which built-in rewards they are.</summary>
+    [Fact]
+    public void With_extra_rewards_on_they_go_as_built_in_and_their_ids_are_listed()
+    {
+        var extra = RewardFileTests.Resource("MoreRewards.extra-rewards.json");
+        var wind = RewardFileTests.Resource("MoreRewards.wind-rewards.json");
+        var data = Data(RewardsPage.DataCall(Game, "{}", Array.Empty<string>(), new BuiltInRewards(wind, extra)));
+        var builtIn = data.GetProperty("builtIn").GetProperty("rewards").EnumerateArray().Select(reward => reward.GetProperty("id").GetInt32()).ToList();
+        var extraIds = data.GetProperty("extraIds").EnumerateArray().Select(id => id.GetInt32()).ToList();
+
+        Assert.Contains(39001, builtIn);
+        Assert.Contains(39049, builtIn);
+        Assert.Contains(39049, extraIds);
+        Assert.DoesNotContain(39001, extraIds);
+    }
+
+    [Fact]
+    public void With_extra_rewards_off_no_ids_are_listed()
+    {
+        var data = Data(RewardsPage.DataCall(Game, "{}", Array.Empty<string>(), BuiltInRewards.None));
+
+        Assert.Equal(0, data.GetProperty("extraIds").GetArrayLength());
     }
 
     [Fact]
