@@ -20,7 +20,7 @@ namespace MoreRewards;
 public sealed class Plugin : BasePlugin
 {
     internal const string Guid = "com.dev.survivallog.morerewards";
-    private const string Version = "0.12.1";
+    private const string Version = "0.12.2";
     private const long MaxLogBytes = 1024 * 1024;
     private const string RewardsFileName = "MoreRewards.Rewards.json";
 
@@ -99,13 +99,6 @@ public sealed class Plugin : BasePlugin
         tables = new RewardTables(() => enabled.Value ? applies : RewardFile.Empty, log.Write);
         RewardsTicker.Checks.Add(tables.Tick);
         LiveSettings.Watch(() => tables.Changed(), enabled);
-        LiveSettings.Watch(() =>
-        {
-            applies = Read();
-            tables.Changed();
-            log.Write(extraRewards.Value ? "extra rewards on" : "extra rewards off");
-        }, extraRewards);
-
         var windText = hasWindPower ? RewardFileStore.WindText() : null;
         var extraText = RewardFileStore.ExtraText();
         var tab = new RewardsTab(path, tables, () => new BuiltInRewards(windText, extraRewards.Value ? extraText : null), () =>
@@ -115,6 +108,13 @@ public sealed class Plugin : BasePlugin
         }, log.Write);
 
         RewardsTicker.Checks.Add(tab.Tick);
+        LiveSettings.Watch(() =>
+        {
+            applies = Read();
+            tables.Changed();
+            tab.BuiltInChanged();
+            log.Write(extraRewards.Value ? "extra rewards on" : "extra rewards off");
+        }, extraRewards);
 
         return tables;
     }

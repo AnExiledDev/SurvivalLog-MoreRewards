@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.12.2
+
+- Rewards tab: turning `ExtraRewards` on or off now updates the list right away. Before, the tab kept showing the list it had when it first opened, so the extra rewards were missing from it. Unsaved changes on the tab stay.
+- Made for Survival Log 1.1.21271.
+
 ## 0.12.1
 
 - Rewards tab: every effect the game's rewards use now has a name, in English and Chinese, with boxes that say what each number does. Before, many of them showed as an unnamed game script with raw numbers.

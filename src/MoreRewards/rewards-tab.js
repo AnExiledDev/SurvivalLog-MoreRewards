@@ -2279,11 +2279,7 @@
     st.cards = isNum(d.cards) && d.cards >= 3 ? d.cards : 3;
 
     if (!gameDay(st.day)) st.day = st.gameDays.length ? st.gameDays[0].day : 0;
-    st.builtIn = {};
-    st.extraIds = new Set(isArr(d.extraIds) ? d.extraIds.filter(isNum) : []);
-    (isObj(d.builtIn) && isArr(d.builtIn.rewards) ? d.builtIn.rewards : []).forEach(r => {
-      if (isObj(r) && isNum(r.id) && !st.byId[r.id]) st.builtIn[r.id] = r;
-    });
+    readBuiltIn(d);
     st.icons = isArr(d.icons) ? d.icons.filter(i => isObj(i) && typeof i.icon === 'string' && i.icon).map(i => ({
       icon: i.icon,
       unityIcon: typeof i.unityIcon === 'string' ? i.unityIcon : '',
@@ -2295,6 +2291,27 @@
     closeOverlays();
     buildCatalogue();
     buildEntries(st.sel);
+    render();
+  }
+
+  function readBuiltIn(d) {
+    st.builtIn = {};
+    st.extraIds = new Set(isArr(d.extraIds) ? d.extraIds.filter(isNum) : []);
+    (isObj(d.builtIn) && isArr(d.builtIn.rewards) ? d.builtIn.rewards : []).forEach(r => {
+      if (isObj(r) && isNum(r.id) && !st.byId[r.id]) st.builtIn[r.id] = r;
+    });
+  }
+
+  // ExtraRewards was turned on or off while the game runs. Only the rewards the mod adds change, so the player's
+  // unsaved edits stay. Before the first data there is nothing to change, and that data has the new list anyway.
+  function builtIn(d) {
+    if (!isObj(d) || !st.data) return;
+
+    readBuiltIn(d);
+
+    if (st.sel && !entryOrGhost(st.sel)) st.sel = 0;
+
+    st.drawn = null;
     render();
   }
 
@@ -2344,7 +2361,7 @@
     textHtml, toast, tplValues, whyHtml, writeGive
   });
 
-  window.__slmrRewards = { data, saved };
+  window.__slmrRewards = { data, builtIn, saved };
 
   if (!isArr(window.__modmanagerTabs)) window.__modmanagerTabs = [];
 

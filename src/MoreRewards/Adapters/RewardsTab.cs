@@ -75,6 +75,9 @@ internal sealed class RewardsTab
         _page.Run(RewardsPage.DataCall(_tables.Game, text, _tables.Problems, _builtIn(), LiveScreen.IsOn ? LiveScreen.Settings.OptionCount : RewardSettings.GameOptionCount));
     }
 
+    /// <summary>Sends the tab the rewards the mod adds now, after ExtraRewards changed.</summary>
+    public void BuiltInChanged() => _page.Run(RewardsPage.BuiltInCall(_builtIn()));
+
     private void Save(string json)
     {
         _page.Run(RewardsPage.CheckSave(json) switch

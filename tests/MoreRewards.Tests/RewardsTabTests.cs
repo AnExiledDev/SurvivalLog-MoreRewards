@@ -225,6 +225,34 @@ public class RewardsTabTests
         Assert.DoesNotContain("cards a day", Text("T.dayHtml(1)"));
     }
 
+    // The tab asks for its data once. Turning ExtraRewards on in game left Investor and the rest out of the list until
+    // the page reloaded, so the plugin sends the mod's rewards again, and the player's unsaved edits stay.
+    [Fact]
+    public void Turning_extra_rewards_on_and_off_in_game_changes_the_list_and_keeps_unsaved_edits()
+    {
+        var extra = RewardFileTests.Resource("MoreRewards.extra-rewards.json");
+        Load("""{ "rewards": [ { "id": 31271 } ] }""");
+        _engine.Execute("T.st.entries[0].levels[0].cost = 77; T.st.dirty = true;");
+
+        Assert.False(Bool("T.allIds().indexOf(39040) >= 0"));
+
+        _engine.Execute(MoreRewards.Core.RewardsPage.BuiltInCall(new MoreRewards.Core.BuiltInRewards(null, extra)));
+
+        Assert.True(Bool("T.allIds().indexOf(39040) >= 0"));
+        Assert.Contains("Investor I", Text("T.searchExtra(T.ghostOf(39040))"));
+        Assert.True(Bool("T.st.extraIds.has(39040)"));
+        Assert.True(Bool("T.st.dirty"));
+        Assert.Equal(77, (int)_engine.Evaluate("T.st.entries[0].levels[0].cost").AsNumber());
+
+        _engine.Execute("T.st.sel = 39040;");
+        _engine.Execute(MoreRewards.Core.RewardsPage.BuiltInCall(MoreRewards.Core.BuiltInRewards.None));
+
+        Assert.False(Bool("T.allIds().indexOf(39040) >= 0"));
+        Assert.False(Bool("T.ghostOf(39040)"));
+        Assert.Equal(0, (int)_engine.Evaluate("T.st.sel").AsNumber());
+        Assert.True(Bool("T.st.dirty"));
+    }
+
     // Day 1 draws two from 9102 and one from 1005; day 7 one each from 9103 and 9121. Twelve game rewards fill the pools.
     // Loading closes any open menu, which lets go of its page listeners, so the page gets a stand-in for that.
     private void Load(string file, int cards = 5, string templates = "{}", string game = "game")

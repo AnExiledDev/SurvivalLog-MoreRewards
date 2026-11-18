@@ -100,6 +100,18 @@ public static class RewardsPage
         return "window.__slmrRewards&&window.__slmrRewards.data(" + Json(writer => WriteData(writer, game, fileText, problems, builtIn, cards)) + ")";
     }
 
+    /// <summary>
+    /// The rewards the mod adds itself, sent again when ExtraRewards changes while the game runs. The tab asks for its
+    /// data only once, so without this it kept showing the list from when it first opened.
+    /// </summary>
+    public static string BuiltInCall(BuiltInRewards builtIn) =>
+        "window.__slmrRewards&&window.__slmrRewards.builtIn(" + Json(writer =>
+        {
+            writer.WriteStartObject();
+            WriteBuiltIn(writer, builtIn);
+            writer.WriteEndObject();
+        }) + ")";
+
     /// <summary>A reply to a save, shown in the tab's status line.</summary>
     public static string SavedCall(bool isSaved, string message) =>
         $"window.__slmrRewards&&window.__slmrRewards.saved({(isSaved ? "true" : "false")},{JsText.Literal(message)})";
