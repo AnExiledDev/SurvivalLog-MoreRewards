@@ -61,6 +61,14 @@ public static class RewardsPage
     public const string Prefix = "slmod|morerewards|rewards|";
     public const string Load = "load";
     public const string Save = "save|";
+    public const string NoScript = "noscript";
+
+    /// <summary>
+    /// A page message without the tab's prefix, such as "load". The Toolkit's mailbox hands over the whole message,
+    /// prefix included.
+    /// </summary>
+    public static string Verb(string message) =>
+        message.StartsWith(Prefix, StringComparison.Ordinal) ? message.Substring(Prefix.Length) : message;
 
     private const string ScriptPrefix = "Buff/";
     private const string RewardIcons = "rewards";

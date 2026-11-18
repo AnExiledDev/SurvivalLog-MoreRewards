@@ -17,7 +17,6 @@ internal sealed class RewardsTab
 {
     private const string Resource = "MoreRewards.rewards-tab.js";
     private const string Global = "window.__slmrRewards";
-    private const string NoScript = "noscript";
 
     private static readonly LocalText Saved = new("Saved. The changes apply now.", "已保存，修改立即生效。");
     private static readonly LocalText NotSaved = new("Not saved:", "未保存：");
@@ -40,7 +39,7 @@ internal sealed class RewardsTab
         _reload = reload;
         _log = log;
         // The tab draws with the Toolkit's reward editor, which goes first.
-        _page = new ToolkitPage(typeof(RewardsTab).Assembly, Resource, Global, RewardsPage.Prefix + NoScript, log)
+        _page = new ToolkitPage(typeof(RewardsTab).Assembly, Resource, Global, RewardsPage.Prefix + RewardsPage.NoScript, log)
         {
             ToolkitScripts = new[] { ToolkitPage.Editor },
         };
@@ -50,11 +49,12 @@ internal sealed class RewardsTab
     {
         _page.KeepInstalled(now);
 
-        while (_inbox.TryTake(out var message))
+        while (_inbox.TryTake(out var whole))
         {
+            var message = RewardsPage.Verb(whole);
             if (message == RewardsPage.Load) Load();
             else if (message.StartsWith(RewardsPage.Save, StringComparison.Ordinal)) Save(message.Substring(RewardsPage.Save.Length));
-            else if (message == NoScript) _page.Install();
+            else if (message == RewardsPage.NoScript) _page.Install();
             else _log("rewards tab: " + message);
         }
     }

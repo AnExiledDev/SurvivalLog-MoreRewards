@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.10.2
+
+- Fixed: the Rewards tab never showed up on the mod's page in the Mod Manager, and the log filled with "rewards tab: ...noscript" lines.
+- Made for Survival Log 1.1.21271.
+
 ## 0.10.1
 
 - The Rewards tab now uses the reward editor in Exiled's Toolkit, the same one New Loop Plus uses. It works as before.
