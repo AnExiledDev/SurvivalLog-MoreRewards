@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.11.1
+
+- Rewards tab: a reward you have not changed shows each of its levels, with what it costs and what it does. Click a level to see its card.
+- Fixed: the Rewards tab showed the game's rewards by their text keys (Talent_Name_31641) instead of their names and descriptions.
+- Fixed: the Rewards tab had the first of all rewards open next to an empty list of your changes.
+- Now needs Exiled's Toolkit 0.27.0 or newer.
+- Made for Survival Log 1.1.21271.
+
 ## 0.11.0
 
 - Rewards tab: a search box finds rewards by name, description or number, in English or Chinese. Enter opens the first one found, Up and Down move through the list and Esc clears the search.

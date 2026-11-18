@@ -19,7 +19,7 @@
     readsHtml, renderPicker, resetOrDelete, round2, roundTrips, saved, scriptOfGive, select, send, setPick, setText,
     showIconGroup, stepper, tag, talentIcons, talentName, textIn, toRaw, unitOf, winEl, writeText, editorCss,
     searchHtml, noMatchHtml, clearSearch, onSearchKey, showSelectedRow, fitHeight, watchHeight,
-    renderAfterChange, watchPresses, refreshSaved
+    renderAfterChange, watchPresses, refreshSaved, keepSelectionInView
   } = window.ExiledEditor.make(T);
 
   const PREFIX = 'slmod|morerewards|rewards|';
@@ -492,10 +492,10 @@
     });
     st.dirty = false;
 
-    const keep = keepId && entryOrGhost(keepId) ? keepId : 0;
-    const first = st.entries.find(e => !e.removed) || st.game[0];
+    st.sel = keepId && entryOrGhost(keepId) ? keepId : 0;
 
-    st.sel = keep || (first ? first.id : 0);
+    if (st.view !== 'days') keepSelectionInView();
+
     st.lv = Math.min(st.lv, Math.max(0, levelCount(st.sel) - 1));
   }
 
@@ -1878,7 +1878,7 @@
     const e = entryOf(st.sel);
 
     switch (a) {
-      case 'view': st.view = v === 'all' || v === 'days' ? v : 'file'; closeMenus(); break;
+      case 'view': st.view = v === 'all' || v === 'days' ? v : 'file'; closeMenus(); if (st.view !== 'days') keepSelectionInView(); break;
       case 'rqx': clearSearch(); return;
       case 'poolmenu': if (st.menu && st.menu.kind === v) closeMenus(); else openPoolMenu(t, v === 'day' ? 'day' : 'reward'); return;
       case 'pmpick': addPool(Number(v)); return;

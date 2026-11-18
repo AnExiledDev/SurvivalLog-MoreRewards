@@ -66,9 +66,11 @@ internal sealed class RewardTables
         var days = config?._Config_DailyRandom_Dict;
         var cache = config?._customCache_k__BackingField;
 
-        if (talents == null || buffs == null || effects == null || conditions == null || pools == null || days == null || cache == null) return;
+        if (config == null || talents == null || buffs == null || effects == null || conditions == null || pools == null || days == null || cache == null) return;
 
         if (talents.Count == 0 || buffs.Count == 0 || effects.Count == 0 || pools.Count == 0) return;
+
+        if (!GameText.IsLoaded(cache._EnglishLanguageMap_k__BackingField, cache._ChineseLanguageMap_k__BackingField)) return;
 
         var tables = (talents.Pointer, buffs.Pointer, effects.Pointer, conditions.Pointer, pools.Pointer, days.Pointer);
 
