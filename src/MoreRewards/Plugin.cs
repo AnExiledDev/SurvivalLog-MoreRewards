@@ -72,8 +72,9 @@ public sealed class Plugin : BasePlugin
     }
 
     /// <summary>
-    /// Writes the player's rewards file into the game's tables, with the extra rewards under it while ExtraRewards is on
-    /// and the wind rewards under it when Wind Power is installed. An entry in the player's file that uses one of their
+    /// Writes the player's rewards file into the game's tables, with the extra rewards under it and the wind rewards
+    /// under it when Wind Power is installed. With ExtraRewards off, the extra rewards are never offered, but their rows
+    /// stay so a save that owns one keeps it. An entry in the player's file that uses one of their
     /// IDs replaces it. Without Wind Power, no reward that gives it more power applies. With the mod off, nothing
     /// applies. A save from the Rewards tab reads the file again and writes it into the tables at once.
     /// </summary>
@@ -85,9 +86,10 @@ public sealed class Plugin : BasePlugin
         var path = Path.Combine(Paths.ConfigPath, RewardsFileName);
         var wind = hasWindPower ? RewardFileStore.Wind(log.Write) : RewardFile.Empty;
         var extra = RewardFileStore.Extra(log.Write);
+        var extraUnoffered = extra.Unoffered();
         RewardFile Read()
         {
-            var file = RewardFileStore.Load(path, log.Write).Over(extraRewards.Value ? extra : RewardFile.Empty).Over(wind);
+            var file = RewardFileStore.Load(path, log.Write).Over(extraRewards.Value ? extra : extraUnoffered).Over(wind);
 
             return hasWindPower ? file : file.Without(windEffect);
         }

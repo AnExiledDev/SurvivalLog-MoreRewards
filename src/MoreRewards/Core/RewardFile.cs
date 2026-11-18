@@ -128,6 +128,24 @@ public sealed record RewardFile(IReadOnlyList<RewardEntry> Rewards, IReadOnlyLis
             Problems.Concat(under.Problems).ToList());
     }
 
+    /// <summary>
+    /// Only the file's new rewards, with no pools, never offered, and switched off so the shop skips them too. Its
+    /// entries for the game's rewards are left out. The rows still go in the game's tables, because the game drops an
+    /// owned reward with no row when it loads a save, and a world's settings only come in after that.
+    /// </summary>
+    public RewardFile Unoffered() => this with
+    {
+        Rewards = Rewards.Where(reward => reward.CopyFrom != null).Select(reward => reward with
+        {
+            Pools = Array.Empty<PoolEntry>(),
+            AnyDay = null,
+            AlwaysOffered = false,
+            Fields = reward.Fields.Append(new FieldSet("Available", new FieldValue.Number(0))).ToList(),
+            Levels = reward.Levels?.Select(level => level with { Pools = null }).ToList(),
+        }).ToList(),
+        Days = Array.Empty<DayEntry>(),
+    };
+
     /// <summary>The file without the rewards that give <paramref name="effect"/>.</summary>
     public RewardFile Without(string effect) =>
         this with { Rewards = Rewards.Where(reward => reward.Gives.All(give => give.Effect != effect)).ToList() };

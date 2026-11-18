@@ -3,6 +3,10 @@
 ## 0.12.2
 
 - Rewards tab: turning `ExtraRewards` on or off now updates the list right away. Before, the tab kept showing the list it had when it first opened, so the extra rewards were missing from it. Unsaved changes on the tab stay.
+- Ban Tokens gives its 3 free bans each time you buy it. Before, buying it gave none.
+- The free airdrops on days 30, 60 and 100 can be taken once. Before, they came back after every refresh.
+- A world that turns on `ExtraRewards` in Customizable Difficulty keeps the extra rewards you bought there when you load it again. Before, they were lost when `ExtraRewards` was off for every other world.
+- With `ExtraRewards` off, the extra rewards you already own keep working. No new ones are offered.
 - Made for Survival Log 1.1.21271.
 
 ## 0.12.1

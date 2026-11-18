@@ -46,6 +46,8 @@ public sealed class RunBook
     private const string ShopTodayKey = "slmr.shop.today";
     private const string ShopDayKey = "slmr.shop.day";
     private const string FreeBansUsedKey = "slmr.freebans.used";
+    private const string FreeBansBoughtKey = "slmr.freebans.bought";
+    private const string BoughtOnKey = "slmr.boughton.";
     private const string FreeRefreshesUsedKey = "slmr.freerefresh.used";
 
     /// <summary>The lock counters' names, made once: the screen's every rebuild reads them.</summary>
@@ -187,6 +189,19 @@ public sealed class RunBook
     public int FreeBansUsed => _counters.Get(FreeBansUsedKey);
 
     public void UseFreeBan() => _counters.Set(FreeBansUsedKey, FreeBansUsed + 1);
+
+    /// <summary>
+    /// Free bans from rewards bought this run that can be bought again. The game never counts those as owned, so their
+    /// bans are added up here when they are bought.
+    /// </summary>
+    public int FreeBansBought => _counters.Get(FreeBansBoughtKey);
+
+    public void AddFreeBans(int count) => _counters.Set(FreeBansBoughtKey, FreeBansBought + Math.Max(count, 0));
+
+    /// <summary>Whether the reward was bought on <paramref name="day"/>.</summary>
+    public bool WasBoughtOn(int id, int day) => _counters.Get(BoughtOnKey + id) == day + 1;
+
+    public void RecordBuy(int id, int day) => _counters.Set(BoughtOnKey + id, day + 1);
 
     /// <summary>Free refreshes used since the day's rewards were drawn.</summary>
     public int FreeRefreshesUsed => _counters.Get(FreeRefreshesUsedKey);

@@ -32,7 +32,7 @@ internal static class LiveScreen
     /// <summary>The perks, the free bans left or the free refreshes left changed.</summary>
     public static event Action? PerksChanged;
 
-    public static int FreeBansLeft => Math.Max(Perks.BanTokens - Book.FreeBansUsed, 0);
+    public static int FreeBansLeft => Math.Max(Perks.BanTokens + Book.FreeBansBought - Book.FreeBansUsed, 0);
 
     /// <summary>Whether the next refresh is free, from the day's free refreshes.</summary>
     public static bool IsFreeRefreshReady => IsOn && Perks.FreeRefreshes > Book.FreeRefreshesUsed;
@@ -57,6 +57,15 @@ internal static class LiveScreen
     public static void UseFreeBan()
     {
         Book.UseFreeBan();
+        Rebuild();
+        PerksChanged?.Invoke();
+    }
+
+    public static void AddFreeBans(int count)
+    {
+        if (count <= 0) return;
+
+        Book.AddFreeBans(count);
         Rebuild();
         PerksChanged?.Invoke();
     }

@@ -53,6 +53,15 @@ internal static class OfferPatch
     /// <summary>Each level of every "alwaysOffered" reward in the rewards file now; empty while the mod is off.</summary>
     public static void UseAlwaysOffered(IReadOnlyList<int> rewards) => _alwaysOffered = rewards;
 
+    /// <summary>
+    /// An "alwaysOffered" reward bought today gets no card again today. One that can be bought again would otherwise
+    /// come back on every refresh.
+    /// </summary>
+    public static void Bought(int id)
+    {
+        if (_alwaysOffered.Contains(id)) LiveScreen.Book.RecordBuy(id, RunGame.Day());
+    }
+
     /// <summary>The day's reward groups, or null on a day the game gives a fixed list.</summary>
     public static IReadOnlyList<RewardGroup>? DayGroups(int day)
     {
@@ -73,8 +82,8 @@ internal static class OfferPatch
     /// What the player set and passed on. An extra lock on a reward the game would no longer offer (bought, or its
     /// needs gone) is let go here, the way the game lets go of a locked card. An "alwaysOffered" reward gets its card only
     /// while the game would offer it, by the same check: owned, not yet unlocked by its needs, before its first day
-    /// or after its last, it gets none. Only the next level of a reward passes, since the ones below are owned and the
-    /// ones above need it.
+    /// or after its last, it gets none. It also gets none on a day it was bought. Only the next level of a reward
+    /// passes, since the ones below are owned and the ones above need it.
     /// </summary>
     public static OfferAsk Ask(SurvivalPlanningComponent planning, int day, int pinnedId, int pinnedSlot)
     {
@@ -84,7 +93,8 @@ internal static class OfferPatch
         var book = LiveScreen.Book;
         var extras = book.Locks();
         var kept = extras.Where(held => planning.CanKeepPinnedPlan(held.Id)).ToList();
-        var always = _alwaysOffered.Where(planning.CanKeepPinnedPlan).ToList();
+        var today = RunGame.Day();
+        var always = _alwaysOffered.Where(id => planning.CanKeepPinnedPlan(id) && !book.WasBoughtOn(id, today)).ToList();
 
         if (kept.Count != extras.Count) book.SetLocks(kept);
 

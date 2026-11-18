@@ -28,6 +28,35 @@ public class RunBookTests
         Assert.Equal(new[] { new RewardLock(1, 0), new RewardLock(3, 2) }, book.Locks());
     }
 
+    // Free bans from a reward bought again add up, and the ones used are counted apart.
+    [Fact]
+    public void Bought_free_bans_add_up_over_the_run()
+    {
+        var book = new RunBook(new FakeCounters());
+
+        book.AddFreeBans(3);
+        book.AddFreeBans(3);
+        book.UseFreeBan();
+
+        Assert.Equal(6, book.FreeBansBought);
+        Assert.Equal(1, book.FreeBansUsed);
+    }
+
+    // A reward that is always offered and can be bought again would come back on every refresh, so a buy keeps it
+    // away for that day only.
+    [Fact]
+    public void A_buy_counts_for_its_day_only()
+    {
+        var book = new RunBook(new FakeCounters());
+
+        book.RecordBuy(39035, 30);
+
+        Assert.True(book.WasBoughtOn(39035, 30));
+        Assert.False(book.WasBoughtOn(39035, 31));
+        Assert.False(book.WasBoughtOn(39036, 30));
+        Assert.False(book.WasBoughtOn(39035, 0));
+    }
+
     [Fact]
     public void A_new_run_has_no_locks_bans_or_shop_buys()
     {

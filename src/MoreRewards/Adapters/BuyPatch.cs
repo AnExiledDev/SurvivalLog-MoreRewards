@@ -9,7 +9,8 @@ using MoreRewards.Core;
 namespace MoreRewards.Adapters;
 
 /// <summary>
-/// Pays out the rewards that act once, when they are bought: a lottery's survival points and a supply crate's items.
+/// Pays out the rewards that act once, when they are bought: a lottery's survival points, a supply crate's items and
+/// the free bans of a reward that can be bought again.
 /// Every buy goes through SurvivalResultsManager.OnBuySurvivalPlan, the shop's too. It takes the points and adds the
 /// reward, or does neither when the player cannot pay, so a buy went through when the points went down or the owned
 /// list grew. Items go in the bag the way the game's item rewards do (AE_AddItemInBag): one at a time, and what does
@@ -49,7 +50,8 @@ internal static class BuyPatch
         {
             if (!LiveScreen.IsOn || __instance == null) return;
 
-            var isBought = __instance.GetSurvivalPoint() < __state.Points || OwnedCount() > __state.Owned;
+            var row = GameSingleton.Existing<ConfigManager>()?.Get_Config_Talent(talentId);
+            var isBought = __instance.GetSurvivalPoint() < __state.Points || OwnedCount() > __state.Owned || IsFreeBuy(row);
 
             if (!isBought) return;
 
@@ -57,6 +59,11 @@ internal static class BuyPatch
 
             PayLotteries(__instance, Payouts.LotteriesOf(grants, talentId));
             GiveItems(Payouts.CratesOf(grants, talentId));
+
+            // A reward that can be bought again is never owned, so Perks never counts its bans. They are added now.
+            if (row?.IsReget == true) LiveScreen.AddFreeBans(Payouts.BanTokensOf(grants, talentId));
+
+            OfferPatch.Bought(talentId);
             PerkWatch.Refresh();
         }
         catch (Exception ex)
@@ -64,6 +71,12 @@ internal static class BuyPatch
             _hooks?.Fail(Doing, ex);
         }
     }
+
+    /// <summary>
+    /// A free reward that can be bought again moves neither the points nor the owned list. The game turns down a buy
+    /// only when the player is dead, the reward has no row, or the points are short, so a free one goes through.
+    /// </summary>
+    private static bool IsFreeBuy(Config_Talent? row) => row is { LvUpCost: <= 0 } && RunGame.Role() is { IsDead: false };
 
     private static int OwnedCount() => RunGame.Planning()?._SaveCache_k__BackingField?.Count ?? 0;
 

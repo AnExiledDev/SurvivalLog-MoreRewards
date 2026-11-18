@@ -81,6 +81,26 @@ public class ExtraRewardsTests
         Assert.All(counts, count => Assert.True(count > 0));
     }
 
+    // With ExtraRewards off, a save that owns an extra reward must still find its row, so the new rewards stay in the
+    // tables. They must not show up on a card or in the shop, and the game's rewards stay as they are.
+    [Fact]
+    public void Unoffered_extras_keep_every_new_reward_but_offer_none()
+    {
+        var extra = Extra();
+        var unoffered = extra.Unoffered();
+
+        Assert.Equal(extra.Rewards.Where(reward => reward.CopyFrom != null).Select(reward => reward.Id), unoffered.Rewards.Select(reward => reward.Id));
+        Assert.Empty(unoffered.Days);
+        Assert.All(unoffered.Rewards, reward =>
+        {
+            Assert.Empty(reward.Pools);
+            Assert.Null(reward.AnyDay);
+            Assert.False(reward.AlwaysOffered);
+            Assert.All(reward.Levels ?? Array.Empty<LevelEntry>(), level => Assert.Null(level.Pools));
+            Assert.Equal(new FieldValue.Number(0), reward.Fields.Last(set => set.Field == "Available").Value);
+        });
+    }
+
     [Fact]
     public void Each_more_rewards_effect_the_mod_offers_has_a_card()
     {
@@ -115,6 +135,36 @@ public class ExtraRewardsGameTests
         var plan = RewardPlan.Build(ExtraRewardsTests.Extra().Over(wind), DumpTables.Load());
 
         Assert.Empty(plan.Problems);
+    }
+
+    [Fact]
+    public void Unoffered_extras_build_switched_off_and_in_no_pool()
+    {
+        var unoffered = ExtraRewardsTests.Extra().Unoffered();
+        var plan = RewardPlan.Build(unoffered, DumpTables.Load());
+
+        Assert.Empty(plan.Problems);
+        Assert.Empty(plan.Pools);
+        Assert.Empty(plan.AlwaysOffered);
+
+        foreach (var id in unoffered.Rewards.SelectMany(reward => reward.Ids))
+        {
+            var row = plan.Rows.Last(edit => edit.Table == Table.Reward && edit.Id == id);
+
+            Assert.Equal(new FieldValue.Number(0), row.Fields.Last(set => set.Field == "Available").Value);
+        }
+    }
+
+    // Ban Tokens can be bought again, so the game never counts it as owned. Its bans are paid out when it is bought.
+    [Fact]
+    public void Ban_tokens_can_be_bought_again_and_pay_three_free_bans()
+    {
+        var extra = ExtraRewardsTests.Extra();
+        var tokens = Assert.Single(extra.Rewards, reward => reward.Gives.Any(give => give.Effect == RewardPlan.MrPrefix + RewardPlan.BanTokens));
+        var plan = RewardPlan.Build(extra, DumpTables.Load());
+
+        Assert.Equal(new FieldValue.Flag(true), tokens.Fields.Last(set => set.Field == "IsReget").Value);
+        Assert.Equal(3, Payouts.BanTokensOf(plan.Grants, tokens.Id));
     }
 
     /// <summary>The game's tables as the Data Dump wrote them, answering the way the mod's live tables do.</summary>
