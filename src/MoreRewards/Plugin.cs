@@ -15,12 +15,12 @@ using MoreRewards.Core;
 namespace MoreRewards;
 
 [BepInPlugin(Guid, "More Rewards", Version)]
-[BepInDependency(ExiledToolkit.Plugin.Guid, ">=0.20.0")]
+[BepInDependency(ExiledToolkit.Plugin.Guid, ">=0.24.0")]
 [BepInDependency(WindLink.Guid, BepInDependency.DependencyFlags.SoftDependency)]
 public sealed class Plugin : BasePlugin
 {
     private const string Guid = "com.dev.survivallog.morerewards";
-    private const string Version = "0.10.0";
+    private const string Version = "0.10.1";
     private const long MaxLogBytes = 1024 * 1024;
     private const string RewardsFileName = "MoreRewards.Rewards.json";
 

@@ -39,7 +39,11 @@ internal sealed class RewardsTab
         _builtIn = builtIn;
         _reload = reload;
         _log = log;
-        _page = new ToolkitPage(typeof(RewardsTab).Assembly, Resource, Global, RewardsPage.Prefix + NoScript, log);
+        // The tab draws with the Toolkit's reward editor, which goes first.
+        _page = new ToolkitPage(typeof(RewardsTab).Assembly, Resource, Global, RewardsPage.Prefix + NoScript, log)
+        {
+            ToolkitScripts = new[] { ToolkitPage.Editor },
+        };
     }
 
     public void Tick(float now)

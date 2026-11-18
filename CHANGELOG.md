@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.10.1
+
+- The Rewards tab now uses the reward editor in Exiled's Toolkit, the same one New Loop Plus uses. It works as before.
+- Now needs Exiled's Toolkit 0.24.0 or newer.
+- Made for Survival Log 1.1.21271.
+
 ## 0.10.0
 
 - Rewards tab: each reward now has its rules. Pick the first day it can be offered, whether it comes up in any run or only in Endless Mode, and which characters get it. Tick "Can be offered and bought again" to let it come back after you own it, and set how many times its effect stacks.
