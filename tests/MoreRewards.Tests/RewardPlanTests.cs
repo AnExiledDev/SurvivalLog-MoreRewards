@@ -338,6 +338,18 @@ public class RewardPlanTests
         Assert.All(plan.Grants, grant => Assert.Equal(new[] { new FieldSet(RewardPlan.WindShare, new FieldValue.Number(0.15)) }, grant.Fields));
     }
 
+    // Each wind level gives 15% more, so from level II on the card also says what the levels so far give together.
+    [Fact]
+    public void Each_wind_card_from_level_two_on_names_the_total()
+    {
+        var plan = RewardPlan.Build(RewardFile.Parse(RewardFileTests.Resource("MoreRewards.wind-rewards.json")), new FakeTables().WithSunlightThree());
+        var card = (int id) => Assert.Single(plan.Texts, text => text.Key == "MoreRewards_Reward_Dec_" + id);
+
+        Assert.Equal("Increases wind turbine power generation by 15%.", card(39001).En);
+        Assert.Equal(("Increases wind turbine power generation by 15%. In total: +30%.", "风力发电机产电 +15%（累计+30%）"), (card(39002).En, card(39002).Zh));
+        Assert.Equal(("Increases wind turbine power generation by 15%. In total: +45%.", "风力发电机产电 +15%（累计+45%）"), (card(39003).En, card(39003).Zh));
+    }
+
     /// <summary>Sunlight Collection's pools in the game's Data Dump, card by card.</summary>
     [Fact]
     public void Each_wind_reward_is_in_the_same_pools_as_its_sunlight_card_with_the_same_weights()

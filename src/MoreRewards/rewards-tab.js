@@ -6,8 +6,10 @@
   if (window.__slmrRewards) return;
   if (!window.ExiledEditor || window.ExiledEditor.version < 1) return;
 
-  // The shared editor from Exiled's Toolkit. It reads this tab's side from T, filled in below.
-  const T = {};
+  // The shared editor from Exiled's Toolkit. It reads this tab's side from T, filled in below. Each level is a talent
+  // of its own, and the game adds its numbers to the levels below it. That goes in before make, since make words a few
+  // effects as a raise per level for it.
+  const T = { levelsAddUp: true };
   const {
     FX, FX_BY_ID, GAME_PREFIX, L, MAX_GIVES, MAX_LEVELS, NO_SCRIPT, REWARD_ICONS, TOAST_MS, VARS, adopt, afterRemove,
     autoDesc, autoLevelText, availableOptions, baseText, cat, choose, chooseButton, clampLevel, clone, closeIcons,
@@ -19,7 +21,7 @@
     readsHtml, renderPicker, resetOrDelete, round2, roundTrips, saved, scriptOfGive, select, send, setPick, setText,
     showIconGroup, stepper, tag, talentIcons, talentName, textIn, toRaw, unitOf, winEl, writeText, editorCss,
     searchHtml, noMatchHtml, clearSearch, onSearchKey, showSelectedRow, fitHeight, watchHeight,
-    renderAfterChange, watchPresses, refreshSaved, keepSelectionInView, addsUp, totalText, totalNoteHtml
+    renderAfterChange, watchPresses, refreshSaved, keepSelectionInView, addsUp, totalText, totalNoteHtml, plainDesc
   } = window.ExiledEditor.make(T);
 
   const PREFIX = 'slmod|morerewards|rewards|';
@@ -434,7 +436,10 @@
       e.gives = [];
     }
 
-    e.autoText = e.gives.length > 0 && e.levels.every((l, i) => !!l.desc && l.desc.en === autoDesc(e, i, false) && l.desc.zh === autoDesc(e, i, true));
+    // Text the editor wrote before the cards named their totals still counts as the editor's, so it gets the totals.
+    const wroteIt = (l, i, write) => l.desc.en === write(e, i, false) && l.desc.zh === write(e, i, true);
+
+    e.autoText = e.gives.length > 0 && e.levels.every((l, i) => !!l.desc && (wroteIt(l, i, autoDesc) || wroteIt(l, i, plainDesc)));
 
     return e;
   }
@@ -1223,10 +1228,20 @@
 
   function levelsHtml(e) {
     const n = e.levels.length;
-    const valuesLocked = e.givesLocked;
     const total = e.levels.reduce((sum, l) => sum + l.cost, 0);
     const chips = e.levels.map((l, i) => '<span data-a="lv" data-v="' + i + '"' + (i === st.lv ? ' class="is-on"' : '') + '>Lv.' + (i + 1) + '</span>').join('');
     const canAdd = n < MAX_LEVELS;
+
+    return '<div class="lvs">' + chips +
+      (canAdd ? '<span class="is-add" data-a="addlv">+ ' + L('LEVEL', '等级') + '</span>' : '') +
+      '<span class="total">' + L('To max level', '升满共需') + ' <b>' + numText(total) + '</b> ' + L('points', '点') + '</span></div>' +
+      levelTableHtml(e) + chainHtml(e) + switchedOffHtml(e) + poolsHtml(e) + offeredHtml(e);
+  }
+
+  // Each effect's number is what that level gives on its own, so where the levels add up its column says "this level".
+  function levelTableHtml(e) {
+    const n = e.levels.length;
+    const valuesLocked = e.givesLocked;
     const cols = [];
 
     e.gives.forEach((g, gi) => numsOf(g.fx).forEach(p => cols.push({ g, gi, p })));
@@ -1235,7 +1250,8 @@
     const sums = addsUp(e);
     const zh = st.lang === 'zh';
     const head = '<tr><th>' + L('LEVEL', '等级') + '</th><th>' + L('COST', '消耗') + '</th>' +
-      cols.map(c => '<th>' + esc(L(c.p.en, c.p.zh).toUpperCase()) + (many ? '<small>' + esc(fxName(c.g.fx, zh)) + '</small>' : '') + '</th>').join('') +
+      cols.map(c => '<th>' + esc(L(c.p.en, c.p.zh).toUpperCase()) + (many ? '<small>' + esc(fxName(c.g.fx, zh)) + '</small>' : '') +
+        (sums ? '<small>' + L('this level', '本级') + '</small>' : '') + '</th>').join('') +
       (sums ? '<th>' + L('IN TOTAL', '累计') + '</th>' : '') + '<th></th></tr>';
     const rows = e.levels.map((l, i) => '<tr' + (i === st.lv ? ' class="is-on"' : '') + '>' +
       '<td class="l" data-a="lv" data-v="' + i + '">Lv.' + (i + 1) + '</td>' +
@@ -1245,10 +1261,7 @@
       (i > 0 && i === n - 1 ? '<td class="x" data-a="rmlv" title="' + L('Remove', '移除') + '">&#x2715;</td>' : '<td></td>') +
       '</tr>').join('');
 
-    return '<div class="lvs">' + chips +
-      (canAdd ? '<span class="is-add" data-a="addlv">+ ' + L('LEVEL', '等级') + '</span>' : '') +
-      '<span class="total">' + L('To max level', '升满共需') + ' <b>' + numText(total) + '</b> ' + L('points', '点') + '</span></div>' +
-      '<table class="lt">' + head + rows + '</table>' + (sums ? totalNoteHtml() : '') + chainHtml(e) + switchedOffHtml(e) + poolsHtml(e) + offeredHtml(e);
+    return '<table class="lt">' + head + rows + '</table>' + (sums ? totalNoteHtml(e) : '');
   }
 
   function chainHtml(e) {
@@ -2110,10 +2123,8 @@
 
   Object.assign(T, {
     CSS, PREFIX, SCOPES, STYLE_ID, actionsHtml, allIds, buildEntries, canEditGives, closeMenus, detailHtml, editText,
-    effectValues, firstTpl, footer, ghostOf, givesHtml, isAvailable, levelsHtml, lookHtml, makeGive, pickerHead,
-    previewHtml, render, rowsHtml, searchExtra, srcTag, st, textHtml, toast, tplValues, whyHtml, writeGive,
-    // Each level is a talent of its own, and the game adds its numbers to the levels below it.
-    levelsAddUp: true
+    effectValues, firstTpl, footer, ghostOf, givesHtml, isAvailable, levelTableHtml, levelsHtml, lookHtml, makeGive,
+    pickerHead, previewHtml, render, rowsHtml, searchExtra, srcTag, st, textHtml, toast, tplValues, whyHtml, writeGive
   });
 
   window.__slmrRewards = { data, saved };

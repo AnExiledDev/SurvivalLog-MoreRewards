@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.11.4
+
+- Rewards tab: each effect's column in the levels table says "this level", since that number is what one level adds. IN TOTAL is what the player has with the levels below it.
+- Rewards tab: a new effect starts at the same number on every level. Better solar panels started at 20%, 30% and 40%, which gave 90% at level III.
+- Rewards tab: the card text the editor writes says what the player has in total from level II on, such as "In total: +30%." A reward whose text the editor wrote gets the totals the next time you change it and save.
+- Rewards tab: the totals follow how the game counts each effect. Discounts multiply, so two levels of 10% off make 19% off. Start with a skill level counts only the highest level. The note under the levels table says so.
+- Rewards tab: Higher loan limit and Backpack keeps food longer give a raise per level, such as +300 to the loan limit, and add up like the rest.
+- Wind Collection II and III say what the levels so far give together: +30% and +45%.
+- Now needs Exiled's Toolkit 0.29.0 or newer.
+- Made for Survival Log 1.1.21271.
+
 ## 0.11.3
 
 - Mod Manager's Conflicts tab can now see what More Rewards changes in the game, like the rewards it adds to the reward pools, the refresh cost and the interest cap, so it can show when another mod changes the same things.
