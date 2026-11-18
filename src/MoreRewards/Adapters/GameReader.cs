@@ -55,10 +55,63 @@ internal static class GameReader
                 first._Icon_k__BackingField ?? "",
                 Needs(first, conditions),
                 Furniture(first, conditions),
+                Rules(first, buffs, conditions),
                 chain.Select(levelOf).ToList()));
         }
 
-        return new GameSnapshot(list, templates, ItemIcons(config), poolIds);
+        return new GameSnapshot(list, templates, ItemIcons(config), poolIds, Characters(config, english, chinese), Days(config));
+    }
+
+    /// <summary>The condition fields the tab edits itself; the rest are shown as they are.</summary>
+    private static readonly HashSet<string> EditedNeeds = new(StringComparer.Ordinal) { "ID", "Source", "TalentNeed", "NeedFurnitureObtainable", "SurvivalToDay" };
+
+    private static GameRules Rules(Config_Talent row, Il2CppSystem.Collections.Generic.Dictionary<int, Config_Buff> buffs, Il2CppSystem.Collections.Generic.Dictionary<int, Config_ConditionSet> conditions)
+    {
+        var buffId = row._BuffID_k__BackingField;
+        var condition = Condition(row, conditions);
+
+        return new GameRules(
+            row._IsReget_k__BackingField,
+            row._EndlessMode_k__BackingField,
+            Ints(row._PlayerSelectId_k__BackingField),
+            buffId != 0 && buffs.ContainsKey(buffId) ? buffs[buffId]?._MaxLayerCount_k__BackingField ?? 0 : 0,
+            condition?._SurvivalToDay_k__BackingField ?? 0,
+            condition == null ? Array.Empty<string>() : RowFields.Describe(condition, EditedNeeds));
+    }
+
+    private static List<GameCharacter> Characters(ConfigManager config, LanguageMap? english, LanguageMap? chinese)
+    {
+        var characters = new List<GameCharacter>();
+        var table = config._Config_PlayerSelect_Dict;
+
+        if (table == null) return characters;
+
+        foreach (var row in table.Values)
+        {
+            if (row != null) characters.Add(new GameCharacter(row._ID_k__BackingField, Text(english, chinese, row._Name_k__BackingField, row._Name_Local_k__BackingField)));
+        }
+
+        return characters;
+    }
+
+    private static List<DayEntry> Days(ConfigManager config)
+    {
+        var days = new List<DayEntry>();
+        var table = config._Config_DailyRandom_Dict;
+
+        if (table == null) return days;
+
+        foreach (var row in table.Values)
+        {
+            if (row == null) continue;
+
+            var pools = Ints(row._RandomPlanID_k__BackingField);
+            var amounts = Ints(row._RandomAmount_k__BackingField);
+
+            days.Add(new DayEntry(row._Day_k__BackingField, pools.Select((pool, i) => new DayPool(pool, i < amounts.Count ? amounts[i] : 0)).ToList()));
+        }
+
+        return days;
     }
 
     private static GameRewardLevel Level(Config_Talent row, Il2CppSystem.Collections.Generic.Dictionary<int, Config_Buff> buffs, Il2CppSystem.Collections.Generic.Dictionary<int, Config_Effect> effects, LanguageMap? english, LanguageMap? chinese, Dictionary<int, List<PoolEntry>> pools)

@@ -12,16 +12,35 @@ namespace MoreRewards.Core;
 /// <summary>One level of a game reward as the Rewards tab shows it. <paramref name="Values"/> are the fields of the effect it runs.</summary>
 public sealed record GameRewardLevel(int Id, int Cost, LocalText Name, LocalText Description, string Script, IReadOnlyList<FieldSet> Values, IReadOnlyList<PoolEntry> Pools);
 
+/// <summary>
+/// The rules on a game reward's first level: whether it can be bought again and how far it stacks, which runs (0 any,
+/// 6 endless only) and characters get it, the first day it can be offered, and the other needs of its condition set,
+/// which the tab shows but does not change.
+/// </summary>
+public sealed record GameRules(bool IsReget, int Endless, IReadOnlyList<int> Characters, int Layers, int FromDay, IReadOnlyList<string> AlsoNeeds)
+{
+    public static readonly GameRules None = new(false, 0, Array.Empty<int>(), 0, 0, Array.Empty<string>());
+}
+
 /// <summary>A game reward and the levels above it, as the game made them, before the rewards file changed anything.</summary>
-public sealed record GameReward(int Id, int Available, string WebIcon, string Icon, IReadOnlyList<int> Needs, IReadOnlyList<int> Furniture, IReadOnlyList<GameRewardLevel> Levels);
+public sealed record GameReward(int Id, int Available, string WebIcon, string Icon, IReadOnlyList<int> Needs, IReadOnlyList<int> Furniture, GameRules Rules, IReadOnlyList<GameRewardLevel> Levels);
+
+/// <summary>A character the player can start as.</summary>
+public sealed record GameCharacter(int Id, LocalText Name);
 
 /// <summary>An image a reward can show: its path for web pages and its path for the game's screens.</summary>
 public sealed record GameIcon(string WebIcon, string Icon);
 
 /// <summary>What the tab needs of the game, all read at once when the tables are written.</summary>
-public sealed record GameSnapshot(IReadOnlyList<GameReward> Rewards, IReadOnlyDictionary<string, IReadOnlyList<FieldSet>> Templates, IReadOnlyList<GameIcon> Items, IReadOnlyList<int> Pools)
+public sealed record GameSnapshot(
+    IReadOnlyList<GameReward> Rewards,
+    IReadOnlyDictionary<string, IReadOnlyList<FieldSet>> Templates,
+    IReadOnlyList<GameIcon> Items,
+    IReadOnlyList<int> Pools,
+    IReadOnlyList<GameCharacter> Characters,
+    IReadOnlyList<DayEntry> Days)
 {
-    public static readonly GameSnapshot Empty = new(Array.Empty<GameReward>(), new Dictionary<string, IReadOnlyList<FieldSet>>(), Array.Empty<GameIcon>(), Array.Empty<int>());
+    public static readonly GameSnapshot Empty = new(Array.Empty<GameReward>(), new Dictionary<string, IReadOnlyList<FieldSet>>(), Array.Empty<GameIcon>(), Array.Empty<int>(), Array.Empty<GameCharacter>(), Array.Empty<DayEntry>());
 }
 
 /// <summary>What a save from the Rewards tab comes to: the text to write, or why nothing is written.</summary>
@@ -121,6 +140,8 @@ public static class RewardsPage
         foreach (var pool in game.Pools.Distinct().OrderBy(pool => pool)) writer.WriteNumberValue(pool);
 
         writer.WriteEndArray();
+        WriteCharacters(writer, game.Characters);
+        WriteDays(writer, game.Days);
         writer.WriteStartArray("icons");
 
         foreach (var (group, icon) in IconChoices(game)) WriteIcon(writer, group, icon);
@@ -191,12 +212,63 @@ public static class RewardsPage
         writer.WriteString("unityIcon", reward.Icon);
         WriteInts(writer, "needs", reward.Needs);
         WriteInts(writer, "furniture", reward.Furniture);
+        writer.WriteBoolean("isReget", reward.Rules.IsReget);
+        writer.WriteNumber("endless", reward.Rules.Endless);
+        WriteInts(writer, "chars", reward.Rules.Characters);
+        writer.WriteNumber("layers", reward.Rules.Layers);
+        writer.WriteNumber("fromDay", reward.Rules.FromDay);
+        writer.WriteStartArray("also");
+
+        foreach (var need in reward.Rules.AlsoNeeds) writer.WriteStringValue(need);
+
+        writer.WriteEndArray();
         writer.WriteStartArray("levels");
 
         foreach (var level in reward.Levels) WriteLevel(writer, level);
 
         writer.WriteEndArray();
         writer.WriteEndObject();
+    }
+
+    private static void WriteCharacters(Utf8JsonWriter writer, IReadOnlyList<GameCharacter> characters)
+    {
+        writer.WriteStartArray("characters");
+
+        foreach (var character in characters.OrderBy(character => character.Id))
+        {
+            writer.WriteStartObject();
+            writer.WriteNumber("id", character.Id);
+            WriteText(writer, "name", character.Name);
+            writer.WriteEndObject();
+        }
+
+        writer.WriteEndArray();
+    }
+
+    /// <summary>Each day's pools as [pool, amount] pairs, in the order the game draws them.</summary>
+    private static void WriteDays(Utf8JsonWriter writer, IReadOnlyList<DayEntry> days)
+    {
+        writer.WriteStartArray("days");
+
+        foreach (var day in days.OrderBy(day => day.Day))
+        {
+            writer.WriteStartObject();
+            writer.WriteNumber("day", day.Day);
+            writer.WriteStartArray("pools");
+
+            foreach (var pool in day.Pools)
+            {
+                writer.WriteStartArray();
+                writer.WriteNumberValue(pool.Pool);
+                writer.WriteNumberValue(pool.Amount);
+                writer.WriteEndArray();
+            }
+
+            writer.WriteEndArray();
+            writer.WriteEndObject();
+        }
+
+        writer.WriteEndArray();
     }
 
     private static void WriteInts(Utf8JsonWriter writer, string name, IReadOnlyList<int> values)

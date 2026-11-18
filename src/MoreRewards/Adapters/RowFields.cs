@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using MoreRewards.Core;
 using Il2CppInts = Il2CppSystem.Collections.Generic.List<int>;
@@ -55,6 +56,35 @@ internal static class RowFields
 
         return true;
     }
+
+    /// <summary>Each field that is set, as "Field: value", leaving out <paramref name="skip"/>.</summary>
+    public static List<string> Describe(object row, ISet<string> skip)
+    {
+        var described = new List<string>();
+
+        foreach (var property in row.GetType().GetProperties(Instance))
+        {
+            if (!IsField(property) || !property.CanRead) continue;
+
+            var name = property.Name.Substring(1, property.Name.Length - 1 - Suffix.Length);
+            var value = property.GetValue(row);
+
+            if (skip.Contains(name) || IsEmpty(value)) continue;
+
+            described.Add($"{name}: {Shown(value)}");
+        }
+
+        return described;
+    }
+
+    private static string Shown(object? value) => value switch
+    {
+        Il2CppInts list => string.Join(", ", ToArray(list)),
+        Il2CppSystem.Collections.Generic.List<string> list => string.Join(", ", Enumerable.Range(0, list.Count).Select(i => list[i])),
+        bool flag => flag ? "yes" : "no",
+        IFormattable number => number.ToString(null, System.Globalization.CultureInfo.InvariantCulture),
+        _ => value?.ToString() ?? "",
+    };
 
     private static bool IsEmpty(object? value) => value switch
     {

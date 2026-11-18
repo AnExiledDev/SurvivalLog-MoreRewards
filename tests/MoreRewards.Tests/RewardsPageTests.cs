@@ -11,7 +11,8 @@ public class RewardsPageTests
     private static readonly GameSnapshot Game = new(
         new[]
         {
-            new GameReward(31271, 1, "../../Res/Reward/solar.png", "Reward/solar", new[] { 31000 }, new[] { 910001 }, new[]
+            new GameReward(31271, 1, "../../Res/Reward/solar.png", "Reward/solar", new[] { 31000 }, new[] { 910001 },
+            new GameRules(true, 6, new[] { 2, 3 }, 4, 9, new[] { "EventTag: TAG101" }), new[]
             {
                 new GameRewardLevel(31271, 4, new LocalText("Solar", "太阳能"), new LocalText("More solar power.", "太阳能更多。"), "Buff/AE_PowerSolarEfficiency",
                     new[] { new FieldSet("ID", new FieldValue.Number(5)), new FieldSet("FloatValue0", new FieldValue.Number(0.1)), new FieldSet("FloatValue1", new FieldValue.Number(0)), new FieldSet("Note", new FieldValue.Text("")), new FieldSet("Stack", new FieldValue.Flag(false)) },
@@ -23,7 +24,9 @@ public class RewardsPageTests
         },
         new Dictionary<string, IReadOnlyList<FieldSet>> { ["Buff/AE_PowerSolarEfficiency"] = new[] { new FieldSet("ConfigName", new FieldValue.Text("x")), new FieldSet("FloatValue0", new FieldValue.Number(0.1)) } },
         new[] { new GameIcon("../../Res/Food/apple.png", "Food/apple"), new GameIcon("../../Res/Reward/solar.png", "Reward/solar") },
-        new[] { 1020, 1013, 1013 });
+        new[] { 1020, 1013, 1013 },
+        new[] { new GameCharacter(2, new LocalText("Student", "大学生")), new GameCharacter(1, new LocalText("Worker", "打工仔")) },
+        new[] { new DayEntry(57, new[] { new DayPool(9107, 3), new DayPool(1005, 3) }), new DayEntry(1, new[] { new DayPool(9114, 1) }) });
 
     private static JsonElement Data(string call)
     {
@@ -79,6 +82,37 @@ public class RewardsPageTests
 
         Assert.Equal("AE_PowerSolarEfficiency", template.Name);
         Assert.Equal(new[] { "FloatValue0" }, template.Value.EnumerateObject().Select(p => p.Name));
+    }
+
+    [Fact]
+    public void A_game_reward_sends_its_rules_and_other_needs()
+    {
+        var reward = Data(RewardsPage.DataCall(Game, "{}", Array.Empty<string>(), null)).GetProperty("game")[0];
+
+        Assert.True(reward.GetProperty("isReget").GetBoolean());
+        Assert.Equal(6, reward.GetProperty("endless").GetInt32());
+        Assert.Equal(new[] { 2, 3 }, reward.GetProperty("chars").EnumerateArray().Select(c => c.GetInt32()));
+        Assert.Equal(4, reward.GetProperty("layers").GetInt32());
+        Assert.Equal(9, reward.GetProperty("fromDay").GetInt32());
+        Assert.Equal("EventTag: TAG101", Assert.Single(reward.GetProperty("also").EnumerateArray()).GetString());
+    }
+
+    [Fact]
+    public void Characters_come_by_ID_with_both_names()
+    {
+        var characters = Data(RewardsPage.DataCall(Game, "{}", Array.Empty<string>(), null)).GetProperty("characters");
+
+        Assert.Equal(new[] { 1, 2 }, characters.EnumerateArray().Select(c => c.GetProperty("id").GetInt32()));
+        Assert.Equal("Student", characters[1].GetProperty("name").GetProperty("en").GetString());
+    }
+
+    [Fact]
+    public void Days_come_in_order_with_their_pools_in_draw_order()
+    {
+        var days = Data(RewardsPage.DataCall(Game, "{}", Array.Empty<string>(), null)).GetProperty("days");
+
+        Assert.Equal(new[] { 1, 57 }, days.EnumerateArray().Select(d => d.GetProperty("day").GetInt32()));
+        Assert.Equal(new[] { 9107, 3, 1005, 3 }, days[1].GetProperty("pools").EnumerateArray().SelectMany(p => p.EnumerateArray()).Select(n => n.GetInt32()));
     }
 
     [Fact]
