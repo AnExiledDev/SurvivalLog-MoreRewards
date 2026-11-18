@@ -357,7 +357,7 @@ public class RewardPlanTests
     [Fact]
     public void A_day_in_the_file_replaces_its_pools_and_amounts_in_draw_order_without_the_zeros()
     {
-        var plan = Plan("""{ "rewards": [], "days": [ { "day": 57, "pools": { "1020": 2, "1013": 0, "1005": 1 } } ] }""", WithPool(1005));
+        var plan = Plan("""{ "rewards": [], "days": [ { "day": 57, "pools": [ { "pool": 1020, "amount": 2 }, { "pool": 1013, "amount": 0 }, { "pool": 1005, "amount": 1 } ] } ] }""", WithPool(1005));
 
         Assert.Empty(plan.Problems);
 
@@ -369,8 +369,8 @@ public class RewardPlanTests
     }
 
     [Theory]
-    [InlineData("""{ "day": 999, "pools": { "1013": 1 } }""", "day 999 is not in")]
-    [InlineData("""{ "day": 57, "pools": { "4242": 1 } }""", "pool 4242")]
+    [InlineData("""{ "day": 999, "pools": [ { "pool": 1013, "amount": 1 } ] }""", "day 999 is not in")]
+    [InlineData("""{ "day": 57, "pools": [ { "pool": 4242, "amount": 1 } ] }""", "pool 4242")]
     public void A_day_the_game_cannot_take_is_a_problem_and_left_out(string day, string reason)
     {
         var plan = Plan("""{ "days": [ """ + day + """ ] }""");
@@ -382,15 +382,17 @@ public class RewardPlanTests
     [Fact]
     public void A_day_named_twice_keeps_the_first()
     {
-        var plan = Plan("""{ "days": [ { "day": 1, "pools": { "1013": 2 } }, { "day": 1, "pools": { "1020": 5 } } ] }""");
+        var plan = Plan("""{ "days": [ { "day": 1, "pools": [ { "pool": 1013, "amount": 2 } ] }, { "day": 1, "pools": [ { "pool": 1020, "amount": 5 } ] } ] }""");
 
         Assert.Contains(plan.Problems, problem => problem.Contains("twice"));
         Assert.Equal(new[] { 1013 }, Assert.Single(plan.Days).Pools);
     }
 
     [Theory]
-    [InlineData("""{ "days": [ { "day": 1, "pools": { "1013": -1 } } ] }""")]
+    [InlineData("""{ "days": [ { "day": 1, "pools": [ { "pool": 1013, "amount": -1 } ] } ] }""")]
     [InlineData("""{ "days": [ { "day": 1 } ] }""")]
+    [InlineData("""{ "days": [ { "day": 1, "pools": { "1013": 2 } } ] }""")]
+    [InlineData("""{ "days": [ { "day": 1, "pools": [ { "pool": 1013, "amount": 2 }, { "pool": 1013, "amount": 1 } ] } ] }""")]
     public void A_day_that_cannot_be_read_is_reported(string json)
     {
         var file = RewardFile.Parse(json);
@@ -402,13 +404,32 @@ public class RewardPlanTests
     [Fact]
     public void The_players_days_replace_the_same_days_from_the_file_below()
     {
-        var mine = RewardFile.Parse("""{ "days": [ { "day": 1, "pools": { "1013": 2 } } ] }""");
-        var below = RewardFile.Parse("""{ "days": [ { "day": 1, "pools": { "1020": 1 } }, { "day": 57, "pools": { "1020": 1 } } ] }""");
+        var mine = RewardFile.Parse("""{ "days": [ { "day": 1, "pools": [ { "pool": 1013, "amount": 2 } ] } ] }""");
+        var below = RewardFile.Parse("""{ "days": [ { "day": 1, "pools": [ { "pool": 1020, "amount": 1 } ] }, { "day": 57, "pools": [ { "pool": 1020, "amount": 1 } ] } ] }""");
 
         var both = mine.Over(below);
 
         Assert.Equal(new[] { 1, 57 }, both.Days.Select(day => day.Day));
         Assert.Equal(1013, both.Days[0].Pools[0].Pool);
+    }
+
+    [Fact]
+    public void A_game_reward_with_fewer_levels_switches_off_the_games_higher_levels()
+    {
+        var plan = Plan("""{ "rewards": [ { "id": 31271, "levels": [ { "cost": 4 } ] } ] }""", new FakeTables().WithSunlightThree());
+
+        Assert.Empty(plan.Problems);
+        Assert.Equal(0d, Assert.IsType<FieldValue.Number>(Value(Row(plan, Table.Reward, 31272), "Available")).Value);
+        Assert.Equal(0d, Assert.IsType<FieldValue.Number>(Value(Row(plan, Table.Reward, 31273), "Available")).Value);
+        Assert.Null(Value(Row(plan, Table.Reward, 31271), "Available"));
+    }
+
+    [Fact]
+    public void A_game_reward_with_no_levels_list_keeps_the_games_higher_levels()
+    {
+        var plan = Plan("""{ "rewards": [ { "id": 31271, "cost": 4 } ] }""", new FakeTables().WithSunlightThree());
+
+        Assert.DoesNotContain(plan.Rows, row => row.Id is 31272 or 31273);
     }
 
     private static FakeTables WithPool(int pool)

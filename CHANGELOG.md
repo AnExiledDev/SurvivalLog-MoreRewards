@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.10.0
+
+- Rewards tab: each reward now has its rules. Pick the first day it can be offered, whether it comes up in any run or only in Endless Mode, and which characters get it. Tick "Can be offered and bought again" to let it come back after you own it, and set how many times its effect stacks.
+- Rewards tab: remove a game reward's top levels with the x on the last level, and those levels are never offered. + LEVEL puts them back.
+- Rewards tab: the new DAY DRAW view shows each day's pools, in the order the game draws from them, and how many rewards each one adds. Change the amounts, add or remove pools, move them up or down, click a pool to see what is in it and how likely each reward is, and click DRAW for a test draw.
+- Rewards file: new keys "fromDay" and "layers" on a reward, and "IsReget", "EndlessMode" and "PlayerSelectId" in its "fields". A new "days" list changes the day table. A game reward whose "levels" list is shorter than the game's switches off the levels above it.
+- Made for Survival Log 1.1.21271.
+
 ## 0.9.0
 
 - Rewards tab: with the Mod Manager 0.7.0 or newer, More Rewards' page gets a Rewards tab that edits the rewards file for you. Change what any reward costs, its levels, its numbers, its pools and its text, or build your own. SAVE writes the file and the changes apply at once.

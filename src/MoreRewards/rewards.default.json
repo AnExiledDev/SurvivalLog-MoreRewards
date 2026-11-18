@@ -13,7 +13,12 @@
 //   "furniture"    furniture IDs; it is only offered once you can build one of them
 //   "pools"        { "pool ID": weight }: the pools it is drawn from, and how likely next to the others there
 //                  (the game uses 1, or 3 for its start-of-run pools 1020, 1021 and 1022)
-//   "fields"       any Config_Talent field, such as { "WebIcon": "../../Res/Furniture/UI_Item_Icon_Furnit_M_900300101.png" }
+//   "fields"       any Config_Talent field, such as { "WebIcon": "../../Res/Furniture/UI_Item_Icon_Furnit_M_900300101.png" }.
+//                  These apply to every level. "IsReget": true lets it be offered and bought again after you own it,
+//                  "EndlessMode": 6 offers it in Endless Mode only (0 is any run), and "PlayerSelectId": [1, 2] gives it
+//                  only to those characters (empty is every character).
+//   "fromDay"      the first day it can be offered; 0 is from the first day
+//   "layers"       with "IsReget": how many times its effect stacks when it is bought again
 //   "gives"        [ { "effect": "game:<script>", "fields": { ... } }, ... ]: what it does, up to 10 things, each made
 //                  from an effect script the game runs (Buff/<script> in Config_Effect) with your fields.
 //                  Left out, it does what its copyFrom does. "mr:wind-power" with { "FloatValue0": 0.15 } makes
@@ -22,11 +27,17 @@
 //   "levels"       [ { "cost", "name", "description", "pools", "fields" }, ... ]: up to 10 levels, like Sunlight
 //                  Collection I, II and III. Level 1 is "id", level 2 is "id" + 1, and so on; each level needs the one
 //                  below it. Anything a level leaves out is the reward's own value. Left out, the reward has one level.
+//                  On a game reward, a list shorter than the game's switches off the game's levels above it.
 //   "buffs", "effects"   Config_Buff and Config_Effect rows this reward changes or makes (see below)
 //
 // A buff or effect entry: "id", an optional "copyFrom" (needed to make a new row), and "fields",
 // named as the game's tables name them (ConfigName, IntValue0, FloatValue0, EffectConfigId...).
 // The "buffs" and "effects" lists at the bottom always apply.
+//
+// "days" changes which pools a day draws its rewards from: [ { "day": 57, "pools": [ { "pool": 1020, "amount": 2 }, ... ] } ].
+// The game goes down the list in order and draws "amount" rewards from each pool, never the same one twice, then shows
+// the first 3, so a pool lower down only shows when the ones above come up short. The day must be one the game's table
+// has; after its last day the game keeps using the last one.
 //
 // With Wind Power 0.9.3 or newer installed, the mod adds Wind Collection I, II and III (39001 to 39003).
 // An entry here with one of those IDs replaces them, so you can change them or switch them off.

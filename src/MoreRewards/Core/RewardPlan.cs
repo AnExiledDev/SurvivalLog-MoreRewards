@@ -260,6 +260,8 @@ public sealed record RewardPlan(IReadOnlyList<RowEdit> Rows, IReadOnlyList<PoolE
                 return;
             }
 
+            SwitchOffLevelsAbove(reward, levels, pending);
+
             foreach (var row in pending.Rows.Where(row => row.Table is Table.Effect or Table.Buff)) Made(row.Table).Add(row.Id);
 
             Rows.AddRange(pending.Rows);
@@ -310,6 +312,19 @@ public sealed record RewardPlan(IReadOnlyList<RowEdit> Rows, IReadOnlyList<PoolE
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// A game reward whose "levels" list is shorter than the game's chain switches the game's higher levels off, so they
+        /// are never offered. A reward with no "levels" list leaves them alone.
+        /// </summary>
+        private void SwitchOffLevelsAbove(RewardEntry reward, List<Level> levels, Pending pending)
+        {
+            if (reward.Levels == null || reward.CopyFrom != null || levels.Count == 0 || levels[^1].IsNew) return;
+
+            var top = levels[^1].Id;
+
+            foreach (var id in Chain(reward.Id).Where(id => id > top)) pending.Rows.Add(new RowEdit(Table.Reward, id, null, new[] { Whole("Available", 0) }));
         }
 
         /// <summary>The reward and the game's levels above it, as far as they go; empty when it is not a reward.</summary>

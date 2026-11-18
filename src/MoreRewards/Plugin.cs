@@ -20,7 +20,7 @@ namespace MoreRewards;
 public sealed class Plugin : BasePlugin
 {
     private const string Guid = "com.dev.survivallog.morerewards";
-    private const string Version = "0.9.0";
+    private const string Version = "0.10.0";
     private const long MaxLogBytes = 1024 * 1024;
     private const string RewardsFileName = "MoreRewards.Rewards.json";
 

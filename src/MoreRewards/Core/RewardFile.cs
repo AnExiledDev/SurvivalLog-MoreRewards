@@ -277,20 +277,26 @@ public sealed record RewardFile(IReadOnlyList<RewardEntry> Rewards, IReadOnlyLis
         return list;
     }
 
-    /// <summary>"pools" is an object of pool ID and how many rewards it adds, in the order the game draws them.</summary>
+    /// <summary>
+    /// "pools" is a [ ] list of { "pool", "amount" }, in the order the game draws them. Order matters: the game shows
+    /// only the first 3 rewards drawn, so a later pool only shows when the ones before it come up short.
+    /// </summary>
     private static DayEntry ReadDay(JsonElement entry, List<string> problems)
     {
         var day = RequireInt(entry, "day");
 
-        if (!entry.TryGetProperty("pools", out var pools) || pools.ValueKind != JsonValueKind.Object) throw new FormatException($"day {day} needs \"pools\", a {{ }} object of pool ID and amount");
+        if (!entry.TryGetProperty("pools", out var pools) || pools.ValueKind != JsonValueKind.Array) throw new FormatException($"day {day} needs \"pools\", a [ ] list of {{ \"pool\", \"amount\" }}");
 
         var list = new List<DayPool>();
 
-        foreach (var pool in pools.EnumerateObject())
+        foreach (var pool in pools.EnumerateArray())
         {
-            if (!int.TryParse(pool.Name, NumberStyles.None, CultureInfo.InvariantCulture, out var id)) throw new FormatException($"day {day}: pool \"{pool.Name}\" must be a pool ID");
+            if (pool.ValueKind != JsonValueKind.Object) throw new FormatException($"day {day}: each pool must be a {{ \"pool\", \"amount\" }} object");
 
-            if (pool.Value.ValueKind != JsonValueKind.Number || !pool.Value.TryGetInt32(out var amount) || amount < 0) throw new FormatException($"day {day}: pool {id} needs an amount of 0 or more");
+            var id = RequireInt(pool, "pool");
+            var amount = RequireInt(pool, "amount");
+
+            if (amount < 0) throw new FormatException($"day {day}: pool {id} needs an amount of 0 or more");
 
             if (list.Any(seen => seen.Pool == id)) throw new FormatException($"day {day} has pool {id} twice");
 
