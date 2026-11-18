@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using ExiledToolkit;
 using GameCore.HotUpdate.Battle.Logic;
 using MoreRewards.Core;
 
@@ -27,6 +28,9 @@ internal static class InterestCode
 
     /// <summary>Where the cap code is, once found; the game's code does not move while it runs.</summary>
     private static IntPtr _code;
+
+    /// <summary>How far into the method the cap code starts, for Mod Manager.</summary>
+    private static int _offset;
 
     /// <param name="cap">The cap to write; <see cref="InterestCap.GameCap"/> puts the game's back.</param>
     /// <returns>Whether the code now holds <paramref name="cap"/>.</returns>
@@ -55,6 +59,7 @@ internal static class InterestCode
             }
 
             Write(_code, rewritten, log);
+            Claim(cap);
             log(cap == InterestCap.GameCap ? $"interest is back to the game's cap of {cap}" : $"interest is now up to {cap} survival points a day (the game's cap is {InterestCap.GameCap})");
 
             return true;
@@ -84,8 +89,18 @@ internal static class InterestCode
         if (InterestCap.FindIn(Read(method, length)) is not { } at) return "the game's interest code is not the one this mod knows (a game update?)";
 
         _code = method + at;
+        _offset = at;
 
         return null;
+    }
+
+    /// <summary>Tells Mod Manager which bytes of the game's code the mod changed. Writing the game's cap back puts the game's code back.</summary>
+    private static void Claim(int cap)
+    {
+        var method = nameof(SurvivalResultsManager.SettleDailySurvivalPoints);
+
+        if (cap == InterestCap.GameCap) Claims.RestoredBytes(Plugin.Guid, typeof(SurvivalResultsManager), method, _offset);
+        else Claims.ChangedBytes(Plugin.Guid, typeof(SurvivalResultsManager), method, _offset, InterestCap.GameCode.Count);
     }
 
     /// <returns>Where SettleDailySurvivalPoints's code starts: the first field of its il2cpp method info, or zero when the interop has no single method info for it.</returns>

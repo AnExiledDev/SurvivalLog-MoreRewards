@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.11.3
+
+- Mod Manager's Conflicts tab can now see what More Rewards changes in the game, like the rewards it adds to the reward pools, the refresh cost and the interest cap, so it can show when another mod changes the same things.
+- Made for Survival Log 1.1.21271.
+
 ## 0.11.2
 
 - Rewards tab: the levels table shows what each level gives in total. Each level of a reward adds to the ones before it, and many of the game's cards only say what that one level adds. Sunlight Collection read 15% on every level, when all three together give 45%.

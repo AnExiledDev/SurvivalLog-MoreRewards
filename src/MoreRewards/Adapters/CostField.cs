@@ -1,4 +1,5 @@
 using System;
+using ExiledToolkit;
 using ExiledToolkit.Game;
 using GameCore.HotUpdate;
 using MoreRewards.Core;
@@ -44,15 +45,28 @@ internal sealed class CostField
 
         if (_keeper.Next(current) is not { } write) return;
 
-        Write(write.Cost);
+        Write(write);
         Report(write);
     }
 
-    private static void Write(int cost)
+    private static void Write(CostWrite write)
     {
-        GameKey._GlobalSetting_RefreshSurvivalCost = cost;
+        GameKey._GlobalSetting_RefreshSurvivalCost = write.Cost;
 
-        if (TableEntry() is { } entry) entry._Params1_k__BackingField = cost;
+        if (TableEntry() is not { } entry) return;
+
+        entry._Params1_k__BackingField = write.Cost;
+        ClaimEntry(write);
+    }
+
+    /// <summary>Tells Mod Manager about the table entry. Writing the game's cost back counts as putting the entry back.</summary>
+    private static void ClaimEntry(CostWrite write)
+    {
+        var key = GameKey.Key_GlobalSetting_RefreshSurvivalCost;
+        var field = nameof(Config_GlobalSetting.Params1);
+
+        if (write.Cost == write.GameCost) Claims.PutBack(Plugin.Guid, nameof(Config_GlobalSetting), key, field);
+        else Claims.Wrote(Plugin.Guid, nameof(Config_GlobalSetting), key, field, write.Cost);
     }
 
     /// <summary>

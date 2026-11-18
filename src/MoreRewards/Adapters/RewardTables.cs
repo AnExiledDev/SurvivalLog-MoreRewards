@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using ExiledToolkit;
 using ExiledToolkit.Game;
 using GameCore.HotUpdate;
 using Il2CppInterop.Runtime.InteropTypes;
@@ -15,7 +16,8 @@ namespace MoreRewards.Adapters;
 /// language maps, once the game has loaded them. It writes again when the game loads the tables afresh, and when a
 /// setting changes what applies: then it first puts back everything it wrote, so a reward turned off leaves the pools
 /// and the game's rows as they were. A reward it made stays in the table, out of the pools, so a save that owns it
-/// still finds it.
+/// still finds it. Each change is reported to Exiled's Toolkit, so Mod Manager can tell when another mod changes the
+/// same rows.
 /// </summary>
 internal sealed class RewardTables
 {
@@ -24,6 +26,7 @@ internal sealed class RewardTables
     private readonly Func<RewardFile> _active;
     private readonly Action<string> _log;
     private readonly List<Action> _undo = new();
+    private readonly List<Action> _takeBack = new();
     private readonly HashSet<(Table, int)> _made = new();
     private (IntPtr Talents, IntPtr Buffs, IntPtr Effects, IntPtr Conditions, IntPtr Pools, IntPtr Days) _applied;
     private bool _isStale = true;
@@ -102,6 +105,8 @@ internal sealed class RewardTables
 
         foreach (var edit in plan.Pools) Pool(pools[edit.Pool], edit);
 
+        ReportPools(plan.Pools);
+
         foreach (var edit in plan.Days) Day(days[edit.Day], edit);
 
         WriteTexts(cache, plan.Texts);
@@ -118,13 +123,26 @@ internal sealed class RewardTables
         for (var i = _undo.Count - 1; i >= 0; i--) _undo[i]();
 
         _undo.Clear();
+        TakeBack();
     }
 
     /// <summary>The game loaded its tables afresh, so nothing in them is ours any more.</summary>
     private void Forget()
     {
         _undo.Clear();
+        TakeBack();
+
+        foreach (var (table, id) in _made) Claims.RemovedRows(Plugin.Guid, ClassOf(table), new[] { id });
+
         _made.Clear();
+    }
+
+    /// <summary>Takes back what the last write reported, since none of it is in the tables any more.</summary>
+    private void TakeBack()
+    {
+        foreach (var takeBack in _takeBack) takeBack();
+
+        _takeBack.Clear();
     }
 
     private string? Apply<T>(Il2CppSystem.Collections.Generic.Dictionary<int, T> table, RowEdit edit, Func<T> make) where T : Il2CppObjectBase
@@ -156,10 +174,21 @@ internal sealed class RewardTables
 
         if (replaced == null && row is Config_Talent reward) _undo.Add(() => reward._Available_k__BackingField = 0);
 
-        return Set(row, edit, isOwnRow: true);
+        var problem = Set(row, edit, isOwnRow: true);
+
+        if (replaced == null) Claims.AddedRows(Plugin.Guid, ClassOf(edit.Table), new[] { edit.Id });
+        else ReportWholeRow(row, edit);
+
+        return problem;
     }
 
-    /// <summary>Sets the edit's fields; on a game row, each old value is kept so it can be put back.</summary>
+    /// <summary>A copy over a game row replaces the whole row, so every field of it counts as written.</summary>
+    private void ReportWholeRow(object row, RowEdit edit)
+    {
+        foreach (var field in RowFields.ReadAll(row)) ReportWrite(row, edit, field.Field);
+    }
+
+    /// <summary>Sets the edit's fields; on a game row, each old value is kept so it can be put back, and each write is reported.</summary>
     private string? Set(object row, RowEdit edit, bool isOwnRow = false)
     {
         var refused = new List<string>();
@@ -168,11 +197,27 @@ internal sealed class RewardTables
         {
             var old = RowFields.Get(row, field.Field);
 
-            if (RowFields.Set(row, field.Field, field.Value) is { } problem) refused.Add(problem);
-            else if (!isOwnRow) _undo.Add(() => RowFields.Restore(row, field.Field, old));
+            if (RowFields.Set(row, field.Field, field.Value) is { } problem)
+            {
+                refused.Add(problem);
+            }
+            else if (!isOwnRow)
+            {
+                _undo.Add(() => RowFields.Restore(row, field.Field, old));
+                ReportWrite(row, edit, field.Field);
+            }
         }
 
         return refused.Count == 0 ? null : $"{edit.Table} {edit.Id}: " + string.Join("; ", refused);
+    }
+
+    /// <summary>Reports that the field holds the mod's value, until the write is undone or the tables are loaded afresh.</summary>
+    private void ReportWrite(object row, RowEdit edit, string field)
+    {
+        var table = ClassOf(edit.Table);
+
+        Claims.Wrote(Plugin.Guid, table, edit.Id, field, RowFields.Reported(row, field));
+        _takeBack.Add(() => Claims.PutBack(Plugin.Guid, table, edit.Id, field));
     }
 
     /// <summary>The day gets new lists, so the old ones can be put back as they were.</summary>
@@ -193,6 +238,20 @@ internal sealed class RewardTables
         {
             day._RandomPlanID_k__BackingField = oldPools;
             day._RandomAmount_k__BackingField = oldAmounts;
+        });
+        ReportDay(edit);
+    }
+
+    /// <summary>A day's lists are written whole, so they count as the mod's values.</summary>
+    private void ReportDay(DayEdit edit)
+    {
+        Claims.Wrote(Plugin.Guid, nameof(Config_DailyRandom), edit.Day, nameof(Config_DailyRandom.RandomPlanID), string.Join(",", edit.Pools));
+        Claims.Wrote(Plugin.Guid, nameof(Config_DailyRandom), edit.Day, nameof(Config_DailyRandom.RandomAmount), string.Join(",", edit.Amounts));
+
+        _takeBack.Add(() =>
+        {
+            Claims.PutBack(Plugin.Guid, nameof(Config_DailyRandom), edit.Day, nameof(Config_DailyRandom.RandomPlanID));
+            Claims.PutBack(Plugin.Guid, nameof(Config_DailyRandom), edit.Day, nameof(Config_DailyRandom.RandomAmount));
         });
     }
 
@@ -228,6 +287,36 @@ internal sealed class RewardTables
             pool._CountList_k__BackingField = oldWeights;
         });
     }
+
+    /// <summary>
+    /// The mod adds its rewards to a pool and keeps the ones already there, so they are reported as added, and another
+    /// mod that adds its own is no clash. Each pool is reported once, since a second report replaces the first.
+    /// </summary>
+    private void ReportPools(IReadOnlyList<PoolEdit> edits)
+    {
+        foreach (var pool in edits.GroupBy(edit => edit.Pool))
+        {
+            var id = pool.Key;
+
+            Claims.AddedTo(Plugin.Guid, nameof(Config_RandomGroup), id, nameof(Config_RandomGroup.IdList), pool.Select(edit => edit.Reward));
+            Claims.AddedTo(Plugin.Guid, nameof(Config_RandomGroup), id, nameof(Config_RandomGroup.CountList), pool.Select(edit => edit.Weight));
+
+            _takeBack.Add(() =>
+            {
+                Claims.TookOut(Plugin.Guid, nameof(Config_RandomGroup), id, nameof(Config_RandomGroup.IdList));
+                Claims.TookOut(Plugin.Guid, nameof(Config_RandomGroup), id, nameof(Config_RandomGroup.CountList));
+            });
+        }
+    }
+
+    /// <summary>The table's name as Mod Manager knows it: the game's row class (Config_Talent).</summary>
+    private static string ClassOf(Table table) => table switch
+    {
+        Table.Effect => nameof(Config_Effect),
+        Table.Buff => nameof(Config_Buff),
+        Table.Condition => nameof(Config_ConditionSet),
+        _ => nameof(Config_Talent),
+    };
 
     /// <summary>The game reads text from the map of the language in use; that may be one of these two or a third.</summary>
     private static void WriteTexts(CustomCache cache, IReadOnlyList<TextEntry> texts)

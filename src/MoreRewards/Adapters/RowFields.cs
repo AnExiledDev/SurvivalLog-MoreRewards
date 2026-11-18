@@ -122,6 +122,14 @@ internal static class RowFields
     /// <summary>A field's value as the row holds it, so it can be put back; null when the row has no such field.</summary>
     public static object? Get(object row, string field) => Find(row.GetType(), field)?.GetValue(row);
 
+    /// <summary>A field's value to report to Mod Manager: a list as its entries split by commas, anything else as the row holds it.</summary>
+    public static object? Reported(object row, string field) => Get(row, field) switch
+    {
+        Il2CppInts list => string.Join(",", ToArray(list)),
+        Il2CppSystem.Collections.Generic.List<string> list => string.Join(",", Enumerable.Range(0, list.Count).Select(i => list[i])),
+        var value => value,
+    };
+
     /// <summary>Puts back a value <see cref="Get"/> read.</summary>
     public static void Restore(object row, string field, object? value) => Find(row.GetType(), field)?.SetValue(row, value);
 
