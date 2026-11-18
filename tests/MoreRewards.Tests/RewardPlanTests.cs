@@ -14,8 +14,10 @@ public class RewardPlanTests
         public HashSet<int> Talents { get; } = new() { 31271, 31272, 50001 };
         public HashSet<int> Buffs { get; } = new() { 312710, 312720 };
         public HashSet<int> Effects { get; } = new() { 200312710, 200312720, 200100910 };
-        public HashSet<int> Conditions { get; } = new() { 31271, 31272 };
+        public HashSet<int> Conditions { get; } = new() { 31271, 31272, 4001 };
+        public int Blank { get; set; } = 4001;
         public HashSet<int> PoolIds { get; } = new() { 1013, 1020 };
+        public HashSet<int> Days { get; } = new() { 1, 57 };
         public Dictionary<string, int> Scripts { get; } = new() { ["Buff/AE_PowerSolarEfficiency"] = 200312710, ["Buff/Buff_Empty"] = 200100910 };
 
         public bool IsReward(int id) => Rewards.Contains(id);
@@ -24,8 +26,10 @@ public class RewardPlanTests
         public bool HasEffect(int id) => Effects.Contains(id);
         public bool HasCondition(int id) => Conditions.Contains(id);
         public bool HasPool(int id) => PoolIds.Contains(id);
+        public bool HasDay(int day) => Days.Contains(day);
         public int RewardBuff(int id) => Rewards.Contains(id) ? id * 10 : 0;
-        public int RewardCondition(int id) => Conditions.Contains(id) ? id : 0;
+        public int RewardCondition(int id) => Conditions.Contains(id) && id != Blank ? id : 0;
+        public int BlankCondition() => Blank;
         public int? EffectRunning(string script) => Scripts.TryGetValue(script, out var id) ? id : null;
         public int NextTier(int id) => Tiers.TryGetValue(id, out var next) ? next : 0;
 
@@ -349,6 +353,186 @@ public class RewardPlanTests
 
     private static IEnumerable<PoolEntry> PoolsOf(RewardPlan plan, int reward) =>
         plan.Pools.Where(pool => pool.Reward == reward).Select(pool => new PoolEntry(pool.Pool, pool.Weight)).OrderBy(pool => pool.Group);
+
+    [Fact]
+    public void A_day_in_the_file_replaces_its_pools_and_amounts_in_draw_order_without_the_zeros()
+    {
+        var plan = Plan("""{ "rewards": [], "days": [ { "day": 57, "pools": { "1020": 2, "1013": 0, "1005": 1 } } ] }""", WithPool(1005));
+
+        Assert.Empty(plan.Problems);
+
+        var day = Assert.Single(plan.Days);
+
+        Assert.Equal(57, day.Day);
+        Assert.Equal(new[] { 1020, 1005 }, day.Pools);
+        Assert.Equal(new[] { 2, 1 }, day.Amounts);
+    }
+
+    [Theory]
+    [InlineData("""{ "day": 999, "pools": { "1013": 1 } }""", "day 999 is not in")]
+    [InlineData("""{ "day": 57, "pools": { "4242": 1 } }""", "pool 4242")]
+    public void A_day_the_game_cannot_take_is_a_problem_and_left_out(string day, string reason)
+    {
+        var plan = Plan("""{ "days": [ """ + day + """ ] }""");
+
+        Assert.Contains(plan.Problems, problem => problem.Contains(reason));
+        Assert.Empty(plan.Days);
+    }
+
+    [Fact]
+    public void A_day_named_twice_keeps_the_first()
+    {
+        var plan = Plan("""{ "days": [ { "day": 1, "pools": { "1013": 2 } }, { "day": 1, "pools": { "1020": 5 } } ] }""");
+
+        Assert.Contains(plan.Problems, problem => problem.Contains("twice"));
+        Assert.Equal(new[] { 1013 }, Assert.Single(plan.Days).Pools);
+    }
+
+    [Theory]
+    [InlineData("""{ "days": [ { "day": 1, "pools": { "1013": -1 } } ] }""")]
+    [InlineData("""{ "days": [ { "day": 1 } ] }""")]
+    public void A_day_that_cannot_be_read_is_reported(string json)
+    {
+        var file = RewardFile.Parse(json);
+
+        Assert.Empty(file.Days);
+        Assert.Single(file.Problems);
+    }
+
+    [Fact]
+    public void The_players_days_replace_the_same_days_from_the_file_below()
+    {
+        var mine = RewardFile.Parse("""{ "days": [ { "day": 1, "pools": { "1013": 2 } } ] }""");
+        var below = RewardFile.Parse("""{ "days": [ { "day": 1, "pools": { "1020": 1 } }, { "day": 57, "pools": { "1020": 1 } } ] }""");
+
+        var both = mine.Over(below);
+
+        Assert.Equal(new[] { 1, 57 }, both.Days.Select(day => day.Day));
+        Assert.Equal(1013, both.Days[0].Pools[0].Pool);
+    }
+
+    private static FakeTables WithPool(int pool)
+    {
+        var tables = new FakeTables();
+
+        tables.PoolIds.Add(pool);
+
+        return tables;
+    }
+
+    /// <summary>Adds Water Boost, a game reward with a buff and no condition set, as about half the game's rewards are.</summary>
+    private static FakeTables WithWaterBoost()
+    {
+        var tables = new FakeTables();
+
+        tables.Rewards.Add(31301);
+        tables.Talents.Add(31301);
+        tables.Buffs.Add(313010);
+
+        return tables;
+    }
+
+    [Fact]
+    public void From_day_on_a_reward_with_a_condition_set_changes_that_set()
+    {
+        var plan = Plan("""{ "rewards": [ { "id": 31271, "fromDay": 12 } ] }""");
+
+        Assert.Empty(plan.Problems);
+        Assert.Equal(new FieldValue.Number(12), Value(Row(plan, Table.Condition, 31271), "SurvivalToDay"));
+        Assert.Null(Row(plan, Table.Condition, 31271).CopyFrom);
+        Assert.Null(Value(Row(plan, Table.Reward, 31271), "ConditionSetId"));
+    }
+
+    [Fact]
+    public void A_game_reward_with_no_condition_set_gets_its_own_copied_from_an_empty_one()
+    {
+        var plan = Plan("""{ "rewards": [ { "id": 31301, "fromDay": 8, "needs": [31271] } ] }""", WithWaterBoost());
+        var condition = Row(plan, Table.Condition, 31301);
+
+        Assert.Empty(plan.Problems);
+        Assert.Equal(4001, condition.CopyFrom);
+        Assert.Equal(new FieldValue.Number(8), Value(condition, "SurvivalToDay"));
+        Assert.Equal(new[] { 31271 }, Assert.IsType<FieldValue.Numbers>(Value(condition, "TalentNeed")).Values);
+        Assert.Equal(new FieldValue.Number(31301), Value(Row(plan, Table.Reward, 31301), "ConditionSetId"));
+    }
+
+    [Fact]
+    public void A_game_reward_with_no_condition_set_and_nothing_to_need_stays_without_one()
+    {
+        var plan = Plan("""{ "rewards": [ { "id": 31301, "cost": 4 } ] }""", WithWaterBoost());
+
+        Assert.Empty(plan.Problems);
+        Assert.DoesNotContain(plan.Rows, row => row.Table == Table.Condition);
+        Assert.Null(Value(Row(plan, Table.Reward, 31301), "ConditionSetId"));
+    }
+
+    [Fact]
+    public void A_new_reward_copying_one_with_no_condition_set_gets_an_empty_one_when_it_needs_something()
+    {
+        var plan = Plan("""
+            { "rewards": [ { "id": 39001, "copyFrom": 31301, "fromDay": 3,
+              "give": { "effect": "game:AE_PowerSolarEfficiency", "fields": { "FloatValue0": 0.1 } } } ] }
+            """, WithWaterBoost());
+
+        Assert.Empty(plan.Problems);
+        Assert.Equal(4001, Row(plan, Table.Condition, 39001).CopyFrom);
+        Assert.Equal(new FieldValue.Number(39001), Value(Row(plan, Table.Reward, 39001), "ConditionSetId"));
+    }
+
+    [Fact]
+    public void Without_an_empty_condition_set_in_the_game_from_day_is_a_problem()
+    {
+        var tables = WithWaterBoost();
+
+        tables.Blank = 0;
+
+        var plan = Plan("""{ "rewards": [ { "id": 31301, "fromDay": 8 } ] }""", tables);
+
+        Assert.Contains(plan.Problems, problem => problem.Contains("fromDay"));
+        Assert.DoesNotContain(plan.Rows, row => row.Id == 31301);
+    }
+
+    [Fact]
+    public void From_day_is_only_for_level_one()
+    {
+        var plan = Plan("""{ "rewards": [ { "id": 31271, "fromDay": 5, "levels": [ {}, {} ] } ] }""");
+
+        Assert.Empty(plan.Problems);
+        Assert.Equal(new FieldValue.Number(5), Value(Row(plan, Table.Condition, 31271), "SurvivalToDay"));
+        Assert.DoesNotContain(plan.Rows, row => row.Table == Table.Condition && row.Id == 31272);
+    }
+
+    [Fact]
+    public void Layers_on_a_game_reward_without_gives_changes_its_buff()
+    {
+        var plan = Plan("""{ "rewards": [ { "id": 31301, "layers": 5 } ] }""", WithWaterBoost());
+
+        Assert.Empty(plan.Problems);
+        Assert.Equal(new FieldValue.Number(5), Value(Row(plan, Table.Buff, 313010), "MaxLayerCount"));
+    }
+
+    [Fact]
+    public void Layers_with_gives_goes_on_the_levels_own_buff()
+    {
+        var plan = Plan("""
+            { "rewards": [ { "id": 39001, "copyFrom": 31271, "layers": 3,
+              "gives": [ { "effect": "game:AE_PowerSolarEfficiency" }, { "effect": "game:AE_PowerSolarEfficiency" } ] } ] }
+            """);
+
+        Assert.Empty(plan.Problems);
+        Assert.Equal(new FieldValue.Number(3), Value(Row(plan, Table.Buff, 390010), "MaxLayerCount"));
+        Assert.Null(Value(Row(plan, Table.Buff, 390011), "MaxLayerCount"));
+        Assert.DoesNotContain(plan.Rows, row => row.Table == Table.Buff && row.Id == 312710);
+    }
+
+    [Fact]
+    public void Layers_on_a_new_reward_without_gives_is_a_problem_so_the_copied_reward_keeps_its_buff()
+    {
+        var plan = Plan("""{ "rewards": [ { "id": 39001, "copyFrom": 31271, "layers": 3 } ] }""");
+
+        Assert.Contains(plan.Problems, problem => problem.Contains("layers"));
+        Assert.DoesNotContain(plan.Rows, row => row.Table == Table.Buff);
+    }
 
     private static IEnumerable<PoolEntry> Pools(params (int Group, int Weight)[] pools) => pools.Select(pool => new PoolEntry(pool.Group, pool.Weight));
 

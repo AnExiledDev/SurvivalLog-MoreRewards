@@ -25,7 +25,7 @@ internal sealed class RewardTables
     private readonly Action<string> _log;
     private readonly List<Action> _undo = new();
     private readonly HashSet<(Table, int)> _made = new();
-    private (IntPtr Talents, IntPtr Buffs, IntPtr Effects, IntPtr Conditions, IntPtr Pools) _applied;
+    private (IntPtr Talents, IntPtr Buffs, IntPtr Effects, IntPtr Conditions, IntPtr Pools, IntPtr Days) _applied;
     private bool _isStale = true;
     private float _nextCheckAt;
 
@@ -63,13 +63,14 @@ internal sealed class RewardTables
         var effects = config?._Config_Effect_Dict;
         var conditions = config?._Config_ConditionSet_Dict;
         var pools = config?._Config_RandomGroup_Dict;
+        var days = config?._Config_DailyRandom_Dict;
         var cache = config?._customCache_k__BackingField;
 
-        if (talents == null || buffs == null || effects == null || conditions == null || pools == null || cache == null) return;
+        if (talents == null || buffs == null || effects == null || conditions == null || pools == null || days == null || cache == null) return;
 
         if (talents.Count == 0 || buffs.Count == 0 || effects.Count == 0 || pools.Count == 0) return;
 
-        var tables = (talents.Pointer, buffs.Pointer, effects.Pointer, conditions.Pointer, pools.Pointer);
+        var tables = (talents.Pointer, buffs.Pointer, effects.Pointer, conditions.Pointer, pools.Pointer, days.Pointer);
 
         if (tables == _applied && !_isStale) return;
 
@@ -81,7 +82,7 @@ internal sealed class RewardTables
 
         Game = GameReader.Read(config, cache, (table, id) => _made.Contains((table, id)));
 
-        var plan = RewardPlan.Build(_active(), new GameTables(talents, buffs, effects, conditions, pools, _made));
+        var plan = RewardPlan.Build(_active(), new GameTables(talents, buffs, effects, conditions, pools, days, _made));
         var problems = new List<string>(plan.Problems);
 
         foreach (var edit in plan.Rows)
@@ -98,6 +99,8 @@ internal sealed class RewardTables
         }
 
         foreach (var edit in plan.Pools) Pool(pools[edit.Pool], edit);
+
+        foreach (var edit in plan.Days) Day(days[edit.Day], edit);
 
         WriteTexts(cache, plan.Texts);
         Grants = plan.Grants;
@@ -168,6 +171,27 @@ internal sealed class RewardTables
         }
 
         return refused.Count == 0 ? null : $"{edit.Table} {edit.Id}: " + string.Join("; ", refused);
+    }
+
+    /// <summary>The day gets new lists, so the old ones can be put back as they were.</summary>
+    private void Day(Config_DailyRandom day, DayEdit edit)
+    {
+        var oldPools = day._RandomPlanID_k__BackingField;
+        var oldAmounts = day._RandomAmount_k__BackingField;
+        var pools = new Il2CppInts();
+        var amounts = new Il2CppInts();
+
+        foreach (var pool in edit.Pools) pools.Add(pool);
+
+        foreach (var amount in edit.Amounts) amounts.Add(amount);
+
+        day._RandomPlanID_k__BackingField = pools;
+        day._RandomAmount_k__BackingField = amounts;
+        _undo.Add(() =>
+        {
+            day._RandomPlanID_k__BackingField = oldPools;
+            day._RandomAmount_k__BackingField = oldAmounts;
+        });
     }
 
     /// <summary>The pool gets new lists, so the old ones can be put back as they were.</summary>
@@ -244,8 +268,10 @@ internal sealed class RewardTables
         private readonly Il2CppSystem.Collections.Generic.Dictionary<int, Config_Effect> _effects;
         private readonly Il2CppSystem.Collections.Generic.Dictionary<int, Config_ConditionSet> _conditions;
         private readonly Il2CppSystem.Collections.Generic.Dictionary<int, Config_RandomGroup> _pools;
+        private readonly Il2CppSystem.Collections.Generic.Dictionary<int, Config_DailyRandom> _days;
         private readonly HashSet<(Table, int)> _made;
         private Dictionary<string, int>? _effectByScript;
+        private int? _blankCondition;
 
         public GameTables(
             Il2CppSystem.Collections.Generic.Dictionary<int, Config_Talent> talents,
@@ -253,6 +279,7 @@ internal sealed class RewardTables
             Il2CppSystem.Collections.Generic.Dictionary<int, Config_Effect> effects,
             Il2CppSystem.Collections.Generic.Dictionary<int, Config_ConditionSet> conditions,
             Il2CppSystem.Collections.Generic.Dictionary<int, Config_RandomGroup> pools,
+            Il2CppSystem.Collections.Generic.Dictionary<int, Config_DailyRandom> days,
             HashSet<(Table, int)> made)
         {
             _talents = talents;
@@ -260,6 +287,7 @@ internal sealed class RewardTables
             _effects = effects;
             _conditions = conditions;
             _pools = pools;
+            _days = days;
             _made = made;
         }
 
@@ -284,6 +312,25 @@ internal sealed class RewardTables
         }
 
         public bool HasPool(int id) => _pools.ContainsKey(id);
+
+        public bool HasDay(int day) => _days.ContainsKey(day);
+
+        /// <summary>The lowest condition set that asks for nothing, found once.</summary>
+        public int BlankCondition()
+        {
+            if (_blankCondition is { } found) return found;
+
+            var lowest = 0;
+
+            foreach (var entry in _conditions)
+            {
+                if ((lowest == 0 || entry.Key < lowest) && !_made.Contains((Table.Condition, entry.Key)) && RowFields.IsBlank(entry.Value)) lowest = entry.Key;
+            }
+
+            _blankCondition = lowest;
+
+            return lowest;
+        }
 
         public int RewardBuff(int id) => Talent(id)?._BuffID_k__BackingField ?? 0;
 

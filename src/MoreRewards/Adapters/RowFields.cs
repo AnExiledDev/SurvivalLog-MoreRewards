@@ -43,6 +43,31 @@ internal static class RowFields
         return fields;
     }
 
+    /// <summary>True when every field but the ID and the label is zero, false, empty or unset: a row that asks for nothing.</summary>
+    public static bool IsBlank(object row)
+    {
+        foreach (var property in row.GetType().GetProperties(Instance))
+        {
+            if (!IsField(property) || !property.CanRead || property.Name is "_ID" + Suffix or "_Source" + Suffix) continue;
+
+            if (!IsEmpty(property.GetValue(row))) return false;
+        }
+
+        return true;
+    }
+
+    private static bool IsEmpty(object? value) => value switch
+    {
+        null => true,
+        int number => number == 0,
+        long number => number == 0,
+        float number => number == 0,
+        double number => number == 0,
+        bool flag => !flag,
+        string text => text.Length == 0,
+        _ => value.GetType().GetProperty("Count")?.GetValue(value) is 0,
+    };
+
     private static FieldValue? ToValue(object? value) => value switch
     {
         int number => new FieldValue.Number(number),

@@ -19,6 +19,12 @@ public interface IRewardTables
 
     bool HasCondition(int id);
 
+    /// <summary>A condition set that asks for nothing, to copy for a reward that has none; 0 when the game has none.</summary>
+    int BlankCondition();
+
+    /// <summary>Whether the game's day table has a row for the day.</summary>
+    bool HasDay(int day);
+
     bool HasPool(int id);
 
     /// <summary>The buff a reward gives; 0 when it gives none.</summary>
@@ -48,6 +54,9 @@ public sealed record RowEdit(Table Table, int Id, int? CopyFrom, IReadOnlyList<F
 /// <summary>Puts <paramref name="Reward"/> in pool <paramref name="Pool"/> with <paramref name="Weight"/>, or changes its weight there.</summary>
 public sealed record PoolEdit(int Pool, int Reward, int Weight);
 
+/// <summary>A day's new pools and amounts, in draw order. A pool at 0 is left out.</summary>
+public sealed record DayEdit(int Day, IReadOnlyList<int> Pools, IReadOnlyList<int> Amounts);
+
 /// <summary>One text the game looks up by key, in both languages.</summary>
 public sealed record TextEntry(string Key, string En, string Zh);
 
@@ -58,7 +67,7 @@ public sealed record MrGrant(string Effect, int RewardId, IReadOnlyList<FieldSet
 public sealed record Companion(int LevelBuff, IReadOnlyList<int> Buffs);
 
 /// <summary>Everything the rewards files change in the game's tables, in the order it must be applied.</summary>
-public sealed record RewardPlan(IReadOnlyList<RowEdit> Rows, IReadOnlyList<PoolEdit> Pools, IReadOnlyList<TextEntry> Texts, IReadOnlyList<MrGrant> Grants, IReadOnlyList<Companion> Companions, IReadOnlyList<string> Problems)
+public sealed record RewardPlan(IReadOnlyList<RowEdit> Rows, IReadOnlyList<PoolEdit> Pools, IReadOnlyList<TextEntry> Texts, IReadOnlyList<MrGrant> Grants, IReadOnlyList<Companion> Companions, IReadOnlyList<DayEdit> Days, IReadOnlyList<string> Problems)
 {
     public const string GamePrefix = "game:";
 
@@ -93,7 +102,9 @@ public sealed record RewardPlan(IReadOnlyList<RowEdit> Rows, IReadOnlyList<PoolE
 
         foreach (var reward in enabled) builder.AddReward(reward);
 
-        return new RewardPlan(builder.Rows, builder.Pools, builder.Texts, builder.Grants, builder.Companions, builder.Problems);
+        foreach (var day in file.Days) builder.AddDay(day);
+
+        return new RewardPlan(builder.Rows, builder.Pools, builder.Texts, builder.Grants, builder.Companions, builder.Days, builder.Problems);
     }
 
     /// <summary>The first enabled entry to use each ID; a later one that uses any of them, at any level, is reported and left out.</summary>
@@ -130,6 +141,7 @@ public sealed record RewardPlan(IReadOnlyList<RowEdit> Rows, IReadOnlyList<PoolE
         bool IsNew,
         int Source,
         IReadOnlyList<int>? Needs,
+        int? FromDay,
         int? Cost,
         LocalText? Name,
         LocalText? Description,
@@ -148,6 +160,9 @@ public sealed record RewardPlan(IReadOnlyList<RowEdit> Rows, IReadOnlyList<PoolE
         public List<MrGrant> Grants { get; } = new();
 
         public List<Companion> Companions { get; } = new();
+
+        /// <summary>The levels that get a condition set of their own, with the same ID as the level.</summary>
+        public HashSet<int> OwnConditions { get; } = new();
     }
 
     private sealed class Builder
@@ -172,6 +187,29 @@ public sealed record RewardPlan(IReadOnlyList<RowEdit> Rows, IReadOnlyList<PoolE
         public List<Companion> Companions { get; } = new();
 
         public List<string> Problems { get; } = new();
+
+        public List<DayEdit> Days { get; } = new();
+
+        /// <summary>A day the file names twice keeps the first; one the game has no row for, or with a pool it lacks, is left out.</summary>
+        public void AddDay(DayEntry day)
+        {
+            var missing = day.Pools.Where(pool => !_tables.HasPool(pool.Pool)).Select(pool => pool.Pool).ToList();
+            var problem = Days.Any(edit => edit.Day == day.Day) ? "is in the file twice; the first one is used"
+                : !_tables.HasDay(day.Day) ? "is not in the game's day table"
+                : missing.Count > 0 ? $"uses pool {string.Join(", ", missing)}, which the game does not have"
+                : null;
+
+            if (problem != null)
+            {
+                Problems.Add($"day {day.Day} {problem}");
+
+                return;
+            }
+
+            var kept = day.Pools.Where(pool => pool.Amount > 0).ToList();
+
+            Days.Add(new DayEdit(day.Day, kept.Select(pool => pool.Pool).ToList(), kept.Select(pool => pool.Amount).ToList()));
+        }
 
         public void AddRows(Table table, IEnumerable<RowEntry> entries)
         {
@@ -208,7 +246,7 @@ public sealed record RewardPlan(IReadOnlyList<RowEdit> Rows, IReadOnlyList<PoolE
 
             foreach (var level in levels)
             {
-                problem ??= AddCondition(reward, level, pending) ?? AddGives(reward, level, pending) ?? PoolProblem(level);
+                problem ??= AddCondition(reward, level, pending) ?? AddGives(reward, level, pending) ?? AddLayers(reward, level, pending) ?? PoolProblem(level);
 
                 if (problem != null) break;
 
@@ -263,6 +301,7 @@ public sealed record RewardPlan(IReadOnlyList<RowEdit> Rows, IReadOnlyList<PoolE
                     !isGameLevel,
                     isGameLevel ? id : chain[Math.Min(i, chain.Count - 1)],
                     i == 0 ? reward.Needs : isGameLevel ? null : new[] { id - 1 },
+                    i == 0 ? reward.FromDay : null,
                     level?.Cost ?? reward.Cost,
                     level?.Name ?? Numbered(reward.Name, i, reward.LevelCount),
                     level?.Description ?? reward.Description,
@@ -285,7 +324,8 @@ public sealed record RewardPlan(IReadOnlyList<RowEdit> Rows, IReadOnlyList<PoolE
 
         /// <summary>
         /// A reward's needs live in its condition set. A new level gets its own, copied from the one its source uses, so
-        /// changing its needs never changes the other reward's.
+        /// changing its needs never changes the other reward's. A reward with no condition set gets one copied from a
+        /// set that asks for nothing.
         /// </summary>
         private string? AddCondition(RewardEntry reward, Level level, Pending pending)
         {
@@ -296,25 +336,48 @@ public sealed record RewardPlan(IReadOnlyList<RowEdit> Rows, IReadOnlyList<PoolE
 
             if (reward.Furniture is { } furniture) fields.Add(new FieldSet("NeedFurnitureObtainable", new FieldValue.Numbers(furniture)));
 
-            if (level.IsNew)
+            if (level.FromDay is { } day) fields.Add(Whole("SurvivalToDay", Math.Max(0, day)));
+
+            if (!level.IsNew && sourceCondition != 0)
             {
-                if (sourceCondition == 0)
-                {
-                    return fields.Count == 0 ? null : $"reward {level.Source} has no condition set to copy, so \"needs\" and \"furniture\" cannot be set";
-                }
-
-                if (_tables.HasCondition(level.Id)) return $"it needs condition set {level.Id}, which the game already uses";
-
-                pending.Rows.Add(new RowEdit(Table.Condition, level.Id, sourceCondition, Prepend(fields, Whole("ID", level.Id))));
+                if (fields.Count > 0) pending.Rows.Add(new RowEdit(Table.Condition, sourceCondition, null, fields));
 
                 return null;
             }
 
-            if (fields.Count == 0) return null;
+            if (sourceCondition == 0 && fields.Count == 0) return null;
 
-            if (sourceCondition == 0) return $"reward {level.Id} has no condition set, so \"needs\" and \"furniture\" cannot be set";
+            var copy = sourceCondition != 0 ? sourceCondition : _tables.BlankCondition();
 
-            pending.Rows.Add(new RowEdit(Table.Condition, sourceCondition, null, fields));
+            if (copy == 0) return "the game has no empty condition set to copy, so \"needs\", \"furniture\" and \"fromDay\" cannot be set";
+
+            if (_tables.HasCondition(level.Id)) return $"it needs condition set {level.Id}, which the game already uses";
+
+            var own = Prepend(fields, Whole("ID", level.Id));
+
+            if (sourceCondition == 0) own.Add(Text("Source", $"{KeyPrefix}{level.Id}"));
+
+            pending.Rows.Add(new RowEdit(Table.Condition, level.Id, copy, own));
+            pending.OwnConditions.Add(level.Id);
+
+            return null;
+        }
+
+        /// <summary>
+        /// How far a reward the player can buy again stacks. It is a number on the level's buff, so a level that makes no
+        /// buff of its own can set it only on a reward the game has.
+        /// </summary>
+        private string? AddLayers(RewardEntry reward, Level level, Pending pending)
+        {
+            if (reward.Layers is not { } layers || reward.Gives.Count > 0) return null;
+
+            if (level.IsNew) return "\"layers\" on a new reward needs \"gives\", so it does not change the buff of the reward it copies";
+
+            var buff = _tables.RewardBuff(level.Id);
+
+            if (buff == 0) return $"reward {level.Id} gives no buff, so \"layers\" cannot be set";
+
+            pending.Rows.Add(new RowEdit(Table.Buff, buff, null, new[] { Whole("MaxLayerCount", Math.Max(1, layers)) }));
 
             return null;
         }
@@ -362,6 +425,8 @@ public sealed record RewardPlan(IReadOnlyList<RowEdit> Rows, IReadOnlyList<PoolE
 
                 if (k == 0)
                 {
+                    if (reward.Layers is { } layers) buffFields.Add(Whole("MaxLayerCount", Math.Max(1, layers)));
+
                     AddText(buffFields, "Name", "Buff", buff, level.Name, pending);
                     AddText(buffFields, "Des", "Buff", buff, level.Description, pending);
                 }
@@ -398,8 +463,9 @@ public sealed record RewardPlan(IReadOnlyList<RowEdit> Rows, IReadOnlyList<PoolE
                 fields.Add(Whole("Lv", 1));
                 fields.Add(Whole("Available", 1));
 
-                if (_tables.RewardCondition(level.Source) != 0) fields.Add(Whole("ConditionSetId", level.Id));
             }
+
+            if (pending.OwnConditions.Contains(level.Id)) fields.Add(Whole("ConditionSetId", level.Id));
 
             fields.AddRange(level.Fields);
 

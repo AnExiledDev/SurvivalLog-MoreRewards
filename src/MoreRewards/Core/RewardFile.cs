@@ -56,7 +56,9 @@ public sealed record LevelEntry(int? Cost, LocalText? Name, LocalText? Descripti
 
 /// <summary>
 /// One reward in the file. Anything left out keeps the game's value, or the value of the reward it copies.
-/// <paramref name="Needs"/> and <paramref name="Furniture"/> are null when the file leaves them as they are.
+/// <paramref name="Needs"/>, <paramref name="Furniture"/>, <paramref name="FromDay"/> and <paramref name="Layers"/> are null
+/// when the file leaves them as they are. <paramref name="Layers"/> is how many times a reward the player can buy again
+/// stacks.
 /// <paramref name="Levels"/> is null for a reward of one level. Level n (from 0) is the reward with ID
 /// <paramref name="Id"/> + n, as the game numbers Sunlight Collection I, II and III.
 /// </summary>
@@ -69,6 +71,8 @@ public sealed record RewardEntry(
     int? Cost,
     IReadOnlyList<int>? Needs,
     IReadOnlyList<int>? Furniture,
+    int? FromDay,
+    int? Layers,
     IReadOnlyList<PoolEntry> Pools,
     IReadOnlyList<FieldSet> Fields,
     IReadOnlyList<GiveEntry> Gives,
@@ -87,10 +91,19 @@ public sealed record RewardEntry(
     public IEnumerable<int> Ids => Enumerable.Range(Id, LevelCount);
 }
 
+/// <summary>How many rewards one pool adds to a day's draw.</summary>
+public sealed record DayPool(int Pool, int Amount);
+
+/// <summary>
+/// One day of the game's day table, in the order the game draws its pools. A day in the file replaces that day's pools
+/// and amounts; a day left out keeps the game's.
+/// </summary>
+public sealed record DayEntry(int Day, IReadOnlyList<DayPool> Pools);
+
 /// <summary>The rewards file as read, with every entry that could not be read.</summary>
-public sealed record RewardFile(IReadOnlyList<RewardEntry> Rewards, IReadOnlyList<RowEntry> Buffs, IReadOnlyList<RowEntry> Effects, IReadOnlyList<string> Problems)
+public sealed record RewardFile(IReadOnlyList<RewardEntry> Rewards, IReadOnlyList<RowEntry> Buffs, IReadOnlyList<RowEntry> Effects, IReadOnlyList<DayEntry> Days, IReadOnlyList<string> Problems)
 {
-    public static readonly RewardFile Empty = new(Array.Empty<RewardEntry>(), Array.Empty<RowEntry>(), Array.Empty<RowEntry>(), Array.Empty<string>());
+    public static readonly RewardFile Empty = new(Array.Empty<RewardEntry>(), Array.Empty<RowEntry>(), Array.Empty<RowEntry>(), Array.Empty<DayEntry>(), Array.Empty<string>());
 
     /// <summary>
     /// This file's entries with those of <paramref name="under"/> that use none of the same reward IDs. An entry here,
@@ -100,8 +113,14 @@ public sealed record RewardFile(IReadOnlyList<RewardEntry> Rewards, IReadOnlyLis
     {
         var taken = new HashSet<int>(Rewards.SelectMany(reward => reward.Ids));
         var kept = under.Rewards.Where(reward => !reward.Ids.Any(taken.Contains));
+        var days = new HashSet<int>(Days.Select(day => day.Day));
 
-        return new RewardFile(Rewards.Concat(kept).ToList(), Buffs.Concat(under.Buffs).ToList(), Effects.Concat(under.Effects).ToList(), Problems.Concat(under.Problems).ToList());
+        return new RewardFile(
+            Rewards.Concat(kept).ToList(),
+            Buffs.Concat(under.Buffs).ToList(),
+            Effects.Concat(under.Effects).ToList(),
+            Days.Concat(under.Days.Where(day => !days.Contains(day.Day))).ToList(),
+            Problems.Concat(under.Problems).ToList());
     }
 
     /// <summary>The file without the rewards that give <paramref name="effect"/>.</summary>
@@ -135,8 +154,9 @@ public sealed record RewardFile(IReadOnlyList<RewardEntry> Rewards, IReadOnlyLis
             var rewards = ReadList(root, "rewards", "reward", problems, ReadReward);
             var buffs = ReadList(root, "buffs", "buff", problems, ReadRow);
             var effects = ReadList(root, "effects", "effect", problems, ReadRow);
+            var days = ReadList(root, "days", "day", problems, ReadDay);
 
-            return new RewardFile(rewards, buffs, effects, problems);
+            return new RewardFile(rewards, buffs, effects, days, problems);
         }
     }
 
@@ -154,6 +174,8 @@ public sealed record RewardFile(IReadOnlyList<RewardEntry> Rewards, IReadOnlyLis
             OptionalInt(entry, "cost"),
             OptionalInts(entry, "needs"),
             OptionalInts(entry, "furniture"),
+            OptionalInt(entry, "fromDay"),
+            OptionalInt(entry, "layers"),
             ReadPools(entry),
             ReadFields(entry),
             ReadGives(entry),
@@ -253,6 +275,29 @@ public sealed record RewardFile(IReadOnlyList<RewardEntry> Rewards, IReadOnlyLis
         }
 
         return list;
+    }
+
+    /// <summary>"pools" is an object of pool ID and how many rewards it adds, in the order the game draws them.</summary>
+    private static DayEntry ReadDay(JsonElement entry, List<string> problems)
+    {
+        var day = RequireInt(entry, "day");
+
+        if (!entry.TryGetProperty("pools", out var pools) || pools.ValueKind != JsonValueKind.Object) throw new FormatException($"day {day} needs \"pools\", a {{ }} object of pool ID and amount");
+
+        var list = new List<DayPool>();
+
+        foreach (var pool in pools.EnumerateObject())
+        {
+            if (!int.TryParse(pool.Name, NumberStyles.None, CultureInfo.InvariantCulture, out var id)) throw new FormatException($"day {day}: pool \"{pool.Name}\" must be a pool ID");
+
+            if (pool.Value.ValueKind != JsonValueKind.Number || !pool.Value.TryGetInt32(out var amount) || amount < 0) throw new FormatException($"day {day}: pool {id} needs an amount of 0 or more");
+
+            if (list.Any(seen => seen.Pool == id)) throw new FormatException($"day {day} has pool {id} twice");
+
+            list.Add(new DayPool(id, amount));
+        }
+
+        return new DayEntry(day, list);
     }
 
     private static RowEntry ReadRow(JsonElement row, List<string> problems) => new(RequireInt(row, "id"), OptionalInt(row, "copyFrom"), ReadFields(row));
