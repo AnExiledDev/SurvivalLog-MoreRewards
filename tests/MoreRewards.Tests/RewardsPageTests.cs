@@ -26,7 +26,8 @@ public class RewardsPageTests
         new[] { new GameIcon("../../Res/Food/apple.png", "Food/apple"), new GameIcon("../../Res/Reward/solar.png", "Reward/solar") },
         new[] { 1020, 1013, 1013 },
         new[] { new GameCharacter(2, new LocalText("Student", "大学生")), new GameCharacter(1, new LocalText("Worker", "打工仔")) },
-        new[] { new DayEntry(57, new[] { new DayPool(9107, 3), new DayPool(1005, 3) }), new DayEntry(1, new[] { new DayPool(9114, 1) }) });
+        new[] { new DayEntry(57, new[] { new DayPool(9107, 3), new DayPool(1005, 3) }), new DayEntry(1, new[] { new DayPool(9114, 1) }) },
+        new Dictionary<int, int> { [9114] = 7, [1005] = 4, [9107] = 375 });
 
     private static JsonElement Data(string call)
     {
@@ -113,6 +114,17 @@ public class RewardsPageTests
 
         Assert.Equal(new[] { 1, 57 }, days.EnumerateArray().Select(d => d.GetProperty("day").GetInt32()));
         Assert.Equal(new[] { 9107, 3, 1005, 3 }, days[1].GetProperty("pools").EnumerateArray().SelectMany(p => p.EnumerateArray()).Select(n => n.GetInt32()));
+    }
+
+    [Fact]
+    public void The_tab_gets_each_pool_size_and_how_many_cards_a_day_shows()
+    {
+        var data = Data(RewardsPage.DataCall(Game, "{}", Array.Empty<string>(), null, 20));
+
+        Assert.Equal(20, data.GetProperty("cards").GetInt32());
+        Assert.Equal(375, data.GetProperty("poolSizes").GetProperty("9107").GetInt32());
+        Assert.Equal(new[] { "1005", "9107", "9114" }, data.GetProperty("poolSizes").EnumerateObject().Select(p => p.Name));
+        Assert.Equal(3, Data(RewardsPage.DataCall(Game, "{}", Array.Empty<string>(), null)).GetProperty("cards").GetInt32());
     }
 
     [Fact]

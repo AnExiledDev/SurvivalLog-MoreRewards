@@ -41,6 +41,12 @@ public interface IRewardTables
 
     /// <summary>The game reward one level up from <paramref name="id"/> (id + 1, needing id); 0 when there is none.</summary>
     int NextTier(int id);
+
+    /// <summary>The game's day table: each day's pools and how many rewards it draws from each, in draw order.</summary>
+    IReadOnlyList<DayEntry> GameDays();
+
+    /// <summary>How many rewards the game's pool holds; 0 when there is no such pool.</summary>
+    int PoolSize(int pool);
 }
 
 public enum Table
@@ -69,8 +75,22 @@ public sealed record MrGrant(string Effect, int RewardId, IReadOnlyList<FieldSet
 /// <summary>Whoever gets <paramref name="LevelBuff"/> also gets <paramref name="Buffs"/>: a reward's second give onwards.</summary>
 public sealed record Companion(int LevelBuff, IReadOnlyList<int> Buffs);
 
-/// <summary>Everything the rewards files change in the game's tables, in the order it must be applied.</summary>
-public sealed record RewardPlan(IReadOnlyList<RowEdit> Rows, IReadOnlyList<PoolEdit> Pools, IReadOnlyList<TextEntry> Texts, IReadOnlyList<MrGrant> Grants, IReadOnlyList<Companion> Companions, IReadOnlyList<DayEdit> Days, IReadOnlyList<string> Problems)
+/// <summary>
+/// Everything the rewards files change in the game's tables, in the order it must be applied, and the rules the mod
+/// keeps itself while a run goes on.
+/// </summary>
+/// <param name="LastDays">Each level of a reward with a "toDay": the last day it can be offered.</param>
+/// <param name="AlwaysOffered">Each level of every "alwaysOffered" reward, in file order.</param>
+public sealed record RewardPlan(
+    IReadOnlyList<RowEdit> Rows,
+    IReadOnlyList<PoolEdit> Pools,
+    IReadOnlyList<TextEntry> Texts,
+    IReadOnlyList<MrGrant> Grants,
+    IReadOnlyList<Companion> Companions,
+    IReadOnlyList<DayEdit> Days,
+    IReadOnlyDictionary<int, int> LastDays,
+    IReadOnlyList<int> AlwaysOffered,
+    IReadOnlyList<string> Problems)
 {
     public const string GamePrefix = "game:";
 
@@ -94,6 +114,7 @@ public sealed record RewardPlan(IReadOnlyList<RowEdit> Rows, IReadOnlyList<PoolE
     /// Works out the edits. Effects come first and buffs second, so a buff can point at an effect the file makes, then
     /// condition sets, then rewards, so a reward can point at any of them. A disabled reward changes nothing, including
     /// its own buffs and effects. Anything that cannot be built is reported and left out; the rest still applies.
+    /// The "anyDay" rewards go in last, once the file's days are known, since those days decide which pools they go in.
     /// </summary>
     public static RewardPlan Build(RewardFile file, IRewardTables tables)
     {
@@ -107,7 +128,9 @@ public sealed record RewardPlan(IReadOnlyList<RowEdit> Rows, IReadOnlyList<PoolE
 
         foreach (var day in file.Days) builder.AddDay(day);
 
-        return new RewardPlan(builder.Rows, builder.Pools, builder.Texts, builder.Grants, builder.Companions, builder.Days, builder.Problems);
+        builder.AddAnyDay(MainPools.Of(MainPools.Days(tables.GameDays(), builder.Days), tables.PoolSize));
+
+        return new RewardPlan(builder.Rows, builder.Pools, builder.Texts, builder.Grants, builder.Companions, builder.Days, builder.LastDays, builder.AlwaysOffered, builder.Problems);
     }
 
     /// <summary>The first enabled entry to use each ID; a later one that uses any of them, at any level, is reported and left out.</summary>
@@ -168,11 +191,15 @@ public sealed record RewardPlan(IReadOnlyList<RowEdit> Rows, IReadOnlyList<PoolE
         public HashSet<int> OwnConditions { get; } = new();
     }
 
+    /// <summary>A level of an "anyDay" reward, with the pools the file already puts it in, which keep their own weight.</summary>
+    private sealed record AnyDayLevel(int Id, int Weight, IReadOnlyList<PoolEntry> Pools);
+
     private sealed class Builder
     {
         private readonly IRewardTables _tables;
         private readonly HashSet<int> _madeEffects = new();
         private readonly HashSet<int> _madeBuffs = new();
+        private readonly List<AnyDayLevel> _anyDay = new();
 
         public Builder(IRewardTables tables)
         {
@@ -192,6 +219,22 @@ public sealed record RewardPlan(IReadOnlyList<RowEdit> Rows, IReadOnlyList<PoolE
         public List<string> Problems { get; } = new();
 
         public List<DayEdit> Days { get; } = new();
+
+        public Dictionary<int, int> LastDays { get; } = new();
+
+        public List<int> AlwaysOffered { get; } = new();
+
+        /// <summary>
+        /// Each level of every "anyDay" reward goes in each main pool at its "anyDay" weight. A pool the level's own
+        /// "pools" already name keeps the weight given there.
+        /// </summary>
+        public void AddAnyDay(IReadOnlyList<int> mainPools)
+        {
+            foreach (var level in _anyDay)
+            {
+                foreach (var pool in mainPools.Where(pool => level.Pools.All(own => own.Group != pool))) Pools.Add(new PoolEdit(pool, level.Id, level.Weight));
+            }
+        }
 
         /// <summary>A day the file names twice keeps the first; one the game has no row for, or with a pool it lacks, is left out.</summary>
         public void AddDay(DayEntry day)
@@ -272,6 +315,25 @@ public sealed record RewardPlan(IReadOnlyList<RowEdit> Rows, IReadOnlyList<PoolE
             Texts.AddRange(pending.Texts);
             Grants.AddRange(pending.Grants);
             Companions.AddRange(pending.Companions);
+            AddDayRules(reward, levels);
+        }
+
+        /// <summary>
+        /// The rules that apply to every level: the last day, the main pools and the card it always gets. A last day
+        /// before the first day is kept, and reported, since the reward is then never offered.
+        /// </summary>
+        private void AddDayRules(RewardEntry reward, List<Level> levels)
+        {
+            if (reward.ToDay is int last and > 0 && reward.FromDay is int first && last < first) Problems.Add($"reward {reward.Id} has a toDay of {last}, before its fromDay of {first}, so it is never offered");
+
+            foreach (var level in levels)
+            {
+                if (reward.ToDay is int lastDay and > 0) LastDays[level.Id] = lastDay;
+
+                if (reward.AnyDay is int weight and > 0) _anyDay.Add(new AnyDayLevel(level.Id, weight, level.Pools));
+
+                if (reward.AlwaysOffered) AlwaysOffered.Add(level.Id);
+            }
         }
 
         /// <summary>

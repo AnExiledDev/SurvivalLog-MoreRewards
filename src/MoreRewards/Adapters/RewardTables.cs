@@ -110,6 +110,8 @@ internal sealed class RewardTables
         foreach (var edit in plan.Days) Day(days[edit.Day], edit);
 
         WriteTexts(cache, plan.Texts);
+        LastDayPatch.Use(plan.LastDays);
+        OfferPatch.UseAlwaysOffered(plan.AlwaysOffered);
         Grants = plan.Grants;
         Problems = problems;
         CompanionBuffs.Use(plan.Companions);
@@ -405,6 +407,10 @@ internal sealed class RewardTables
         public bool HasPool(int id) => _pools.ContainsKey(id);
 
         public bool HasDay(int day) => _days.ContainsKey(day);
+
+        public IReadOnlyList<DayEntry> GameDays() => GameReader.Days(_days);
+
+        public int PoolSize(int pool) => _pools.ContainsKey(pool) ? _pools[pool]?._IdList_k__BackingField?.Count ?? 0 : 0;
 
         /// <summary>The lowest condition set that asks for nothing, found once.</summary>
         public int BlankCondition()

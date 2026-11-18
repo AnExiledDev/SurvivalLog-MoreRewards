@@ -19,6 +19,8 @@ public class RewardPlanTests
         public HashSet<int> PoolIds { get; } = new() { 1013, 1020 };
         public HashSet<int> Days { get; } = new() { 1, 57 };
         public Dictionary<string, int> Scripts { get; } = new() { ["Buff/AE_PowerSolarEfficiency"] = 200312710, ["Buff/Buff_Empty"] = 200100910 };
+        public List<DayEntry> DayRows { get; } = new();
+        public Dictionary<int, int> Sizes { get; } = new();
 
         public bool IsReward(int id) => Rewards.Contains(id);
         public bool HasTalent(int id) => Talents.Contains(id);
@@ -32,6 +34,27 @@ public class RewardPlanTests
         public int BlankCondition() => Blank;
         public int? EffectRunning(string script) => Scripts.TryGetValue(script, out var id) ? id : null;
         public int NextTier(int id) => Tiers.TryGetValue(id, out var next) ? next : 0;
+        public IReadOnlyList<DayEntry> GameDays() => DayRows;
+        public int PoolSize(int pool) => Sizes.TryGetValue(pool, out var size) ? size : 0;
+
+        /// <summary>
+        /// Days 1 and 7 as the game has them: day 1 draws from 9114 (7 rewards), 9102 (30) and 1005 (4), day 7 from 9103
+        /// (72), 9121 (14) and 1005. So 9102 and 9103 are the main pools.
+        /// </summary>
+        public FakeTables WithDays()
+        {
+            DayRows.Add(new DayEntry(1, new[] { new DayPool(9114, 1), new DayPool(9102, 2), new DayPool(1005, 3) }));
+            DayRows.Add(new DayEntry(7, new[] { new DayPool(9103, 1), new DayPool(9121, 1), new DayPool(1005, 1) }));
+            Days.Add(7);
+
+            foreach (var (pool, size) in new[] { (9114, 7), (9102, 30), (1005, 4), (9103, 72), (9121, 14) })
+            {
+                Sizes[pool] = size;
+                PoolIds.Add(pool);
+            }
+
+            return this;
+        }
 
         /// <summary>Adds Sunlight Collection III and every pool the wind rewards use.</summary>
         public FakeTables WithSunlightThree()
@@ -565,6 +588,87 @@ public class RewardPlanTests
 
         Assert.Contains(plan.Problems, problem => problem.Contains("layers"));
         Assert.DoesNotContain(plan.Rows, row => row.Table == Table.Buff);
+    }
+
+    [Fact]
+    public void To_day_goes_on_every_level()
+    {
+        var plan = Plan("""{ "rewards": [ { "id": 31271, "toDay": 20, "levels": [ {}, {} ] } ] }""");
+
+        Assert.Empty(plan.Problems);
+        Assert.Equal(new Dictionary<int, int> { [31271] = 20, [31272] = 20 }, plan.LastDays);
+    }
+
+    [Fact]
+    public void A_to_day_before_the_from_day_is_reported_and_kept()
+    {
+        var plan = Plan("""{ "rewards": [ { "id": 31271, "fromDay": 10, "toDay": 5 } ] }""");
+
+        Assert.Contains(plan.Problems, problem => problem.Contains("toDay of 5, before its fromDay of 10"));
+        Assert.Equal(5, plan.LastDays[31271]);
+    }
+
+    [Fact]
+    public void Always_offered_goes_on_every_level_in_file_order()
+    {
+        var plan = Plan("""
+            { "rewards": [ { "id": 39001, "copyFrom": 31271, "alwaysOffered": true, "levels": [ {}, {} ] },
+              { "id": 31271, "alwaysOffered": true }, { "id": 39101, "copyFrom": 31271 } ] }
+            """);
+
+        Assert.Empty(plan.Problems);
+        Assert.Equal(new[] { 39001, 39002, 31271 }, plan.AlwaysOffered);
+    }
+
+    [Fact]
+    public void Any_day_puts_every_level_in_each_days_main_pool()
+    {
+        var plan = Plan("""{ "rewards": [ { "id": 39001, "copyFrom": 31271, "anyDay": 10, "levels": [ {}, {} ] } ] }""", new FakeTables().WithDays());
+
+        Assert.Empty(plan.Problems);
+        Assert.Equal(Pools((9102, 10), (9103, 10)), PoolsOf(plan, 39001));
+        Assert.Equal(Pools((9102, 10), (9103, 10)), PoolsOf(plan, 39002));
+    }
+
+    [Fact]
+    public void Any_day_leaves_a_pool_the_reward_names_at_the_weight_given_there()
+    {
+        var plan = Plan("""{ "rewards": [ { "id": 39001, "copyFrom": 31271, "anyDay": 10, "pools": { "9103": 3 } } ] }""", new FakeTables().WithDays());
+
+        Assert.Empty(plan.Problems);
+        Assert.Equal(Pools((9102, 10), (9103, 3)), PoolsOf(plan, 39001));
+    }
+
+    [Fact]
+    public void Any_day_follows_a_day_the_file_changes()
+    {
+        var plan = Plan("""
+            { "rewards": [ { "id": 39001, "copyFrom": 31271, "anyDay": 10 } ],
+              "days": [ { "day": 7, "pools": [ { "pool": 9121, "amount": 2 }, { "pool": 1005, "amount": 1 } ] } ] }
+            """, new FakeTables().WithDays());
+
+        Assert.Empty(plan.Problems);
+        Assert.Equal(Pools((9102, 10), (9121, 10)), PoolsOf(plan, 39001));
+    }
+
+    [Fact]
+    public void A_skipped_reward_gets_no_last_day_main_pools_or_card()
+    {
+        var plan = Plan("""{ "rewards": [ { "id": 39001, "toDay": 5, "anyDay": 10, "alwaysOffered": true } ] }""", new FakeTables().WithDays());
+
+        Assert.Contains(plan.Problems, problem => problem.Contains("was skipped"));
+        Assert.Empty(plan.LastDays);
+        Assert.Empty(plan.AlwaysOffered);
+        Assert.Empty(plan.Pools);
+    }
+
+    [Fact]
+    public void A_days_main_pool_is_its_biggest_drawn_pool_and_the_first_on_a_tie()
+    {
+        var sizes = new Dictionary<int, int> { [5] = 10, [6] = 10, [7] = 100 };
+
+        Assert.Equal(5, MainPools.MainOf(new DayEntry(1, new[] { new DayPool(5, 1), new DayPool(6, 2), new DayPool(7, 0) }), pool => sizes[pool]));
+        Assert.Equal(0, MainPools.MainOf(new DayEntry(1, new[] { new DayPool(7, 0) }), pool => sizes[pool]));
     }
 
     private static IEnumerable<PoolEntry> Pools(params (int Group, int Weight)[] pools) => pools.Select(pool => new PoolEntry(pool.Group, pool.Weight));

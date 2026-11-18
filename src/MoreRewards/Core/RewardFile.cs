@@ -58,7 +58,9 @@ public sealed record LevelEntry(int? Cost, LocalText? Name, LocalText? Descripti
 /// One reward in the file. Anything left out keeps the game's value, or the value of the reward it copies.
 /// <paramref name="Needs"/>, <paramref name="Furniture"/>, <paramref name="FromDay"/> and <paramref name="Layers"/> are null
 /// when the file leaves them as they are. <paramref name="Layers"/> is how many times a reward the player can buy again
-/// stacks.
+/// stacks. <paramref name="ToDay"/> is the last day it can be offered, null for no last day. <paramref name="AnyDay"/>
+/// is a weight: the reward goes in the biggest pool of every day at that weight. <paramref name="AlwaysOffered"/> takes
+/// one card each day for it while it can be offered. All three apply to every level.
 /// <paramref name="Levels"/> is null for a reward of one level. Level n (from 0) is the reward with ID
 /// <paramref name="Id"/> + n, as the game numbers Sunlight Collection I, II and III.
 /// </summary>
@@ -72,6 +74,9 @@ public sealed record RewardEntry(
     IReadOnlyList<int>? Needs,
     IReadOnlyList<int>? Furniture,
     int? FromDay,
+    int? ToDay,
+    int? AnyDay,
+    bool AlwaysOffered,
     int? Layers,
     IReadOnlyList<PoolEntry> Pools,
     IReadOnlyList<FieldSet> Fields,
@@ -175,6 +180,9 @@ public sealed record RewardFile(IReadOnlyList<RewardEntry> Rewards, IReadOnlyLis
             OptionalInts(entry, "needs"),
             OptionalInts(entry, "furniture"),
             OptionalInt(entry, "fromDay"),
+            OptionalInt(entry, "toDay"),
+            OptionalInt(entry, "anyDay"),
+            OptionalBool(entry, "alwaysOffered") ?? false,
             OptionalInt(entry, "layers"),
             ReadPools(entry),
             ReadFields(entry),

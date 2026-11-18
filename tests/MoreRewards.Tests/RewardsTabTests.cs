@@ -98,6 +98,115 @@ public class RewardsTabTests
         Assert.False(Bool("T.st.entries[0].autoText"));
     }
 
+    // The three day rules go into the file only when they are set, and read back as they were written.
+    [Fact]
+    public void The_day_rules_are_saved_only_when_set_and_read_back()
+    {
+        Load("""{ "rewards": [ { "id": 31271, "toDay": 20, "anyDay": 10, "alwaysOffered": true }, { "id": 31301, "pools": { "1005": 2 } } ] }""");
+
+        Assert.Equal("20 10 true", Text("[T.st.entries[0].rules.toDay, T.st.entries[0].rules.anyDay, T.st.entries[0].rules.always].join(' ')"));
+        Assert.Equal("20 10 true", Text("(function (o) { return [o.toDay, o.anyDay, o.alwaysOffered].join(' '); })(T.outEntry(T.st.entries[0]))"));
+        Assert.False(Bool("['toDay', 'anyDay', 'alwaysOffered'].some(function (k) { return k in T.outEntry(T.st.entries[1]); })"));
+    }
+
+    // Day 1 draws from 9102 (30 rewards) and 1005 (4), day 7 from 9103 (72) and 9121 (14). The plugin picks the same
+    // pools (MainPools.cs), so the tab and the game agree on where "any day" puts a reward.
+    [Fact]
+    public void Each_days_biggest_pool_follows_the_days_changed_in_the_tab()
+    {
+        Load("""{ "rewards": [] }""");
+
+        Assert.Equal("9102,9103", Text("T.mainPools()"));
+
+        _engine.Execute("T.st.dayEdits[7] = [{ pool: 9121, amount: 2 }, { pool: 9103, amount: 0 }];");
+
+        Assert.Equal("9102,9121", Text("T.mainPools()"));
+    }
+
+    [Fact]
+    public void Any_day_puts_a_reward_in_each_days_biggest_pool_and_a_pool_it_names_keeps_its_weight()
+    {
+        Load("""{ "rewards": [ { "id": 31301, "anyDay": 10, "pools": { "9103": 3 } } ] }""");
+
+        Assert.Equal(10, Weight(9102, 31301));
+        Assert.Equal(3, Weight(9103, 31301));
+        Assert.Equal(0, Weight(9121, 31301));
+        Assert.Contains("pools 9102 at weight 10", Text("T.poolsHtml(T.st.entries[0])"));
+    }
+
+    // With 5 cards a day the test draw shows 5: the always offered reward first, then the game's picks and More
+    // Rewards' extra cards. A reward past its last day never shows.
+    [Fact]
+    public void The_test_draw_shows_every_card_of_the_day_with_always_offered_first()
+    {
+        Load("""{ "rewards": [ { "id": 31271, "alwaysOffered": true }, { "id": 31451, "toDay": 3 } ] }""");
+
+        for (var run = 0; run < 20; run++)
+        {
+            _engine.Execute("var drawn = T.testDraw(7); var shown = drawn.filter(function (c) { return c.isShown; });");
+
+            Assert.Equal(5, (int)_engine.Evaluate("shown.length").AsNumber());
+            Assert.Equal(31271, (int)_engine.Evaluate("shown[0].id").AsNumber());
+            Assert.Equal("Always offered", Text("shown[0].pool ? 'pool' : 'Always offered'"));
+            Assert.False(Bool("drawn.some(function (c) { return c.id === 31451; })"));
+            Assert.True(Bool("new Set(drawn.map(function (c) { return c.id; })).size === drawn.length"));
+        }
+    }
+
+    [Fact]
+    public void An_always_offered_reward_outside_its_days_gets_no_card()
+    {
+        Load("""{ "rewards": [ { "id": 31271, "alwaysOffered": true, "fromDay": 7 } ] }""", 3);
+
+        _engine.Execute("var shown = T.testDraw(1).filter(function (c) { return c.isShown; });");
+
+        Assert.Equal(3, (int)_engine.Evaluate("shown.length").AsNumber());
+        Assert.False(Bool("shown.some(function (c) { return !c.pool; })"));
+    }
+
+    // The day view used to say only the first 3 cards show, which is wrong once OptionCount is above 3.
+    [Fact]
+    public void The_day_view_says_how_many_cards_a_day_shows_and_marks_the_biggest_pool()
+    {
+        Load("""{ "rewards": [] }""");
+
+        Assert.Contains("You get 5 cards a day (OptionCount), so More Rewards draws the other 2", Text("T.dayHtml(1)"));
+        Assert.Contains("BIGGEST", Text("T.dayHtml(1)"));
+        Assert.Contains("4 rewards, Day 1</small>", Text("T.dayHtml(1)"));
+        Assert.Contains("2 rewards, Days 7+</small>", Text("T.dayHtml(7)"));
+
+        Load("""{ "rewards": [] }""", 3);
+
+        Assert.DoesNotContain("cards a day", Text("T.dayHtml(1)"));
+    }
+
+    // Day 1 draws two from 9102 and one from 1005; day 7 one each from 9103 and 9121. Twelve game rewards fill the pools.
+    // Loading closes any open menu, which lets go of its page listeners, so the page gets a stand-in for that.
+    private void Load(string file, int cards = 5)
+    {
+        _engine.Execute($$"""
+            window.document = window.document || { addEventListener: function () {}, removeEventListener: function () {} };
+            (function () {
+              var game = [];
+              var pools = [[9102, 31271], [9102, 31301], [9102, 31331], [9102, 31361], [1005, 31391], [1005, 31421],
+                [9103, 31451], [9103, 31481], [9103, 31571], [9103, 31601], [9121, 31511], [9121, 31541]];
+              pools.forEach(function (p) {
+                var into = {};
+                into[p[0]] = 5;
+                game.push({ id: p[1], levels: [{ id: p[1], cost: 10, name: { en: 'Reward ' + p[1], zh: 'Reward ' + p[1] }, pools: into }] });
+              });
+              window.__slmrRewards.data({
+                game: game, pools: [1005, 9102, 9103, 9121], cards: {{cards}},
+                days: [{ day: 1, pools: [[9102, 2], [1005, 1]] }, { day: 7, pools: [[9103, 1], [9121, 1]] }],
+                poolSizes: { 1005: 4, 9102: 30, 9103: 72, 9121: 14 },
+                file: {{file}}
+              });
+            })();
+            """);
+    }
+
+    private int Weight(int pool, int id) => (int)_engine.Evaluate($"(function () {{ var m = (T.poolIndex()[{pool}] || []).find(function (x) {{ return x.id === {id}; }}); return m ? m.weight : 0; }})()").AsNumber();
+
     private bool Bool(string expression) => _engine.Evaluate($"!!({expression})").AsBoolean();
 
     private string Text(string expression) => _engine.Evaluate($"String({expression})").AsString();

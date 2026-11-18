@@ -20,7 +20,7 @@ namespace MoreRewards;
 public sealed class Plugin : BasePlugin
 {
     internal const string Guid = "com.dev.survivallog.morerewards";
-    private const string Version = "0.11.4";
+    private const string Version = "0.11.5";
     private const long MaxLogBytes = 1024 * 1024;
     private const string RewardsFileName = "MoreRewards.Rewards.json";
 
@@ -80,8 +80,10 @@ public sealed class Plugin : BasePlugin
         var wind = hasWindPower ? RewardFileStore.Wind(log.Write) : RewardFile.Empty;
         RewardFile Read() => hasWindPower ? RewardFileStore.Load(path, log.Write).Over(wind) : RewardFileStore.Load(path, log.Write).Without(windEffect);
         var applies = Read();
+        var fileHooks = new PatchKit(new Harmony(Guid), log.Write);
 
-        CompanionBuffs.Apply(new PatchKit(new Harmony(Guid), log.Write));
+        CompanionBuffs.Apply(fileHooks);
+        LastDayPatch.Apply(fileHooks);
         tables = new RewardTables(() => enabled.Value ? applies : RewardFile.Empty, log.Write);
         RewardsTicker.Checks.Add(tables.Tick);
         LiveSettings.Watch(() => tables.Changed(), enabled);

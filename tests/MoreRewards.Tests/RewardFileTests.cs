@@ -48,6 +48,20 @@ public class RewardFileTests
     }
 
     [Fact]
+    public void The_day_rules_are_read_and_left_out_they_change_nothing()
+    {
+        var file = RewardFile.Parse("""{ "rewards": [ { "id": 31271, "toDay": 40, "anyDay": 10, "alwaysOffered": true }, { "id": 31301 } ] }""");
+
+        Assert.Empty(file.Problems);
+        Assert.Equal(40, file.Rewards[0].ToDay);
+        Assert.Equal(10, file.Rewards[0].AnyDay);
+        Assert.True(file.Rewards[0].AlwaysOffered);
+        Assert.Null(file.Rewards[1].ToDay);
+        Assert.Null(file.Rewards[1].AnyDay);
+        Assert.False(file.Rewards[1].AlwaysOffered);
+    }
+
+    [Fact]
     public void Levels_and_several_gives_are_read()
     {
         var file = RewardFile.Parse("""

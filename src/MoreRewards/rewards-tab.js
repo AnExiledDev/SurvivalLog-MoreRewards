@@ -75,9 +75,11 @@
     'N .pm span{text-align:right;font-family:var(--mono);color:var(--td)}',
     'N .drw.is-cut{opacity:.5}',
     'N .drw .nm2{text-align:right}',
+    'N .pl-row.drw{grid-template-columns:minmax(0,1fr) auto 80px}',
     'N .drw-n{display:flex;align-items:center;gap:8px;min-width:0}',
     'N .drw-n img{width:28px;height:28px;object-fit:contain;flex:none}',
     'N .nm2{color:var(--td);font-size:.82rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+    'N .nm2.wr{white-space:normal}',
     'N .tx{grid-template-columns:180px minmax(0,1fr) minmax(0,1fr)}',
     'N .chw{grid-column:span 2;display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px}',
     'N .tx-n{grid-column:span 2;margin-top:-4px;color:var(--td);font-size:.8rem}',
@@ -140,6 +142,8 @@
     problems: [],
     characters: [],
     gameDays: [],
+    poolSizes: {},
+    cards: 3,
     dayEdits: {},
     day: 0,
     peek: 0,
@@ -358,8 +362,9 @@
 
   // ===== Entries: the rewards in the file, as the tab edits them =====
 
-  // A reward made from scratch starts with the game's defaults: any run, every character, from the first day.
-  const NO_RULES = { isReget: false, endless: 0, chars: [], layers: 0, fromDay: 0 };
+  // A reward made from scratch starts with the game's defaults: any run, every character, from the first day. The game
+  // has no last day, any day weight or always offered card, so those start off on every reward.
+  const NO_RULES = { isReget: false, endless: 0, chars: [], layers: 0, fromDay: 0, toDay: 0, anyDay: 0, always: false };
 
   function entryFromRaw(raw, rawIndex) {
     const id = raw.id;
@@ -399,7 +404,10 @@
       endless: isNum(fields.EndlessMode) ? fields.EndlessMode : e.gameRules.endless,
       chars: isArr(fields.PlayerSelectId) ? fields.PlayerSelectId.filter(isNum) : e.gameRules.chars.slice(),
       layers: isNum(raw.layers) ? raw.layers : base ? e.gameRules.layers : 1,
-      fromDay: isNum(raw.fromDay) ? raw.fromDay : e.gameRules.fromDay
+      fromDay: isNum(raw.fromDay) ? raw.fromDay : e.gameRules.fromDay,
+      toDay: isNum(raw.toDay) ? raw.toDay : 0,
+      anyDay: isNum(raw.anyDay) ? raw.anyDay : 0,
+      always: raw.alwaysOffered === true
     };
 
     e.levels = range(count).map(i => {
@@ -697,9 +705,58 @@
   // A level by the name the player sees on its card.
   const levelLabel = (look, i) => levelNameOf(look, i, st.lang);
 
+  // The pool a day draws most from: the one with the most rewards that it draws at least one from, the first on a tie.
+  // The plugin picks it the same way (MainPools.cs).
+  function mainPoolOf(pools) {
+    let best = 0;
+    let bestSize = -1;
+
+    pools.forEach(p => {
+      const size = st.poolSizes[p.pool] || 0;
+
+      if (p.amount > 0 && size > bestSize) {
+        best = p.pool;
+        bestSize = size;
+      }
+    });
+
+    return best;
+  }
+
+  // Each day's biggest pool, each pool once, with the day changes in this tab.
+  function mainPools() {
+    const pools = [];
+
+    st.gameDays.forEach(x => {
+      const pool = mainPoolOf(dayPools(x.day));
+
+      if (pool && pools.indexOf(pool) < 0) pools.push(pool);
+    });
+
+    return pools;
+  }
+
+  // A level's pools once "any day" is in: each day's biggest pool at the any day weight, except a pool the level
+  // names itself, which keeps its own weight.
+  function livePools(look, l, main) {
+    const pools = poolsOf(l);
+    const weight = look.rules ? look.rules.anyDay : 0;
+
+    if (!(weight > 0)) return pools;
+
+    const out = Object.assign({}, pools);
+
+    main.forEach(pool => {
+      if (!(l.pools && pool in l.pools)) out[pool] = weight;
+    });
+
+    return out;
+  }
+
   // Every pool's reward levels with their weights, in one pass over the rewards.
   function poolIndex() {
     const index = {};
+    const main = mainPools();
 
     allIds().forEach(id => {
       const look = liveReward(id);
@@ -707,10 +764,10 @@
       if (!look) return;
 
       look.levels.forEach((l, i) => {
-        const pools = poolsOf(l);
+        const pools = livePools(look, l, main);
 
         Object.keys(pools).forEach(pool => {
-          if (pools[pool] > 0) (index[pool] = index[pool] || []).push({ id: id + i, name: levelLabel(look, i), icon: look.icon, weight: pools[pool] });
+          if (pools[pool] > 0) (index[pool] = index[pool] || []).push({ id: id + i, name: levelLabel(look, i), icon: look.icon, weight: pools[pool], rules: look.rules });
         });
       });
     });
@@ -765,27 +822,87 @@
 
   const rewardCount = n => st.lang === 'zh' ? n + '个奖励' : n + (n === 1 ? ' reward' : ' rewards');
 
-  // One end-of-day draw done the way the game does it: each pool in order draws its amount by weight, never the same
-  // reward twice, and only the first 3 are shown. It does not know what the player owns or can get, as the game does.
+  // Whether a reward can come up on a day by its first and last day.
+  const isInDays = (r, day) => !r || ((r.fromDay <= 0 || day >= r.fromDay) && (r.toDay <= 0 || day <= r.toDay));
+
+  // One pick by weight from the members not taken yet; null when none is left.
+  function drawOne(members, taken) {
+    const left = members.filter(m => !taken.has(m.id));
+
+    if (!left.length) return null;
+
+    const total = left.reduce((sum, m) => sum + m.weight, 0);
+    let roll = Math.floor(Math.random() * total) + 1;
+
+    return left.find(m => (roll -= m.weight) <= 0) || left[left.length - 1];
+  }
+
+  // The first level of each always offered reward that can come up on the day, in file order. One card is always
+  // left for the draw.
+  function alwaysCards(day) {
+    return st.entries.filter(e => e.enabled && !e.removed && e.rules.always && isInDays(e.rules, day)).slice(0, Math.max(0, st.cards - 1))
+      .map(e => ({ id: e.id, pool: 0, name: levelLabel(e, 0), icon: e.icon, isShown: true }));
+  }
+
+  // One end-of-day draw done the way the game and More Rewards do it. The game goes down the pools in order, draws each
+  // one's amount by weight, never the same reward twice, and keeps the first 3. More Rewards puts the always offered
+  // rewards first, then the game's picks, then draws the rest from the day's pools by their amounts until there are as
+  // many cards as the tab was told (OptionCount). It knows the first and last days, but not what the player owns,
+  // their character or their needs, so the game may skip some of these.
   function testDraw(day) {
+    const index = poolIndex();
+    const members = pool => poolMembers(pool, index).filter(m => isInDays(m.rules, day));
+    const pools = dayPools(day);
     const taken = new Set();
-    const picks = [];
+    const gamePicks = [];
 
-    dayPools(day).forEach(p => {
-      let left = poolMembers(p.pool).filter(m => !taken.has(m.id));
+    pools.forEach(p => {
+      for (let n = 0; n < p.amount; n++) {
+        const pick = drawOne(members(p.pool), taken);
 
-      for (let n = 0; n < p.amount && left.length; n++) {
-        const total = left.reduce((sum, m) => sum + m.weight, 0);
-        let roll = Math.floor(Math.random() * total) + 1;
-        const pick = left.find(m => (roll -= m.weight) <= 0) || left[left.length - 1];
+        if (!pick) break;
 
         taken.add(pick.id);
-        picks.push({ pool: p.pool, name: pick.name, icon: pick.icon, isShown: picks.length < 3 });
-        left = left.filter(m => m !== pick);
+        gamePicks.push({ id: pick.id, pool: p.pool, name: pick.name, icon: pick.icon });
       }
     });
 
-    return picks;
+    const shown = alwaysCards(day);
+    const held = new Set(shown.map(c => c.id));
+    const kept = gamePicks.slice(0, 3).filter(c => !held.has(c.id)).slice(0, st.cards - shown.length);
+
+    kept.forEach(c => { shown.push(Object.assign({}, c, { isShown: true })); held.add(c.id); });
+    topUp(shown, held, pools, members);
+
+    return shown.concat(gamePicks.filter(c => !held.has(c.id)).map(c => Object.assign({}, c, { isShown: false })));
+  }
+
+  // More Rewards' extra cards: each pool once per reward it draws, round and round, so a pool that draws 2 gives
+  // twice as many extras as a pool that draws 1. A pool with nothing left drops out (OfferFill.cs).
+  function topUp(shown, held, pools, members) {
+    const turns = [];
+    const dry = new Set();
+
+    pools.forEach(p => { for (let n = 0; n < p.amount; n++) turns.push(p.pool); });
+
+    const poolCount = new Set(turns).size;
+
+    for (let turn = 0; shown.length < st.cards && dry.size < poolCount; turn++) {
+      const pool = turns[turn % turns.length];
+
+      if (dry.has(pool)) continue;
+
+      const pick = drawOne(members(pool), held);
+
+      if (!pick) {
+        dry.add(pool);
+
+        continue;
+      }
+
+      held.add(pick.id);
+      shown.push({ id: pick.id, pool, name: pick.name, icon: pick.icon, isShown: true });
+    }
   }
 
   function daysHtml() {
@@ -807,14 +924,17 @@
   function dayHtml(day) {
     const pools = dayPools(day);
     const index = poolIndex();
+    const main = mainPoolOf(pools);
     const free = st.allPools.filter(id => !pools.some(p => p.pool === id));
     const rows = pools.map((p, i) => {
       const count = poolMembers(p.pool, index).length;
+      const runs = poolDayRuns(p.pool);
+      const biggest = p.pool === main ? tag('src-game', 'BIGGEST', '最大') : '';
       const up = i > 0 ? '<b data-a="dpup" data-v="' + p.pool + '" title="' + L('Draw earlier', '提前抽取') + '">&#9650;</b>' : '<b></b>';
       const down = i < pools.length - 1 ? '<b data-a="dpdn" data-v="' + p.pool + '" title="' + L('Draw later', '推后抽取') + '">&#9660;</b>' : '';
 
       return '<div class="pl-row dpl"><span class="pl-id" data-a="peek" data-v="' + p.pool + '">' + (st.peek === p.pool ? '&#9660; ' : '&#9654; ') +
-        L('Pool', '卡池') + ' ' + p.pool + '<small>' + (count ? rewardCount(count) : L('empty', '空')) + '</small></span>' +
+        L('Pool', '卡池') + ' ' + p.pool + biggest + '<small>' + (count ? rewardCount(count) : L('empty', '空')) + (runs.length ? L(', ', '，') + daysText(runs) : '') + '</small></span>' +
         '<span class="mv">' + up + down + '</span>' +
         stepper('d:' + p.pool, p.amount, L('drawn', '个'), false) +
         '<span class="x" data-a="rmdpool" data-v="' + p.pool + '" title="' + L('Remove', '移除') + '">&#x2715;</span></div>' +
@@ -825,11 +945,20 @@
     const none = pools.length ? '' : '<div class="nnote">' + L('No pools, so this day offers nothing.', '没有卡池，这一天什么都不会出现。') + '</div>';
 
     return '<div class="sec-h">' + esc(dayName(day)).toUpperCase() + '</div>' +
-      '<div class="nnote">' + L('At the end of this day the game goes down this list in order and draws that many rewards from each pool, never the same one twice. It shows the first 3, so a pool lower down only shows when the ones above come up short. Click a pool to see what is in it.', '这一天结束时，游戏按顺序从每个卡池抽出设定数量的奖励，不会重复。只显示前 3 个，所以下面的卡池只在上面的抽不够时才会出现。点卡池可以看里面有什么。') + '</div>' +
+      '<div class="nnote">' + drawNote() + '</div>' +
       '<div class="pl">' + rows + none + '<div class="pl-add">' + add + reset + '</div></div>' +
       '<div class="sec-h">' + L('TEST DRAW', '试抽') + '</div>' +
-      '<div class="nnote">' + L('Uses the pools and weights in this tab, unsaved changes too. It does not know what you own, your character or your needs, so the game may skip some of these.', '使用本页的卡池和权重，包括没保存的修改。它不知道你拥有什么、你的角色和条件，所以游戏可能会跳过其中一些。') + '</div>' +
+      '<div class="nnote">' + L('Uses the pools and weights in this tab, unsaved changes too, and the first and last days. It does not know what you own, your character or your needs, so the game may skip some of these.', '使用本页的卡池和权重，包括没保存的修改，也看开始和最后一天。它不知道你拥有什么、你的角色和条件，所以游戏可能会跳过其中一些。') + '</div>' +
       '<div class="pl-add"><span class="gbtn" data-a="draw">' + L('DRAW', '抽取') + '</span></div>' + drawnHtml();
+  }
+
+  // How a day's cards are drawn, with the number of cards OptionCount gives.
+  function drawNote() {
+    const game = L('At the end of this day the game goes down this list in order and draws that many rewards from each pool, never the same one twice. It keeps the first 3, so a pool lower down only comes up when the ones above come up short.', '这一天结束时，游戏按顺序从每个卡池抽出设定数量的奖励，不会重复。它只留前 3 个，所以下面的卡池只在上面的抽不够时才会出现。');
+    const more = st.cards > 3 ? ' ' + L('You get ' + st.cards + ' cards a day (OptionCount), so More Rewards draws the other ' + (st.cards - 3) + ' from these pools. A pool that draws 2 gives twice as many of them as a pool that draws 1. More cards means every reward comes up more often.', '你每天有 ' + st.cards + ' 张卡（OptionCount），所以更多奖励会从这些卡池再抽 ' + (st.cards - 3) + ' 张。抽 2 张的卡池给的是抽 1 张的两倍。卡越多，每个奖励出现得越常。') : '';
+    const always = st.entries.some(e => e.enabled && !e.removed && e.rules.always) ? ' ' + L('Always offered rewards take the first cards.', '必定出现的奖励占前几张卡。') : '';
+
+    return game + more + always + ' ' + L('Click a pool to see what is in it.', '点卡池可以看里面有什么。');
   }
 
   function membersHtml(pool) {
@@ -848,7 +977,7 @@
     if (!st.drawn.length) return '<div class="nnote">' + L('Nothing came up: these pools are empty.', '什么都没抽到：这些卡池是空的。') + '</div>';
 
     return '<div class="pl">' + st.drawn.map(p => '<div class="pl-row drw' + (p.isShown ? '' : ' is-cut') + '"><span class="drw-n"><img src="' + esc(p.icon) + '" alt=""><span>' + esc(p.name) + '</span></span>' +
-      '<span class="nm2">' + L('Pool', '卡池') + ' ' + p.pool + '</span><span class="nm2">' + (p.isShown ? '' : L('not shown', '不显示')) + '</span></div>').join('') + '</div>';
+      '<span class="nm2">' + (p.pool ? L('Pool', '卡池') + ' ' + p.pool : L('Always offered', '必定出现')) + '</span><span class="nm2">' + (p.isShown ? '' : L('not shown', '不显示')) + '</span></div>').join('') + '</div>';
   }
 
   // ===== Saving =====
@@ -897,7 +1026,7 @@
 
     const auto = isAutoOn(e);
     const out = { id: e.id, enabled: e.enabled };
-    const managed = ['id', 'enabled', 'copyFrom', 'name', 'description', 'cost', 'pools', 'needs', 'furniture', 'levels', 'gives', 'fields', 'fromDay', 'layers'];
+    const managed = ['id', 'enabled', 'copyFrom', 'name', 'description', 'cost', 'pools', 'needs', 'furniture', 'levels', 'gives', 'fields', 'fromDay', 'toDay', 'anyDay', 'alwaysOffered', 'layers'];
     const name = writeText(e.name, baseText(e, 'name'));
     const description = auto ? undefined : writeText(e.description, null);
 
@@ -918,6 +1047,12 @@
     if (Object.keys(fields).length) out.fields = fields;
 
     if (e.rules.fromDay !== e.gameRules.fromDay) out.fromDay = e.rules.fromDay;
+
+    if (e.rules.toDay > 0) out.toDay = e.rules.toDay;
+
+    if (e.rules.anyDay > 0) out.anyDay = e.rules.anyDay;
+
+    if (e.rules.always) out.alwaysOffered = true;
 
     if (e.rules.layers !== e.gameRules.layers) out.layers = e.rules.layers;
 
@@ -1296,10 +1431,13 @@
       (id in l.gamePools ? '<span></span>' : '<span class="x" data-a="rmpool" data-v="' + id + '" title="' + L('Remove', '移除') + '">&#x2715;</span>') + '</div>').join('');
     const add = free.length ? poolButton('reward', L('ADD TO A POOL', '加入卡池')) : '';
     const same = e.levels.length > 1 ? '<span class="gbtn dim" data-a="poolsall">' + L('USE THESE POOLS FOR EVERY LEVEL', '所有等级使用这些卡池') + '</span>' : '';
-    const none = ids.length ? '' : '<div class="nnote">' + L('Not in any pool, so the game never offers this level.', '不在任何卡池中，游戏永远不会提供这一级。') + '</div>';
+    const none = ids.length || e.rules.anyDay > 0 ? '' : '<div class="nnote">' + L('Not in any pool, so the game never offers this level.', '不在任何卡池中，游戏永远不会提供这一级。') + '</div>';
+    const main = mainPools().filter(id => !(l.pools && id in l.pools));
+    const mainInOrder = main.slice().sort((a, b) => a - b);
+    const anyDay = e.rules.anyDay > 0 && main.length ? '<div class="nnote">' + L('"Any day" also puts it in pools ' + mainInOrder.join(', ') + ' at weight ' + e.rules.anyDay + '. Those are the biggest pools of each day.', '「任何一天」还会把它以权重 ' + e.rules.anyDay + ' 加入卡池 ' + mainInOrder.join('、') + '。这些是每天最大的卡池。') + '</div>' : '';
 
     return '<div class="sec-h">' + L('POOLS', '卡池') + ' (Lv.' + (i + 1) + ')<small>' + L('Where the game draws it from. A higher weight comes up more often.', '游戏从哪些卡池抽取它。权重越高越常出现。') + '</small></div>' +
-      '<div class="pl">' + rows + none + '<div class="pl-add">' + add + same + '</div></div>' +
+      '<div class="pl">' + rows + none + '<div class="pl-add">' + add + same + '</div></div>' + anyDay +
       (Object.keys(l.gamePools).length ? '<div class="nnote">' + L('You can\'t remove the game\'s pools, only change their weight.', '游戏原有的卡池不能移除，只能改权重。') + '</div>' : '');
   }
 
@@ -1311,12 +1449,16 @@
       '<input data-a="ids" data-k="' + key + '" value="' + esc(own ? own.join(', ') : '') + '" placeholder="' + esc(game.length ? game.join(', ') : L('none', '无')) + '">' +
       '<span class="nm2">' + esc((own || game).map(id => idName(id)).join(', ')) + '</span>';
     const fromDay = r.fromDay > 0 ? L('Offered from day ' + r.fromDay, '第' + r.fromDay + '天起出现') : L('Offered from the first day', '从第一天起出现');
+    const toDay = r.toDay <= 0 ? L('No last day', '没有最后一天') : r.toDay < r.fromDay ? L('Before its first day, so it is never offered', '早于开始的那天，所以永远不会出现') : L('Not offered after day ' + r.toDay, '第' + r.toDay + '天之后不再出现');
+    const anyDay = r.anyDay > 0 ? L('In the biggest pool of every day at this weight', '以这个权重加入每天最大的卡池') : L('Off. Give it a weight to add it to the biggest pool of every day.', '关闭。给它一个权重，就会加入每天最大的卡池。');
     const also = base && base.also.length ? '<span class="k">' + L('Also needs', '还需要') + '</span><span class="ro">' + esc(base.also.join('; ')) + '</span>' +
       '<span class="nm2">' + L('Set by the game', '游戏设定') + '</span>' : '';
 
     return '<div class="sec-h">' + L('WHEN IT IS OFFERED', '出现条件') + '<small>' + L('When the game can offer it, and to whom.', '游戏什么时候、给谁提供它。') + '</small></div>' +
       '<div class="tx">' +
-      '<span class="k">' + L('From day', '从第几天') + '</span>' + stepper('r:fromDay', r.fromDay, '', false) + '<span class="nm2">' + fromDay + '</span>' +
+      '<span class="k">' + L('From day', '从第几天') + '</span>' + stepper('r:fromDay', r.fromDay, '', false) + '<span class="nm2 wr">' + fromDay + '</span>' +
+      '<span class="k">' + L('To day', '到第几天') + '</span>' + stepper('r:toDay', r.toDay, '', false) + '<span class="nm2 wr">' + toDay + '</span>' +
+      '<span class="k">' + L('Any day', '任何一天') + '</span>' + stepper('r:anyDay', r.anyDay, L('weight', '权重'), false) + '<span class="nm2 wr">' + anyDay + '</span>' +
       '<span class="k">' + L('Runs', '模式') + '</span>' + runsHtml(r.endless, e.gameRules.endless) + '<span></span>' +
       '<span class="k">' + L('Characters', '角色') + '</span><div class="chw">' + charsHtml(r.chars) +
       (r.chars.length ? '' : '<span class="nm2">' + L('None picked, so every character gets it', '未选，所有角色都能拿到') + '</span>') + '</div>' +
@@ -1324,7 +1466,16 @@
       row('furniture', 'Furniture you can build', '可以建造的家具', e.furniture, base ? base.furniture : []) +
       '<span></span><span class="tx-n">' + L('Type IDs split by commas. Leave a box empty to keep the game\'s list.', '填ID，用逗号分隔。留空则用游戏原有的。') + '</span>' +
       also +
-      '</div>' + buyAgainHtml(e);
+      '</div>' + alwaysHtml(e) + buyAgainHtml(e);
+  }
+
+  // One card every day it can be offered, until it is bought. A reward you can buy again keeps its card for good.
+  function alwaysHtml(e) {
+    const r = e.rules;
+    const note = r.always ? '<div class="nnote">' + L('Its card comes first, and one card is always left for the day\'s draw. With ' + st.cards + ' cards a day, ' + (st.cards - 1) + ' rewards at most can be always offered. Past that, the first ones in the file get the cards.', '它的卡排在最前，并且总会留一张卡给当天的抽取。每天 ' + st.cards + ' 张卡时，最多 ' + (st.cards - 1) + ' 个奖励可以必定出现。超出时，文件里靠前的先占卡。') +
+      (r.isReget ? ' ' + L('It can be bought again, so it takes a card every day.', '它可以再次购买，所以每天都占一张卡。') : '') + '</div>' : '';
+
+    return '<label class="chk"><input type="checkbox" data-a="always"' + (r.always ? ' checked' : '') + '>' + L('Always offered: it takes a card every day it can be offered, until you buy it', '必定出现：在能出现的每一天都占一张卡，直到你买下') + '</label>' + note;
   }
 
   // EndlessMode 6 is endless runs only. Any other value the game uses is kept and shown as it is.
@@ -1998,6 +2149,9 @@
     else if (a === 'reget' && e) {
       e.rules.isReget = t.checked;
       markChanged(e);
+    } else if (a === 'always' && e) {
+      e.rules.always = t.checked;
+      markChanged(e);
     } else if (a === 'rule' && e) {
       e.rules.endless = Number(t.value);
       markChanged(e);
@@ -2066,6 +2220,12 @@
       pools: x.pools.filter(p => isArr(p) && isNum(p[0]) && isNum(p[1])).map(p => ({ pool: p[0], amount: p[1] }))
     })) : [];
 
+    st.poolSizes = {};
+    Object.keys(isObj(d.poolSizes) ? d.poolSizes : {}).forEach(k => {
+      if (isNum(d.poolSizes[k])) st.poolSizes[Number(k)] = d.poolSizes[k];
+    });
+    st.cards = isNum(d.cards) && d.cards >= 3 ? d.cards : 3;
+
     if (!gameDay(st.day)) st.day = st.gameDays.length ? st.gameDays[0].day : 0;
     st.builtIn = {};
     (isObj(d.builtIn) && isArr(d.builtIn.rewards) ? d.builtIn.rewards : []).forEach(r => {
@@ -2111,7 +2271,10 @@
         endless: isNum(t.endless) ? t.endless : 0,
         chars: isArr(t.chars) ? t.chars.filter(isNum) : [],
         layers: isNum(t.layers) ? t.layers : 0,
-        fromDay: isNum(t.fromDay) ? t.fromDay : 0
+        fromDay: isNum(t.fromDay) ? t.fromDay : 0,
+        toDay: 0,
+        anyDay: 0,
+        always: false
       },
       also: isArr(t.also) ? t.also.map(String) : [],
       levels
@@ -2122,9 +2285,10 @@
   const searchExtra = e => range(e.levels.length).map(i => levelNameOf(e, i, 'en') + ' ' + levelNameOf(e, i, 'zh')).join(' ');
 
   Object.assign(T, {
-    CSS, PREFIX, SCOPES, STYLE_ID, actionsHtml, allIds, buildEntries, canEditGives, closeMenus, detailHtml, editText,
-    effectValues, firstTpl, footer, ghostOf, givesHtml, isAvailable, levelTableHtml, levelsHtml, lookHtml, makeGive,
-    pickerHead, previewHtml, render, rowsHtml, searchExtra, srcTag, st, textHtml, toast, tplValues, whyHtml, writeGive
+    CSS, PREFIX, SCOPES, STYLE_ID, actionsHtml, allIds, buildEntries, canEditGives, closeMenus, dayHtml, detailHtml, editText,
+    effectValues, firstTpl, footer, ghostOf, givesHtml, isAvailable, levelTableHtml, levelsHtml, lookHtml, mainPools, makeGive,
+    offeredHtml, outEntry, pickerHead, poolIndex, poolsHtml, previewHtml, render, rowsHtml, searchExtra, srcTag, st, testDraw,
+    textHtml, toast, tplValues, whyHtml, writeGive
   });
 
   window.__slmrRewards = { data, saved };

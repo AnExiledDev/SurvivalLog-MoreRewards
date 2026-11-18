@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -38,9 +39,10 @@ public sealed record GameSnapshot(
     IReadOnlyList<GameIcon> Items,
     IReadOnlyList<int> Pools,
     IReadOnlyList<GameCharacter> Characters,
-    IReadOnlyList<DayEntry> Days)
+    IReadOnlyList<DayEntry> Days,
+    IReadOnlyDictionary<int, int> PoolSizes)
 {
-    public static readonly GameSnapshot Empty = new(Array.Empty<GameReward>(), new Dictionary<string, IReadOnlyList<FieldSet>>(), Array.Empty<GameIcon>(), Array.Empty<int>(), Array.Empty<GameCharacter>(), Array.Empty<DayEntry>());
+    public static readonly GameSnapshot Empty = new(Array.Empty<GameReward>(), new Dictionary<string, IReadOnlyList<FieldSet>>(), Array.Empty<GameIcon>(), Array.Empty<int>(), Array.Empty<GameCharacter>(), Array.Empty<DayEntry>(), new Dictionary<int, int>());
 }
 
 /// <summary>What a save from the Rewards tab comes to: the text to write, or why nothing is written.</summary>
@@ -80,12 +82,13 @@ public static class RewardsPage
     /// is not JSON at all, which the tab takes as "do not save over it". Every non-ASCII character is escaped, so the
     /// data can never end the script early. <paramref name="builtInText"/> is the rewards the mod adds itself (the wind
     /// rewards, while Wind Power is installed), or null; the tab shows them next to the game's and offers the wind effect.
+    /// <paramref name="cards"/> is how many cards the end of the day shows (Rewards/OptionCount), for the day view.
     /// </summary>
-    public static string DataCall(GameSnapshot game, string? fileText, IReadOnlyList<string> startProblems, string? builtInText)
+    public static string DataCall(GameSnapshot game, string? fileText, IReadOnlyList<string> startProblems, string? builtInText, int cards = RewardSettings.GameOptionCount)
     {
         var problems = (fileText == null ? new[] { "the rewards file could not be read" } : RewardFile.Parse(fileText).Problems).Concat(startProblems).Distinct().ToList();
 
-        return "window.__slmrRewards&&window.__slmrRewards.data(" + Json(writer => WriteData(writer, game, fileText, problems, builtInText)) + ")";
+        return "window.__slmrRewards&&window.__slmrRewards.data(" + Json(writer => WriteData(writer, game, fileText, problems, builtInText, cards)) + ")";
     }
 
     /// <summary>A reply to a save, shown in the tab's status line.</summary>
@@ -120,10 +123,11 @@ public static class RewardsPage
         return path;
     }
 
-    private static void WriteData(Utf8JsonWriter writer, GameSnapshot game, string? fileText, IReadOnlyList<string> problems, string? builtInText)
+    private static void WriteData(Utf8JsonWriter writer, GameSnapshot game, string? fileText, IReadOnlyList<string> problems, string? builtInText, int cards)
     {
         writer.WriteStartObject();
         writer.WriteBoolean("windPower", builtInText != null);
+        writer.WriteNumber("cards", cards);
         writer.WritePropertyName("builtIn");
         WriteFile(writer, builtInText);
         writer.WriteStartArray("game");
@@ -150,6 +154,11 @@ public static class RewardsPage
         writer.WriteEndArray();
         WriteCharacters(writer, game.Characters);
         WriteDays(writer, game.Days);
+        writer.WriteStartObject("poolSizes");
+
+        foreach (var (pool, size) in game.PoolSizes.OrderBy(pair => pair.Key)) writer.WriteNumber(pool.ToString(CultureInfo.InvariantCulture), size);
+
+        writer.WriteEndObject();
         writer.WriteStartArray("icons");
 
         foreach (var (group, icon) in IconChoices(game)) WriteIcon(writer, group, icon);

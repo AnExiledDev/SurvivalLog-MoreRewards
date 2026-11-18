@@ -72,7 +72,7 @@ internal sealed class RewardsTab
             _log("rewards tab: could not read the rewards file: " + ex.Message);
         }
 
-        _page.Run(RewardsPage.DataCall(_tables.Game, text, _tables.Problems, _builtIn));
+        _page.Run(RewardsPage.DataCall(_tables.Game, text, _tables.Problems, _builtIn, LiveScreen.IsOn ? LiveScreen.Settings.OptionCount : RewardSettings.GameOptionCount));
     }
 
     private void Save(string json)

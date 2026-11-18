@@ -60,7 +60,7 @@ internal static class GameReader
                 chain.Select(levelOf).ToList()));
         }
 
-        return new GameSnapshot(list, templates, ItemIcons(config), poolIds, Characters(config, english, chinese), Days(config));
+        return new GameSnapshot(list, templates, ItemIcons(config), poolIds, Characters(config, english, chinese), Days(config._Config_DailyRandom_Dict), PoolSizes(config));
     }
 
     /// <summary>The condition fields the tab edits itself; the rest are shown as they are.</summary>
@@ -95,10 +95,10 @@ internal static class GameReader
         return characters;
     }
 
-    private static List<DayEntry> Days(ConfigManager config)
+    /// <summary>Each day's pools and amounts as the table has them now; the plan reads it too, after an earlier write is put back.</summary>
+    public static List<DayEntry> Days(Il2CppSystem.Collections.Generic.Dictionary<int, Config_DailyRandom>? table)
     {
         var days = new List<DayEntry>();
-        var table = config._Config_DailyRandom_Dict;
 
         if (table == null) return days;
 
@@ -156,6 +156,19 @@ internal static class GameReader
         }
 
         return byReward;
+    }
+
+    /// <summary>How many rewards each pool holds, so the tab finds each day's main pool as the plan does (<see cref="MainPools"/>).</summary>
+    private static Dictionary<int, int> PoolSizes(ConfigManager config)
+    {
+        var sizes = new Dictionary<int, int>();
+
+        foreach (var pool in config._Config_RandomGroup_Dict.Values)
+        {
+            if (pool != null) sizes[pool._ID_k__BackingField] = pool._IdList_k__BackingField?.Count ?? 0;
+        }
+
+        return sizes;
     }
 
     /// <summary>The fields of the lowest effect row running each script, which a new give starts from, as the plan copies it.</summary>

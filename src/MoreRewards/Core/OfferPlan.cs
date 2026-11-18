@@ -10,12 +10,17 @@ namespace MoreRewards.Core;
 /// <param name="Extras">The mod's extra locks, all still worth keeping.</param>
 /// <param name="IsUnwanted">True for a card the player banned.</param>
 /// <param name="NoRepeat">A refresh never brings back a card that was just on screen.</param>
-public sealed record OfferAsk(int Count, int GamePin, int GamePinSlot, IReadOnlyList<RewardLock> Extras, Func<int, bool> IsUnwanted, bool NoRepeat = false);
+/// <param name="Always">The "alwaysOffered" rewards the game would offer now, in file order; null for none.</param>
+public sealed record OfferAsk(int Count, int GamePin, int GamePinSlot, IReadOnlyList<RewardLock> Extras, Func<int, bool> IsUnwanted, bool NoRepeat = false, IReadOnlyList<int>? Always = null)
+{
+    public IReadOnlyList<int> AlwaysOffered => Always ?? Array.Empty<int>();
+}
 
 /// <summary>
 /// Builds the end-of-day offer from the game's: banned cards come out, the day's groups fill the gaps,
 /// and every locked card (the game's one and the mod's extras) sits in its own slot. The game's pick is kept
-/// where it can be, so with nothing locked or passed on this is <see cref="OfferFill"/> alone.
+/// where it can be, so with nothing locked or passed on this is <see cref="OfferFill"/> alone. An "alwaysOffered"
+/// reward takes the first free slots, ahead of the drawn cards, and always leaves room for at least one drawn card.
 /// </summary>
 public static class OfferPlan
 {
@@ -27,43 +32,48 @@ public static class OfferPlan
     {
         var locks = Locks(gameOffer, ask);
 
-        if (groups == null) return Place(Free(gameOffer, locks, _ => false), locks);
+        if (groups == null) return Place(Free(gameOffer, Ids(locks), _ => false), locks);
 
-        var target = Math.Max(0, ask.Count - locks.Count);
-        var free = Free(gameOffer, locks, ask.IsUnwanted).Take(target).ToList();
+        var always = Always(ask, locks);
+        var held = Ids(locks).Concat(always).ToList();
+        var target = Math.Max(0, ask.Count - held.Count);
+        var free = Free(gameOffer, held, ask.IsUnwanted).Take(target).ToList();
 
-        free.AddRange(OfferFill.TopUp(free, target, groups, Wanted(draw, locks, ask.IsUnwanted)));
+        free.AddRange(OfferFill.TopUp(free, target, groups, Wanted(draw, held, ask.IsUnwanted)));
 
-        return Place(free, locks);
+        return Place(always.Concat(free).ToList(), locks);
     }
 
     /// <summary>
     /// A refresh: as <see cref="OfferFill.TopUpRefresh"/>, and when nothing new turns up the game's answer for that
-    /// case is kept (nothing, or only its locked card), which the game treats as a refresh that costs nothing.
+    /// case is kept (nothing, or only its locked card), which the game treats as a refresh that costs nothing. The
+    /// "alwaysOffered" cards come back on a refresh too, but they are not new, so they alone never make it count.
     /// </summary>
     public static IReadOnlyList<int> Refresh(IReadOnlyList<int> gameOffer, OfferAsk ask, IReadOnlyList<RewardGroup>? groups, RewardDraw unseen, RewardDraw seenBefore)
     {
         var locks = Locks(gameOffer, ask);
         var nothingNew = gameOffer.Where(id => id == ask.GamePin).ToList();
 
-        if (groups == null) return Place(Free(gameOffer, locks, _ => false), locks);
+        if (groups == null) return Place(Free(gameOffer, Ids(locks), _ => false), locks);
 
-        var target = Math.Max(0, ask.Count - locks.Count);
-        var free = Free(gameOffer, locks, ask.IsUnwanted).Take(target).ToList();
-        RewardDraw again = ask.NoRepeat ? (_, _) => null : Wanted(seenBefore, locks, ask.IsUnwanted);
+        var always = Always(ask, locks);
+        var held = Ids(locks).Concat(always).ToList();
+        var target = Math.Max(0, ask.Count - held.Count);
+        var free = Free(gameOffer, held, ask.IsUnwanted).Take(target).ToList();
+        RewardDraw again = ask.NoRepeat ? (_, _) => null : Wanted(seenBefore, held, ask.IsUnwanted);
 
-        free.AddRange(OfferFill.TopUpRefresh(free, target, groups, Wanted(unseen, locks, ask.IsUnwanted), again));
+        free.AddRange(OfferFill.TopUpRefresh(free, target, groups, Wanted(unseen, held, ask.IsUnwanted), again));
 
-        return free.Count == 0 ? nothingNew : Place(free, locks);
+        return free.Count == 0 ? nothingNew : Place(always.Concat(free).ToList(), locks);
     }
 
     /// <summary>
     /// Whether a refresh that turned up nothing new leaves the screen as it was. The game does that itself while its own
     /// lock is held (it calls the refresh failed, at no cost); with no lock of its own it shows an empty screen, which
-    /// would hide the mod's extra locks until the next day.
+    /// would hide the mod's extra locks and the "alwaysOffered" cards until the next day.
     /// </summary>
     /// <param name="refreshed">What <see cref="Refresh"/> handed back to the game.</param>
-    public static bool KeepsScreen(IReadOnlyList<int> refreshed, OfferAsk ask) => refreshed.Count == 0 && ask.GamePin <= 0 && ask.Extras.Count > 0;
+    public static bool KeepsScreen(IReadOnlyList<int> refreshed, OfferAsk ask) => refreshed.Count == 0 && ask.GamePin <= 0 && (ask.Extras.Count > 0 || ask.AlwaysOffered.Count > 0);
 
     /// <summary>
     /// Swaps out the card at <paramref name="slot"/> (the player banned it) for one wanted card from the
@@ -81,7 +91,7 @@ public static class OfferPlan
 
         if (groups == null) return offer;
 
-        var wanted = Wanted(draw, Locks(current, ask), ask.IsUnwanted);
+        var wanted = Wanted(draw, Ids(Locks(current, ask)), ask.IsUnwanted);
         var rotation = groups.Where(group => group.Amount > 0).Select(group => group.Id).Distinct().ToList();
 
         for (var turn = 0; turn < rotation.Count; turn++)
@@ -106,8 +116,18 @@ public static class OfferPlan
         return locks;
     }
 
-    private static List<int> Free(IReadOnlyList<int> gameOffer, IReadOnlyList<RewardLock> locks, Func<int, bool> isUnwanted) =>
-        gameOffer.Where(id => locks.All(held => held.Id != id) && !isUnwanted(id)).Distinct().ToList();
+    /// <summary>
+    /// The "alwaysOffered" cards that get a slot: not banned, not locked already, and few enough to leave at least one
+    /// slot for a drawn card.
+    /// </summary>
+    private static List<int> Always(OfferAsk ask, IReadOnlyList<RewardLock> locks) =>
+        ask.AlwaysOffered.Where(id => locks.All(held => held.Id != id) && !ask.IsUnwanted(id)).Distinct().Take(Math.Max(0, ask.Count - locks.Count - 1)).ToList();
+
+    private static List<int> Ids(IReadOnlyList<RewardLock> locks) => locks.Select(held => held.Id).ToList();
+
+    /// <summary>The game's cards that stay: none already held in a slot of its own, and none the player passed on.</summary>
+    private static List<int> Free(IReadOnlyList<int> gameOffer, IReadOnlyList<int> held, Func<int, bool> isUnwanted) =>
+        gameOffer.Where(id => !held.Contains(id) && !isUnwanted(id)).Distinct().ToList();
 
     /// <summary>Each locked card goes back to its slot, lowest slot first, or to the end when the offer is shorter.</summary>
     private static IReadOnlyList<int> Place(List<int> free, IReadOnlyList<RewardLock> locks)
@@ -117,10 +137,10 @@ public static class OfferPlan
         return free;
     }
 
-    /// <summary>A draw that never gives a locked card or one the player passed on; it asks again a few times before giving up.</summary>
-    private static RewardDraw Wanted(RewardDraw draw, IReadOnlyList<RewardLock> locks, Func<int, bool> isUnwanted) => (group, offered) =>
+    /// <summary>A draw that never gives a held card or one the player passed on; it asks again a few times before giving up.</summary>
+    private static RewardDraw Wanted(RewardDraw draw, IReadOnlyList<int> held, Func<int, bool> isUnwanted) => (group, offered) =>
     {
-        var avoid = offered.Concat(locks.Select(held => held.Id)).ToList();
+        var avoid = offered.Concat(held).ToList();
 
         for (var tries = 0; tries < RedrawBudget; tries++)
         {

@@ -20,8 +20,70 @@ public class OfferPlanTests
         return (_, _) => next < order.Length ? order[next++] : null;
     }
 
-    private static OfferAsk Ask(int count, int gamePin = 0, int gamePinSlot = 0, RewardLock[]? extras = null, Func<int, bool>? isUnwanted = null, bool noRepeat = false) =>
-        new(count, gamePin, gamePinSlot, extras ?? NoExtras, isUnwanted ?? (_ => false), noRepeat);
+    private static OfferAsk Ask(int count, int gamePin = 0, int gamePinSlot = 0, RewardLock[]? extras = null, Func<int, bool>? isUnwanted = null, bool noRepeat = false, int[]? always = null) =>
+        new(count, gamePin, gamePinSlot, extras ?? NoExtras, isUnwanted ?? (_ => false), noRepeat, always);
+
+    [Fact]
+    public void An_always_offered_card_comes_first_and_the_rest_are_the_game_pick()
+    {
+        var offer = OfferPlan.Day(new[] { 107, 108, 109 }, Ask(3, always: new[] { 900 }), OneGroup, Pool());
+
+        Assert.Equal(new[] { 900, 107, 108 }, offer);
+    }
+
+    [Fact]
+    public void Always_offered_cards_leave_room_for_one_drawn_card()
+    {
+        var offer = OfferPlan.Day(new[] { 107, 108, 109 }, Ask(3, always: new[] { 900, 901, 902 }), OneGroup, Pool());
+
+        Assert.Equal(new[] { 900, 901, 107 }, offer);
+    }
+
+    [Fact]
+    public void Locked_cards_count_before_always_offered_ones()
+    {
+        var offer = OfferPlan.Day(new[] { 107, 108, 109 }, Ask(3, gamePin: 108, gamePinSlot: 2, always: new[] { 900, 901 }), OneGroup, Pool());
+
+        Assert.Equal(new[] { 900, 107, 108 }, offer);
+    }
+
+    [Fact]
+    public void A_banned_or_locked_always_offered_card_gets_no_card_of_its_own()
+    {
+        var ask = Ask(5, extras: new[] { new RewardLock(901, 4) }, isUnwanted: id => id == 900, always: new[] { 900, 901, 902 });
+
+        var offer = OfferPlan.Day(new[] { 107, 108, 109 }, ask, OneGroup, Pool());
+
+        Assert.Equal(new[] { 902, 107, 108, 109, 901 }, offer);
+    }
+
+    [Fact]
+    public void An_always_offered_card_is_never_drawn_a_second_time()
+    {
+        var offer = OfferPlan.Day(new[] { 100 }, Ask(3, always: new[] { 100 }), OneGroup, Pool());
+
+        Assert.Equal(new[] { 100, 101, 102 }, offer);
+    }
+
+    [Fact]
+    public void A_refresh_keeps_the_always_offered_card_and_draws_the_rest_new()
+    {
+        var offer = OfferPlan.Refresh(new[] { 110, 111, 112 }, Ask(3, always: new[] { 900 }), OneGroup, Pool(), Pool());
+
+        Assert.Equal(new[] { 900, 110, 111 }, offer);
+    }
+
+    [Fact]
+    public void A_refresh_with_only_always_offered_cards_counts_as_nothing_new_and_keeps_the_screen()
+    {
+        RewardDraw nothing = (_, _) => null;
+        var ask = Ask(3, always: new[] { 900 }, noRepeat: true);
+
+        var refreshed = OfferPlan.Refresh(Array.Empty<int>(), ask, OneGroup, nothing, Pool());
+
+        Assert.Empty(refreshed);
+        Assert.True(OfferPlan.KeepsScreen(refreshed, ask));
+    }
 
     [Fact]
     public void With_nothing_locked_or_passed_on_the_game_pick_stays_and_the_rest_is_filled()

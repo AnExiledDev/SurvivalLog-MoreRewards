@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.11.5
+
+- New in the rewards file and the Rewards tab: "toDay", the last day a reward can be offered. 0 or left out is no last day.
+- New: "anyDay", a weight. The reward also goes in the biggest pool of every day at that weight, so it can come up on any day. A pool you name in "pools" keeps the weight you gave it there.
+- New: "alwaysOffered", off unless you set it. The reward takes a card every day it can be offered, until you buy it. Its card comes first, and one card is always left for the day's draw.
+- Rewards tab: the DAY DRAW view says which days use each pool and marks each day's biggest pool.
+- Rewards tab: the DAY DRAW view counts your `OptionCount`. It said only the first 3 cards show. With more cards a day, More Rewards draws the rest from the same pools, more from a pool that draws more, and the test draw shows all of them.
+- Made for Survival Log 1.1.21271.
+
 ## 0.11.4
 
 - Rewards tab: each effect's column in the levels table says "this level", since that number is what one level adds. IN TOTAL is what the player has with the levels below it.

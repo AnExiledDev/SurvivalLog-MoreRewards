@@ -35,6 +35,7 @@ internal static class OfferPatch
 
     private static Action<string> _log = _ => { };
     private static PatchKit? _hooks;
+    private static IReadOnlyList<int> _alwaysOffered = Array.Empty<int>();
 
     public static void Apply(PatchKit hooks, Action<string> log)
     {
@@ -48,6 +49,9 @@ internal static class OfferPatch
         hooks.Patch(typeof(OfferPatch), type, method, RefreshParameters, postfix: nameof(ShapeRefresh),
             done: "hooked the rewards refresh", consequence: "a refresh keeps the game's 3 rewards, with no extra locks and nothing kept away");
     }
+
+    /// <summary>Each level of every "alwaysOffered" reward in the rewards file now; empty while the mod is off.</summary>
+    public static void UseAlwaysOffered(IReadOnlyList<int> rewards) => _alwaysOffered = rewards;
 
     /// <summary>The day's reward groups, or null on a day the game gives a fixed list.</summary>
     public static IReadOnlyList<RewardGroup>? DayGroups(int day)
@@ -67,7 +71,10 @@ internal static class OfferPatch
 
     /// <summary>
     /// What the player set and passed on. An extra lock on a reward the game would no longer offer (bought, or its
-    /// needs gone) is let go here, as the game lets go of its own pin.
+    /// needs gone) is let go here, the way the game lets go of a locked card. An "alwaysOffered" reward gets its card only
+    /// while the game would offer it, by the same check: owned, not yet unlocked by its needs, before its first day
+    /// or after its last, it gets none. Only the next level of a reward passes, since the ones below are owned and the
+    /// ones above need it.
     /// </summary>
     public static OfferAsk Ask(SurvivalPlanningComponent planning, int day, int pinnedId, int pinnedSlot)
     {
@@ -75,10 +82,11 @@ internal static class OfferPatch
         var book = LiveScreen.Book;
         var extras = book.Locks();
         var kept = extras.Where(held => planning.CanKeepPinnedPlan(held.Id)).ToList();
+        var always = _alwaysOffered.Where(planning.CanKeepPinnedPlan).ToList();
 
         if (kept.Count != extras.Count) book.SetLocks(kept);
 
-        return new OfferAsk(settings.OptionCount, pinnedId, pinnedSlot, kept, book.IsBanned, settings.NoRepeatOnRefresh);
+        return new OfferAsk(settings.OptionCount, pinnedId, pinnedSlot, kept, book.IsBanned, settings.NoRepeatOnRefresh, always);
     }
 
     public static int? First(Il2CppInts? rewards) => rewards != null && rewards.Count > 0 ? rewards[0] : null;

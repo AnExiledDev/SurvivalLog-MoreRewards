@@ -18,6 +18,12 @@
 //                  "EndlessMode": 6 offers it in Endless Mode only (0 is any run), and "PlayerSelectId": [1, 2] gives it
 //                  only to those characters (empty is every character).
 //   "fromDay"      the first day it can be offered; 0 is from the first day
+//   "toDay"        the last day it can be offered; 0 or left out is no last day
+//   "anyDay"       a weight: it also goes in the biggest pool of every day (the pool that day draws from with the most
+//                  rewards in it) at this weight, so it can come up on any day. A pool named in "pools" keeps the
+//                  weight given there.
+//   "alwaysOffered"  true: it takes a card every day it can be offered, until you buy it. These cards come first, and one
+//                  card is always left for the day's draw. With "IsReget" it takes a card every day.
 //   "layers"       with "IsReget": how many times its effect stacks when it is bought again
 //   "gives"        [ { "effect": "game:<script>", "fields": { ... } }, ... ]: what it does, up to 10 things, each made
 //                  from an effect script the game runs (Buff/<script> in Config_Effect) with your fields.
@@ -35,9 +41,11 @@
 // The "buffs" and "effects" lists at the bottom always apply.
 //
 // "days" changes which pools a day draws its rewards from: [ { "day": 57, "pools": [ { "pool": 1020, "amount": 2 }, ... ] } ].
-// The game goes down the list in order and draws "amount" rewards from each pool, never the same one twice, then shows
-// the first 3, so a pool lower down only shows when the ones above come up short. The day must be one the game's table
-// has; after its last day the game keeps using the last one.
+// The game goes down the list in order and draws "amount" rewards from each pool, never the same one twice, then keeps
+// the first 3, so a pool lower down only comes up when the ones above come up short. With "OptionCount" above 3, the mod
+// draws the other cards from the same pools: a pool with "amount" 2 gives twice as many of them as a pool with 1. More
+// cards a day means every reward comes up more often. The day must be one the game's table has; after its last day the
+// game keeps using the last one.
 //
 // With Wind Power 0.9.3 or newer installed, the mod adds Wind Collection I, II and III (39001 to 39003).
 // An entry here with one of those IDs replaces them, so you can change them or switch them off.
