@@ -7,6 +7,9 @@
 - Rewards tab: the card shows the level you are editing the way the game shows it, and a reward with levels says that each level is its own reward in the game.
 - Rewards tab: the list and the editor fit the window, so nothing hides under the Mod Manager's buttons. A new or copied reward opens with the list scrolled to it, and the editor starts at the top when you pick another reward.
 - Rewards tab: the rules and pools are easier to read. The ID boxes say how to fill them, and each pool says how many rewards it holds and which days draw from it.
+- Rewards tab: SAVE lights up as soon as you start typing a number or an ID.
+- Fixed: after you typed a number or an ID, the next click did nothing, so clicking SAVE right away did not save.
+- Fixed: Tab after typing a number lost the cursor. It moves to the next box now.
 - Fixed: 75 of the game's rewards were missing from the Rewards tab, and the rewards file got their levels wrong.
 - Fixed: the example in the rewards file showed Small Solar Boost as changed in the Rewards tab. The example is now a comment. An older file keeps the old example until you remove the example or delete the file.
 - Now needs Exiled's Toolkit 0.26.0 or newer.

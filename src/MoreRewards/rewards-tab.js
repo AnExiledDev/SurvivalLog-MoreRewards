@@ -18,7 +18,8 @@
     onDocDown, onInput, onPickerDouble, onPickerKey, paramRow, pct, pickHtml, picksOf, range, rawCache, rawFx,
     readsHtml, renderPicker, resetOrDelete, round2, roundTrips, saved, scriptOfGive, select, send, setPick, setText,
     showIconGroup, stepper, tag, talentIcons, talentName, textIn, toRaw, unitOf, winEl, writeText, editorCss,
-    searchHtml, noMatchHtml, clearSearch, onSearchKey, showSelectedRow, fitHeight, watchHeight
+    searchHtml, noMatchHtml, clearSearch, onSearchKey, showSelectedRow, fitHeight, watchHeight,
+    renderAfterChange, watchPresses, refreshSaved
   } = window.ExiledEditor.make(T);
 
   const PREFIX = 'slmod|morerewards|rewards|';
@@ -1652,6 +1653,15 @@
   function onMenuKey(ev) {
     if (!st.menu) return;
 
+    // The key stops here. The Mod Manager's Esc would only take the cursor out of the search and leave the menu open.
+    if (ev.key === 'Escape') {
+      ev.preventDefault();
+      ev.stopPropagation();
+      closeMenus();
+
+      return;
+    }
+
     if (ev.key === 'ArrowDown' || ev.key === 'ArrowUp') {
       ev.preventDefault();
       st.menu.at += ev.key === 'ArrowDown' ? 1 : -1;
@@ -1942,6 +1952,12 @@
     render();
   }
 
+  // The id lists are written when you leave the field, so SAVE lights up while you type.
+  function onTabInput(ev) {
+    if (ev.target.getAttribute('data-a') === 'ids') refreshSaved(true);
+    else onInput(ev);
+  }
+
   function onChange(ev) {
     const t = ev.target;
     const a = t.getAttribute('data-a');
@@ -1979,7 +1995,7 @@
       markChanged(e);
     } else return;
 
-    render();
+    renderAfterChange();
   }
 
   // ===== Wiring =====
@@ -2005,7 +2021,7 @@
       st.root.className = 'mr';
       st.root.addEventListener('click', onClick);
       st.root.addEventListener('change', onChange);
-      st.root.addEventListener('input', onInput);
+      st.root.addEventListener('input', onTabInput);
       st.root.addEventListener('keydown', onSearchKey);
     }
 
@@ -2014,6 +2030,7 @@
     load();
     render();
     watchHeight();
+    watchPresses();
   }
 
   function data(d) {
