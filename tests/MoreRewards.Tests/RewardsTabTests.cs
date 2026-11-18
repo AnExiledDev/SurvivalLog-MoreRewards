@@ -104,9 +104,43 @@ public class RewardsTabTests
     [Fact]
     public void New_reward_leaves_out_effects_that_only_work_before_the_disaster()
     {
-        Load("""{ "rewards": [] }""", templates: "{ Savings_Plan: {}, AE_HomePackageMax: {}, PreDisaster_AddGold: {}, PreDisaster_AddWeight: {}, LoanMaxBonus: {}, AE_FurnitureDiscount: {}, VehicleTimeReduce: {} }");
+        Load("""{ "rewards": [] }""", templates: "{ Savings_Plan: {}, AE_HomePackageMax: {}, PreDisaster_AddGold: {}, PreDisaster_AddWeight: {}, LoanMaxBonus: {}, AE_FurnitureDiscount: {}, VehicleTimeReduce: {}, AE_NoNameYet: {} }");
 
-        Assert.Equal("game:savings,mr:ban-tokens,mr:free-refresh,mr:investor,mr:lottery,mr:more-cards,mr:more-locks,mr:supply-crate,raw:AE_HomePackageMax", Text("ed.cat.list.map(function (f) { return f.id; }).sort().join(',')"));
+        Assert.Equal("game:AE_HomePackageMax,game:savings,mr:ban-tokens,mr:free-refresh,mr:investor,mr:lottery,mr:more-cards,mr:more-locks,mr:supply-crate,raw:AE_NoNameYet", Text("ed.cat.list.map(function (f) { return f.id; }).sort().join(',')"));
+    }
+
+    // Many of the game's effects only make sense with the card text of a reward that uses them. The effect's page shows
+    // that text, and the last level's text when it reads differently, since end-of-day rewards have no line with the
+    // numbers for each level. An effect with no name says its boxes hold the game's numbers.
+    [Fact]
+    public void An_effect_page_shows_the_card_text_of_the_rewards_that_use_it()
+    {
+        Load("""{ "rewards": [ { "id": 31271 } ] }""", templates: "{ AE_HomePackageMax: {}, AE_NoNameYet: {} }", game: """
+            [
+              { id: 31271, levels: [
+                { id: 31271, cost: 10, name: { en: 'Big Entryway', zh: '大玄关' }, desc: { en: 'The Entryway holds more packages.', zh: '玄关能放更多包裹。' }, script: 'AE_HomePackageMax', values: { FloatValue0: 1 } },
+                { id: 31272, cost: 14, name: { en: 'Big Entryway II', zh: '大玄关 Lv2' }, desc: { en: 'The Entryway holds even more packages.', zh: '玄关能放更多的包裹。' }, script: 'AE_HomePackageMax', values: { FloatValue0: 2 } } ] },
+              { id: 31301, levels: [
+                { id: 31301, cost: 10, name: { en: 'Odd Luck', zh: '怪运' }, desc: { en: 'Something rare happens.', zh: '会发生罕见的事。' }, script: 'AE_NoNameYet', values: { IntValue0: 3 } } ] }
+            ]
+            """);
+        _engine.Execute("T.st.picker = { selId: 'game:AE_HomePackageMax' };");
+
+        var named = Text("T.detailHtml(T.st.entries[0], ed.cat.list)");
+
+        Assert.Contains("WHAT THE GAME SAYS", named);
+        Assert.Contains("Big Entryway", named);
+        Assert.Contains("The Entryway holds more packages.", named);
+        Assert.Contains("Level 2: The Entryway holds even more packages.", named);
+        Assert.DoesNotContain("has no name yet", named);
+
+        _engine.Execute("T.st.picker = { selId: 'raw:AE_NoNameYet' };");
+
+        var raw = Text("T.detailHtml(T.st.entries[0], ed.cat.list)");
+
+        Assert.Contains("Something rare happens.", raw);
+        Assert.Contains(Text("ed.RAW_NOTE[0]"), raw);
+        Assert.DoesNotContain("no friendly names", raw);
     }
 
     // The three day rules go into the file only when they are set, and read back as they were written.
@@ -193,7 +227,7 @@ public class RewardsTabTests
 
     // Day 1 draws two from 9102 and one from 1005; day 7 one each from 9103 and 9121. Twelve game rewards fill the pools.
     // Loading closes any open menu, which lets go of its page listeners, so the page gets a stand-in for that.
-    private void Load(string file, int cards = 5, string templates = "{}")
+    private void Load(string file, int cards = 5, string templates = "{}", string game = "game")
     {
         _engine.Execute($$"""
             window.document = window.document || { addEventListener: function () {}, removeEventListener: function () {} };
@@ -207,7 +241,7 @@ public class RewardsTabTests
                 game.push({ id: p[1], levels: [{ id: p[1], cost: 10, name: { en: 'Reward ' + p[1], zh: 'Reward ' + p[1] }, pools: into }] });
               });
               window.__slmrRewards.data({
-                game: game, pools: [1005, 9102, 9103, 9121], cards: {{cards}},
+                game: {{game}}, pools: [1005, 9102, 9103, 9121], cards: {{cards}},
                 days: [{ day: 1, pools: [[9102, 2], [1005, 1]] }, { day: 7, pools: [[9103, 1], [9121, 1]] }],
                 poolSizes: { 1005: 4, 9102: 30, 9103: 72, 9121: 14 },
                 templates: {{templates}},

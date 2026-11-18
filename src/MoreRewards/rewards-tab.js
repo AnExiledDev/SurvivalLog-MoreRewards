@@ -21,7 +21,7 @@
     readsHtml, renderPicker, resetOrDelete, round2, roundTrips, saved, scriptOfGive, select, send, setPick, setText,
     showIconGroup, stepper, tag, talentIcons, talentName, textIn, toRaw, unitOf, winEl, writeText, editorCss,
     searchHtml, noMatchHtml, clearSearch, onSearchKey, showSelectedRow, fitHeight, watchHeight,
-    renderAfterChange, watchPresses, refreshSaved, keepSelectionInView, addsUp, totalText, totalNoteHtml, plainDesc
+    renderAfterChange, watchPresses, refreshSaved, keepSelectionInView, addsUp, totalText, totalNoteHtml, plainDesc, gameCardsHtml, RAW_NOTE
   } = window.ExiledEditor.make(T);
 
   const PREFIX = 'slmod|morerewards|rewards|';
@@ -1687,7 +1687,7 @@
 
     if (f.mr) notes.push(L('More Rewards runs this effect itself.', '由更多奖励自身实现。'));
 
-    if (f.raw) notes.push(L('A game script with no friendly names yet. Its numbers are the raw fields from the game\'s tables.', '尚未命名的游戏脚本。数值为游戏表中的原始字段。'));
+    if (f.raw) notes.push(L(RAW_NOTE[0], RAW_NOTE[1]));
 
     if (!numsOf(f).length) notes.push(L('This effect has no numbers, so a reward with only this effect is the same at every level.', '此效果没有数值，所以只有此效果的奖励每级都一样。'));
 
@@ -1699,6 +1699,8 @@
     if (shownParams.length) html += '<h4>' + L('NUMBERS IT TAKES', '数值') + '</h4><table>' + shownParams.map(p => paramRow(p, count)).join('') + '</table>';
 
     html += '<h4>' + (st.lang === 'zh' ? '显示效果：' + count + '级' : 'HOW IT READS AT ' + count + (count === 1 ? ' LEVEL' : ' LEVELS')) + '</h4>' + readsHtml(e, f, count);
+
+    html += gameCardsHtml(f);
 
     if (users.length) html += '<h4>' + L('REWARDS THAT USE IT', '使用它的奖励') + '</h4><div class="ub">' + users.map(id => '<span><img src="' + esc(st.byId[id] ? st.byId[id].icon : '') + '" alt="">' + esc(talentName(id)) + '</span>').join('') + '</div>';
 

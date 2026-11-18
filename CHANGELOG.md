@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.12.1
+
+- Rewards tab: every effect the game's rewards use now has a name, in English and Chinese, with boxes that say what each number does. Before, many of them showed as an unnamed game script with raw numbers.
+- Rewards tab: when you pick an effect for WHAT IT GIVES, its page shows what the game's cards say about it, for up to three rewards that use it. When a reward's last level reads differently from its first, that text shows too.
+- Rewards tab: an airdrop says what it drops, such as "2 random Snacks", and you can pick what it drops from the list. Before, it read "Group 201" and the list was empty.
+- Rewards tab: if a game update adds an effect with no name yet, its boxes are numbered from 1 and show a percent where the game's cards do. HOW IT READS shows "Number 1: -30%" instead of "Number 0 0.3".
+- Needs Exiled's Toolkit 0.30.1 or newer.
+- Made for Survival Log 1.1.21271.
+
 ## 0.12.0
 
 - New setting `ExtraRewards`, off by default. Turn it on for 39 more end-of-day rewards. CONFIG.md lists them all. You can change or turn off each one on the Rewards tab, like the game's rewards. Applies at once.
