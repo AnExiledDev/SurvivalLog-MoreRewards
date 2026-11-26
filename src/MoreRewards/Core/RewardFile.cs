@@ -114,6 +114,7 @@ public sealed record RewardFile(IReadOnlyList<RewardEntry> Rewards, IReadOnlyLis
     /// This file's entries with those of <paramref name="under"/> that use none of the same reward IDs. An entry here,
     /// switched off or not, replaces the one below, so the player's file can change or turn off a reward the mod carries.
     /// A new reward below that only switched-off entries replace is kept, switched off, so its rows stay in the tables.
+    /// Rows are written in list order, so a buff or effect here replaces the one below with the same id.
     /// </summary>
     public RewardFile Over(RewardFile under)
     {
@@ -124,11 +125,13 @@ public sealed record RewardFile(IReadOnlyList<RewardEntry> Rewards, IReadOnlyLis
             .Where(reward => !reward.Ids.Any(taken.Contains) || reward.CopyFrom != null)
             .Select(reward => reward.Ids.Any(taken.Contains) ? reward with { Enabled = false } : reward);
         var days = new HashSet<int>(Days.Select(day => day.Day));
+        var buffs = new HashSet<int>(Buffs.Select(row => row.Id));
+        var effects = new HashSet<int>(Effects.Select(row => row.Id));
 
         return new RewardFile(
             Rewards.Concat(kept).ToList(),
-            Buffs.Concat(under.Buffs).ToList(),
-            Effects.Concat(under.Effects).ToList(),
+            Buffs.Concat(under.Buffs.Where(row => !buffs.Contains(row.Id))).ToList(),
+            Effects.Concat(under.Effects.Where(row => !effects.Contains(row.Id))).ToList(),
             Days.Concat(under.Days.Where(day => !days.Contains(day.Day))).ToList(),
             Problems.Concat(under.Problems).ToList());
     }

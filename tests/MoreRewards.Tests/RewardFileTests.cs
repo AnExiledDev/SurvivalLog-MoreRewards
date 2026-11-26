@@ -111,6 +111,19 @@ public class RewardFileTests
         Assert.False(mine.Over(wind).Rewards.Single(reward => reward.Id == 39001).Enabled);
     }
 
+    [Fact]
+    public void A_buff_or_effect_in_the_player_s_file_replaces_the_one_below_with_the_same_id()
+    {
+        // Rows are written in order, so a lower file's row left in after the player's would undo the player's edit.
+        var mine = RewardFile.Parse("""{ "buffs": [ { "id": 5001, "fields": { "Duration": 2 } } ], "effects": [ { "id": 6001, "fields": { "FloatValue0": 1 } } ] }""");
+        var below = RewardFile.Parse("""{ "buffs": [ { "id": 5001, "fields": { "Duration": 9 } }, { "id": 5002 } ], "effects": [ { "id": 6001, "fields": { "FloatValue0": 9 } } ] }""");
+        var both = mine.Over(below);
+
+        Assert.Equal(new[] { 5001, 5002 }, both.Buffs.Select(row => row.Id));
+        Assert.Same(mine.Buffs[0], both.Buffs[0]);
+        Assert.Same(mine.Effects[0], Assert.Single(both.Effects));
+    }
+
     // Turning off a reward the mod carries must keep its rows, or a save that owns it loses it.
     [Fact]
     public void A_switched_off_entry_keeps_the_new_reward_below_it_switched_off()

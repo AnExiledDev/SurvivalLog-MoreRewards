@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.12.4
+
+- Fixed: buying a free reward that can be bought again in the shop gave back the shop's markup, even though you got the reward.
+- A buff or effect you change in your rewards file now always beats one with the same ID in the mod's built-in files.
+- If writing the rewards into the game fails partway, the mod puts back what it wrote and tries again a second later.
+- The mod only watches buffs being added once one of your rewards gives extra buffs.
+- Made for Survival Log 1.1.21671.
+
 ## 0.12.3
 
 - A new reward you switch off in the rewards file, or every new reward while `Enabled` is off, now stays in the game's tables and is just never offered. Before, a save that owned one lost it on the next load.

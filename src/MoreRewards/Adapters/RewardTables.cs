@@ -85,6 +85,30 @@ internal sealed class RewardTables
         _applied = tables;
         _isStale = false;
 
+        try
+        {
+            Write(config, cache, talents, buffs, effects, conditions, pools, days);
+        }
+        catch
+        {
+            // Put back the part that was written and write it all again at the next check. The ticker logs the error once.
+            Undo();
+            _isStale = true;
+
+            throw;
+        }
+    }
+
+    private void Write(
+        ConfigManager config,
+        CustomCache cache,
+        Il2CppSystem.Collections.Generic.Dictionary<int, Config_Talent> talents,
+        Il2CppSystem.Collections.Generic.Dictionary<int, Config_Buff> buffs,
+        Il2CppSystem.Collections.Generic.Dictionary<int, Config_Effect> effects,
+        Il2CppSystem.Collections.Generic.Dictionary<int, Config_ConditionSet> conditions,
+        Il2CppSystem.Collections.Generic.Dictionary<int, Config_RandomGroup> pools,
+        Il2CppSystem.Collections.Generic.Dictionary<int, Config_DailyRandom> days)
+    {
         Game = GameReader.Read(config, cache, (table, id) => _made.Contains((table, id)));
 
         var plan = RewardPlan.Build(_active(), new GameTables(talents, buffs, effects, conditions, pools, days, _made));

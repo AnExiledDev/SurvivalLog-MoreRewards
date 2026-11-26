@@ -28,8 +28,8 @@ internal static class BuyPatch
     private static Func<IReadOnlyList<MrGrant>> _grants = () => Array.Empty<MrGrant>();
     private static PatchKit? _hooks;
 
-    /// <summary>The points held and the rewards owned before a buy.</summary>
-    internal readonly record struct BuyMark(int Points, int Owned);
+    /// <summary>The points held and the rewards owned before a buy. Not read when the hook before it failed.</summary>
+    internal readonly record struct BuyMark(int Points, int Owned, bool IsRead);
 
     public static void Apply(PatchKit hooks, Func<IReadOnlyList<MrGrant>> grants, Action<string, string> tell, Action<string> log)
     {
@@ -41,17 +41,29 @@ internal static class BuyPatch
             done: "hooked buying a reward", consequence: "lottery tickets and supply crates pay out nothing, and new perks show up within a second instead of at once");
     }
 
-    private static void Before(SurvivalResultsManager __instance, out BuyMark __state) =>
-        __state = new BuyMark(__instance?.GetSurvivalPoint() ?? 0, OwnedCount());
+    private static void Before(SurvivalResultsManager __instance, out BuyMark __state)
+    {
+        __state = default;
+
+        try
+        {
+            __state = new BuyMark(__instance?.GetSurvivalPoint() ?? 0, OwnedCount(), IsRead: true);
+        }
+        catch (Exception ex)
+        {
+            _hooks?.Fail(Doing, ex);
+        }
+    }
 
     private static void After(SurvivalResultsManager __instance, int talentId, BuyMark __state)
     {
         try
         {
-            if (!LiveScreen.IsOn || __instance == null) return;
+            if (!LiveScreen.IsOn || __instance == null || !__state.IsRead) return;
 
             var row = GameSingleton.Existing<ConfigManager>()?.Get_Config_Talent(talentId);
-            var isBought = __instance.GetSurvivalPoint() < __state.Points || OwnedCount() > __state.Owned || IsFreeBuy(row);
+            var cost = ShopPrice.CardCost(row?.LvUpCost ?? 1, LeadingRole.GetSettlementBuyDiscountRatio());
+            var isBought = row != null && ShopPrice.IsBought(__state.Points, __instance.GetSurvivalPoint(), __state.Owned, OwnedCount(), cost, RunGame.Role() is { IsDead: false });
 
             if (!isBought) return;
 
@@ -72,13 +84,7 @@ internal static class BuyPatch
         }
     }
 
-    /// <summary>
-    /// A free reward that can be bought again moves neither the points nor the owned list. The game turns down a buy
-    /// only when the player is dead, the reward has no row, or the points are short, so a free one goes through.
-    /// </summary>
-    private static bool IsFreeBuy(Config_Talent? row) => row is { LvUpCost: <= 0 } && RunGame.Role() is { IsDead: false };
-
-    private static int OwnedCount() => RunGame.Planning()?._SaveCache_k__BackingField?.Count ?? 0;
+    internal static int OwnedCount() => RunGame.Planning()?._SaveCache_k__BackingField?.Count ?? 0;
 
     private static void PayLotteries(SurvivalResultsManager results, IReadOnlyList<PointRange> lotteries)
     {

@@ -404,10 +404,11 @@ internal sealed class RewardActions
         }
 
         var before = results.GetSurvivalPoint();
+        var ownedBefore = BuyPatch.OwnedCount();
 
         results.OnBuySurvivalPlan(id);
 
-        if (results.GetSurvivalPoint() < before || (check.CardCost == 0 && planning.HasActivated(id)))
+        if (ShopPrice.IsBought(before, results.GetSurvivalPoint(), ownedBefore, BuyPatch.OwnedCount(), check.CardCost, RunGame.Role() is { IsDead: false }))
         {
             book.RecordShopBuy(day, settings.ShopReset);
             _log($"shop: bought reward {id} for {price} survival points");

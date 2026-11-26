@@ -18,16 +18,10 @@ internal static class CompanionBuffs
 
     private static readonly Dictionary<int, IReadOnlyList<int>> Riders = new();
     private static PatchKit? _hooks;
+    private static bool _isHooked;
 
-    /// <summary>Taking the extra buffs away is hooked only once giving them is.</summary>
-    public static void Apply(PatchKit hooks)
-    {
-        _hooks = hooks;
-
-        if (!hooks.Patch(typeof(CompanionBuffs), typeof(BuffComponent), nameof(BuffComponent.AddBuff), new[] { typeof(long), typeof(int) }, postfix: nameof(AfterAdd), consequence: Consequence)) return;
-
-        hooks.Patch(typeof(CompanionBuffs), typeof(BuffComponent), nameof(BuffComponent.RemoveBuff), new[] { typeof(int) }, postfix: nameof(AfterRemove), consequence: Consequence);
-    }
+    /// <summary>The buff hooks go in the first time a reward has companions, since adding a buff is a busy call.</summary>
+    public static void Apply(PatchKit hooks) => _hooks = hooks;
 
     /// <summary>Replaces the companions; called each time the rewards files are written into the tables.</summary>
     public static void Use(IReadOnlyList<Companion> companions)
@@ -35,6 +29,18 @@ internal static class CompanionBuffs
         Riders.Clear();
 
         foreach (var companion in companions) Riders[companion.LevelBuff] = companion.Buffs;
+
+        if (Riders.Count > 0 && !_isHooked && _hooks is { } hooks) Hook(hooks);
+    }
+
+    /// <summary>Taking the extra buffs away is hooked only once giving them is.</summary>
+    private static void Hook(PatchKit hooks)
+    {
+        _isHooked = true;
+
+        if (!hooks.Patch(typeof(CompanionBuffs), typeof(BuffComponent), nameof(BuffComponent.AddBuff), new[] { typeof(long), typeof(int) }, postfix: nameof(AfterAdd), consequence: Consequence)) return;
+
+        hooks.Patch(typeof(CompanionBuffs), typeof(BuffComponent), nameof(BuffComponent.RemoveBuff), new[] { typeof(int) }, postfix: nameof(AfterRemove), consequence: Consequence);
     }
 
     /// <summary>Never throws into the game. A companion is never a reward's buff, so adding one does not cascade.</summary>

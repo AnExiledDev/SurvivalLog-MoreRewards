@@ -28,6 +28,14 @@ public static class ShopPrice
         return Math.Max(0, (int)((1f - discountRatio) * cost + 0.5f));
     }
 
+    /// <summary>
+    /// Whether the game's buy went through. The game turns a buy down only when the player is dead, the reward has no
+    /// row, or the points are short, so a buy that cost points went through, and so did a free one while the player
+    /// lives. A free reward that can be bought again moves neither the points nor the owned list.
+    /// </summary>
+    public static bool IsBought(int pointsBefore, int pointsAfter, int ownedBefore, int ownedAfter, int cardCost, bool isAlive) =>
+        pointsAfter < pointsBefore || ownedAfter > ownedBefore || (cardCost <= 0 && isAlive);
+
     /// <summary>Buys left today, or null when there is no daily limit.</summary>
     public static int? LeftToday(ScreenSettings settings, ShopTally tally) =>
         settings.ShopPerDay > 0 ? Math.Max(0, settings.ShopPerDay - tally.Today) : null;
