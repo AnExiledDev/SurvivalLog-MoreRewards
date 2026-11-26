@@ -175,4 +175,4 @@ There are no keys to set. The buttons on the rewards screen are set with the set
 
 A reward can set its cost, name and description (in English and Chinese), the rewards it needs first, the furniture you must be able to build, the pools it is drawn from and how often, and what it gives. A new reward copies a game reward (`copyFrom`) for its icon and look, then changes what you set. It can give any effect the game has, such as more solar power, or more wind turbine power with Wind Power installed.
 
-Anything the mod cannot use is left out and written to `BepInEx\more-rewards.log` with the reason. The rest of the file still applies. With `Enabled` off, nothing in the file applies.
+Anything the mod cannot use is left out and written to `BepInEx\more-rewards.log` with the reason. The rest of the file still applies. With `Enabled` off, nothing in the file applies, except that new rewards stay in the tables, never offered, so a save that owns one keeps it.

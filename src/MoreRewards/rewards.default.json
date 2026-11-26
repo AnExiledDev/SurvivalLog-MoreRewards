@@ -5,7 +5,7 @@
 //
 // A reward entry:
 //   "id"           the reward's ID. Use a game reward's ID to change it, or a new ID to add one.
-//   "enabled"      true or false; a switched-off entry changes nothing, its buffs and effects included
+//   "enabled"      true or false; a switched-off entry changes nothing, its buffs and effects included. A switched-off new reward (one with "copyFrom") still goes in the tables but is never offered, so a save that owns it keeps it
 //   "copyFrom"     for a new ID: the game reward it starts from (its icon, look, needs and what it gives)
 //   "name", "description"   text, either "plain" or { "en": "...", "zh": "..." }
 //   "cost"         survival points to take it

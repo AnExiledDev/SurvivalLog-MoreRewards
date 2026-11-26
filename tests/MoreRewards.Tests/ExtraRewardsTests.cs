@@ -98,6 +98,7 @@ public class ExtraRewardsTests
             Assert.False(reward.AlwaysOffered);
             Assert.All(reward.Levels ?? Array.Empty<LevelEntry>(), level => Assert.Null(level.Pools));
             Assert.Equal(new FieldValue.Number(0), reward.Fields.Last(set => set.Field == "Available").Value);
+            Assert.All(reward.Levels ?? Array.Empty<LevelEntry>(), level => Assert.Equal(new FieldValue.Number(0), level.Fields.Last(set => set.Field == "Available").Value));
         });
     }
 

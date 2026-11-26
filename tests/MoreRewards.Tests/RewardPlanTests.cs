@@ -204,6 +204,34 @@ public class RewardPlanTests
         Assert.Empty(plan.Pools);
     }
 
+    // A save that owns a new reward loses it on load when the reward has no row. Switching the reward off in the file
+    // must only stop it being offered, never take its rows out of the tables.
+    [Fact]
+    public void A_disabled_new_reward_keeps_its_rows_but_is_never_offered()
+    {
+        var plan = Plan("""
+            { "rewards": [ { "id": 39001, "enabled": false, "copyFrom": 31271, "anyDay": 5, "alwaysOffered": true,
+              "pools": { "1013": 5 }, "buffs": [ { "id": 390010, "copyFrom": 312710 } ],
+              "levels": [ {}, { "fields": { "Available": 1 } } ] } ] }
+            """);
+
+        Assert.Equal(new FieldValue.Number(0), Value(Row(plan, Table.Reward, 39001), "Available"));
+        Assert.Equal(new FieldValue.Number(0), Value(Row(plan, Table.Reward, 39002), "Available"));
+        Assert.Single(plan.Rows, row => row.Table == Table.Buff && row.Id == 390010);
+        Assert.Empty(plan.Pools);
+        Assert.Empty(plan.AlwaysOffered);
+    }
+
+    [Fact]
+    public void A_disabled_new_reward_gives_way_to_an_enabled_entry_with_the_same_id()
+    {
+        var plan = Plan("""{ "rewards": [ { "id": 39001, "copyFrom": 31271, "cost": 3 }, { "id": 39001, "enabled": false, "copyFrom": 31271, "cost": 9 } ] }""");
+
+        Assert.Equal(new FieldValue.Number(3), Value(Row(plan, Table.Reward, 39001), "LvUpCost"));
+        Assert.NotEqual(new FieldValue.Number(0), Value(Row(plan, Table.Reward, 39001), "Available"));
+        Assert.Empty(plan.Problems);
+    }
+
     [Fact]
     public void The_second_entry_for_an_id_is_left_out()
     {

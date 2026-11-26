@@ -113,11 +113,16 @@ public sealed record RewardFile(IReadOnlyList<RewardEntry> Rewards, IReadOnlyLis
     /// <summary>
     /// This file's entries with those of <paramref name="under"/> that use none of the same reward IDs. An entry here,
     /// switched off or not, replaces the one below, so the player's file can change or turn off a reward the mod carries.
+    /// A new reward below that only switched-off entries replace is kept, switched off, so its rows stay in the tables.
     /// </summary>
     public RewardFile Over(RewardFile under)
     {
         var taken = new HashSet<int>(Rewards.SelectMany(reward => reward.Ids));
-        var kept = under.Rewards.Where(reward => !reward.Ids.Any(taken.Contains));
+        var offered = new HashSet<int>(Rewards.Where(reward => reward.Enabled).SelectMany(reward => reward.Ids));
+        var kept = under.Rewards
+            .Where(reward => !reward.Ids.Any(offered.Contains))
+            .Where(reward => !reward.Ids.Any(taken.Contains) || reward.CopyFrom != null)
+            .Select(reward => reward.Ids.Any(taken.Contains) ? reward with { Enabled = false } : reward);
         var days = new HashSet<int>(Days.Select(day => day.Day));
 
         return new RewardFile(
@@ -129,22 +134,35 @@ public sealed record RewardFile(IReadOnlyList<RewardEntry> Rewards, IReadOnlyLis
     }
 
     /// <summary>
-    /// Only the file's new rewards, with no pools, never offered, and switched off so the shop skips them too. Its
-    /// entries for the game's rewards are left out. The rows still go in the game's tables, because the game drops an
-    /// owned reward with no row when it loads a save, and a world's settings only come in after that.
+    /// Only the file's new rewards, never offered, and its own buffs and effects for them. Its entries for the game's
+    /// rewards are left out. The rows still go in the game's tables, because the game drops an owned reward with no row
+    /// when it loads a save, and a world's settings only come in after that.
     /// </summary>
     public RewardFile Unoffered() => this with
     {
-        Rewards = Rewards.Where(reward => reward.CopyFrom != null).Select(reward => reward with
+        Rewards = Rewards.Where(reward => reward.CopyFrom != null).Select(reward => Unoffer(reward) with { Enabled = true }).ToList(),
+        Buffs = Buffs.Where(row => row.CopyFrom != null).ToList(),
+        Effects = Effects.Where(row => row.CopyFrom != null).ToList(),
+        Days = Array.Empty<DayEntry>(),
+    };
+
+    /// <summary>
+    /// The reward with no pools and Available 0 on every level, so it is never offered and the shop skips it. The
+    /// Available 0 goes last, after any level's own fields, so nothing in the file can turn it back on.
+    /// </summary>
+    public static RewardEntry Unoffer(RewardEntry reward)
+    {
+        var off = new FieldSet("Available", new FieldValue.Number(0));
+
+        return reward with
         {
             Pools = Array.Empty<PoolEntry>(),
             AnyDay = null,
             AlwaysOffered = false,
-            Fields = reward.Fields.Append(new FieldSet("Available", new FieldValue.Number(0))).ToList(),
-            Levels = reward.Levels?.Select(level => level with { Pools = null }).ToList(),
-        }).ToList(),
-        Days = Array.Empty<DayEntry>(),
-    };
+            Fields = reward.Fields.Append(off).ToList(),
+            Levels = reward.Levels?.Select(level => level with { Pools = null, Fields = level.Fields.Append(off).ToList() }).ToList(),
+        };
+    }
 
     /// <summary>The file without the rewards that give <paramref name="effect"/>.</summary>
     public RewardFile Without(string effect) =>

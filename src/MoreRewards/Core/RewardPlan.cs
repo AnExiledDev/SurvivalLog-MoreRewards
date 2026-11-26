@@ -141,14 +141,24 @@ public sealed record RewardPlan(
 
     /// <summary>
     /// Works out the edits. Effects come first and buffs second, so a buff can point at an effect the file makes, then
-    /// condition sets, then rewards, so a reward can point at any of them. A disabled reward changes nothing, including
-    /// its own buffs and effects. Anything that cannot be built is reported and left out; the rest still applies.
+    /// condition sets, then rewards, so a reward can point at any of them. A disabled reward of the game's changes
+    /// nothing, including its own buffs and effects. A disabled new reward still gets its rows, never offered, so a save
+    /// that owns it keeps it. Anything that cannot be built is reported and left out; the rest still applies.
     /// The "anyDay" rewards go in last, once the file's days are known, since those days decide which pools they go in.
     /// </summary>
     public static RewardPlan Build(RewardFile file, IRewardTables tables)
     {
         var builder = new Builder(tables);
         var enabled = Distinct(file.Rewards.Where(reward => reward.Enabled), builder.Problems);
+        var seen = new HashSet<int>(enabled.SelectMany(reward => reward.Ids));
+
+        foreach (var reward in file.Rewards.Where(reward => !reward.Enabled && reward.CopyFrom != null))
+        {
+            if (reward.Ids.Any(seen.Contains)) continue;
+
+            seen.UnionWith(reward.Ids);
+            enabled.Add(RewardFile.Unoffer(reward) with { Enabled = true });
+        }
 
         builder.AddRows(Table.Effect, file.Effects.Concat(enabled.SelectMany(reward => reward.Effects)));
         builder.AddRows(Table.Buff, file.Buffs.Concat(enabled.SelectMany(reward => reward.Buffs)));

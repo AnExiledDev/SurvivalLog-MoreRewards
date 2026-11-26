@@ -20,7 +20,7 @@ namespace MoreRewards;
 public sealed class Plugin : BasePlugin
 {
     internal const string Guid = "com.dev.survivallog.morerewards";
-    private const string Version = "0.12.2";
+    private const string Version = "0.12.3";
     private const long MaxLogBytes = 1024 * 1024;
     private const string RewardsFileName = "MoreRewards.Rewards.json";
 
@@ -75,13 +75,13 @@ public sealed class Plugin : BasePlugin
     /// Writes the player's rewards file into the game's tables, with the extra rewards under it and the wind rewards
     /// under it when Wind Power is installed. With ExtraRewards off, the extra rewards are never offered, but their rows
     /// stay so a save that owns one keeps it. An entry in the player's file that uses one of their
-    /// IDs replaces it. Without Wind Power, no reward that gives it more power applies. With the mod off, nothing
-    /// applies. A save from the Rewards tab reads the file again and writes it into the tables at once.
+    /// IDs replaces it. Without Wind Power, no reward that gives it more power applies. With the mod off, only the
+    /// new rewards' rows stay, never offered, so saves keep them. A save from the Rewards tab reads the file again and writes it into the tables at once.
     /// </summary>
     private static RewardTables WatchRewardsFile(ConfigEntry<bool> enabled, ConfigEntry<bool> extraRewards, ModLog log)
     {
         RewardTables? tables = null;
-        var hasWindPower = LinkWind(() => tables?.Grants ?? Array.Empty<MrGrant>(), log);
+        var hasWindPower = LinkWind(() => enabled.Value ? tables?.Grants ?? Array.Empty<MrGrant>() : Array.Empty<MrGrant>(), log);
         var windEffect = RewardPlan.MrPrefix + RewardPlan.WindPower;
         var path = Path.Combine(Paths.ConfigPath, RewardsFileName);
         var wind = hasWindPower ? RewardFileStore.Wind(log.Write) : RewardFile.Empty;
@@ -98,7 +98,7 @@ public sealed class Plugin : BasePlugin
 
         CompanionBuffs.Apply(fileHooks);
         LastDayPatch.Apply(fileHooks);
-        tables = new RewardTables(() => enabled.Value ? applies : RewardFile.Empty, log.Write);
+        tables = new RewardTables(() => enabled.Value ? applies : applies.Unoffered(), log.Write);
         RewardsTicker.Checks.Add(tables.Tick);
         LiveSettings.Watch(() => tables.Changed(), enabled);
         var windText = hasWindPower ? RewardFileStore.WindText() : null;

@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.12.3
+
+- A new reward you switch off in the rewards file, or every new reward while `Enabled` is off, now stays in the game's tables and is just never offered. Before, a save that owned one lost it on the next load.
+- Made for Survival Log 1.1.21671.
+
 ## 0.12.2
 
 - Rewards tab: turning `ExtraRewards` on or off now updates the list right away. Before, the tab kept showing the list it had when it first opened, so the extra rewards were missing from it. Unsaved changes on the tab stay.

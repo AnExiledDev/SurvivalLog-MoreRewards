@@ -107,7 +107,30 @@ public class RewardFileTests
         var mine = RewardFile.Parse("""{ "rewards": [ { "id": 39002, "enabled": false }, { "id": 31271, "cost": 1 } ] }""");
         var wind = RewardFile.Parse("""{ "rewards": [ { "id": 39001, "copyFrom": 31271, "levels": [ {}, {}, {} ] }, { "id": 39010, "copyFrom": 31271 } ] }""");
 
-        Assert.Equal(new[] { 39002, 31271, 39010 }, mine.Over(wind).Rewards.Select(reward => reward.Id));
+        Assert.Equal(new[] { 39002, 31271, 39001, 39010 }, mine.Over(wind).Rewards.Select(reward => reward.Id));
+        Assert.False(mine.Over(wind).Rewards.Single(reward => reward.Id == 39001).Enabled);
+    }
+
+    // Turning off a reward the mod carries must keep its rows, or a save that owns it loses it.
+    [Fact]
+    public void A_switched_off_entry_keeps_the_new_reward_below_it_switched_off()
+    {
+        var mine = RewardFile.Parse("""{ "rewards": [ { "id": 39010, "enabled": false } ] }""");
+        var below = RewardFile.Parse("""{ "rewards": [ { "id": 39010, "copyFrom": 31271 }, { "id": 31272, "cost": 1 } ] }""");
+        var both = mine.Over(below);
+
+        Assert.Equal(new[] { 39010, 39010, 31272 }, both.Rewards.Select(reward => reward.Id));
+        Assert.False(both.Rewards[1].Enabled);
+        Assert.Equal(31271, both.Rewards[1].CopyFrom);
+    }
+
+    [Fact]
+    public void An_enabled_entry_replaces_the_new_reward_below_it()
+    {
+        var mine = RewardFile.Parse("""{ "rewards": [ { "id": 39010, "copyFrom": 31271, "cost": 2 } ] }""");
+        var below = RewardFile.Parse("""{ "rewards": [ { "id": 39010, "copyFrom": 31271 } ] }""");
+
+        Assert.Single(mine.Over(below).Rewards);
     }
 
     [Fact]
